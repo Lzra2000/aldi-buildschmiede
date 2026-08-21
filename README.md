@@ -10,8 +10,10 @@ Zwei Seiten und ein Addon für Project Ascension, Season 10 Wildcard.
 - **[Synergiekompendium](https://lzra2000.github.io/aldi-buildschmiede/synergien.html)** —
   Nachschlagewerk: was mit was zusammenspielt, woraus Schaden und Heilung skalieren.
 - **[Companion-Addon](AscBuildschmiede.zip)** — `/bs` im Spiel exportiert deinen
-  echten Charakter (Abilities, Talente, Path, Stats, Gear) als Text. Auf der Seite
-  einfügen, dann sagt sie dir, was an deinem tatsächlichen Build kritisch ist.
+  echten Charakter (Abilities, Talente, Path, Stats, Gear, Seltenheits-Budget) als
+  Text. Auf der Seite einfügen, dann sagt sie dir, was an deinem tatsächlichen
+  Build kritisch ist. `/bs target` liest den Build deines Ziels aus — den kannst
+  du auf der Seite unter *Vergleich* gegen deinen eigenen stellen.
 
 ## Addon installieren
 
@@ -19,6 +21,13 @@ Zwei Seiten und ein Addon für Project Ascension, Season 10 Wildcard.
 2. Nach `Interface\AddOns\` entpacken. Es muss danach
    `Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc` geben.
 3. Spiel neu starten, dann `/bs`.
+
+| Befehl | Wirkung |
+|---|---|
+| `/bs` | Fenster auf oder zu |
+| `/bs target` | Build des angeklickten Spielers auslesen |
+| `/bs gear` | Gear im Export an/aus |
+| `/bs stats` | Stats und Waffen im Export an/aus |
 
 Das Addon schickt nichts ins Internet. Es liest den Charakter aus und schreibt
 Text in ein Fenster — kopieren musst du selbst.

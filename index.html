@@ -159,8 +159,9 @@ details.panel:not([open])>summary{border-bottom:0}
 /* kein uppercase: der Browser laesst Umlaute dabei klein stehen */
 .scsum b{font-family:"JetBrains Mono",monospace;font-size:11.5px;display:block;
   letter-spacing:.02em;color:var(--accent);margin-bottom:4px}
-.schd{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.11em;
-  text-transform:uppercase;color:var(--ink-faint);padding:9px 14px 4px;
+/* kein uppercase: Chrome laesst dabei Umlaute klein stehen */
+.schd{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.05em;
+  font-weight:700;color:var(--ink-faint);padding:9px 14px 4px;
   border-top:1px solid var(--rule-soft)}
 
 .row.lock{opacity:.42}
@@ -184,6 +185,35 @@ details.panel:not([open])>summary{border-bottom:0}
 .sugadd{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--good);
   font-size:15px;padding:0 3px}
 
+.cmphd{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:10px 14px;
+  background:var(--accent-soft);border-bottom:1px solid var(--rule);font-size:12.5px;
+  font-family:"JetBrains Mono",monospace}
+.cmphd .vs{color:var(--ink-faint);font-size:11px}
+.cmpsplit{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rule-soft);
+  border-bottom:1px solid var(--rule);font-size:11px;text-align:center;
+  font-family:"JetBrains Mono",monospace}
+.cmpsplit>span{background:var(--raised);padding:7px 4px}
+.c-mine{color:var(--accent)} .c-his{color:var(--warn)} .c-both{color:var(--ink-faint)}
+table.cmp{min-width:0}
+table.cmp td.num{text-align:right}
+table.cmp td.up{color:var(--good);font-weight:700}
+table.cmp td.down{color:var(--warn);font-weight:700}
+table.cmp tr.sep td{background:var(--sunken);font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
+.cmprow{display:flex;align-items:center;gap:8px;padding:4px 14px;
+  border-bottom:1px solid var(--rule-soft);font-size:12px}
+.cmprow .nm{font-family:"JetBrains Mono",monospace;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmprow.add{cursor:pointer}
+.cmprow.add:hover{background:var(--good-soft)}
+.cmprow.locked{opacity:.55}
+.cmprow.locked:hover{background:none;cursor:default}
+.cmprow .stop{font-family:"JetBrains Mono",monospace;font-size:9.5px;
+  color:var(--warn);border:1px solid var(--warn);padding:0 5px;white-space:nowrap}
+
+.lg{font-weight:700}
+.lg.up{color:var(--good)}
+.lg.down{color:var(--warn)}
 section.ref{margin-top:22px}
 @media(max-width:560px){
   .twocol{grid-template-columns:1fr}
@@ -374,6 +404,8 @@ table.stat tr.dead td{color:var(--ink-faint)}
             class="cnt" id="cS">—</span></button>
           <button class="tab" data-tab="tFlags" role="tab">Analyse<span
             class="cnt" id="cF">—</span></button>
+          <button class="tab" data-tab="tCmp" role="tab">Vergleich<span
+            class="cnt" id="cX">—</span></button>
           <button class="tab" data-tab="tShare" role="tab">Teilen</button>
         </div>
         <div class="tabp on" id="tPath"><div id="paths"></div></div>
@@ -381,6 +413,20 @@ table.stat tr.dead td{color:var(--ink-faint)}
         <div class="tabp" id="tSug"><div id="sugbox"></div></div>
         <div class="tabp" id="tScale"><div id="scalebox"></div></div>
         <div class="tabp" id="tFlags"><div id="flags"></div></div>
+        <div class="tabp" id="tCmp">
+          <div class="pastewrap">
+            <p class="pastehint">Build-Link eines Gildenkollegen oder ein
+              Export aus dem Spiel. <code>/bs target</code> liest den Build
+              deines Ziels aus.</p>
+            <textarea id="cmpBox" rows="3" spellcheck="false"
+              placeholder="Link mit #b=… oder === BUILDSCHMIEDE v1 ==="></textarea>
+            <div class="pastebtns">
+              <button class="primary" id="bCmp">Vergleichen</button>
+              <button id="bCmpClear">Verwerfen</button>
+            </div>
+          </div>
+          <div id="cmpbox"></div>
+        </div>
         <div class="tabp" id="tShare">
           <div class="share">
             <button class="primary" id="bLink">Link kopieren</button>
@@ -1399,6 +1445,9 @@ table.stat tr.dead td{color:var(--ink-faint)}
             if (q && String(m[1]).indexOf("-") < 0) d.qcost[q] = +m[1] || 0;
           });
           break;
+        case "INSPECT":
+          d.inspect = true;
+          break;
         case "CODE":
           d.code = parts[0];
           break;
@@ -2185,6 +2234,216 @@ table.stat tr.dead td{color:var(--ink-faint)}
     return false;
   }
 
+  // ---------- Vergleich ----------
+  // Zwei Builds nebeneinander. Als Quelle taugt beides: ein geteilter Link
+  // oder ein Export aus dem Spiel (auch der von "/bs target").
+
+  var RIVAL = null;
+
+  function idsFromExport(d) {
+    var ids = [], miss = [];
+    function take(name) {
+      var i = BYNAME[String(name).toLowerCase().trim()];
+      if (i === undefined) miss.push(name); else ids.push(i);
+    }
+    (d.abi || []).forEach(take);
+    (d.tal || []).forEach(function (t) { take(t.n); });
+    return { ids: ids, miss: miss };
+  }
+
+  function parseRival(text) {
+    text = String(text || "").trim();
+    if (!text) return null;
+
+    // Erst der Link: alles nach b= bis zum naechsten Trennzeichen.
+    var m = text.match(/b=([0-9a-z.]+)/i);
+    if (m && text.indexOf("CHAR|") < 0) {
+      var ids = [];
+      m[1].split(".").forEach(function (t) {
+        var n = parseInt(t, 36);
+        if (!isNaN(n) && n >= 0 && n < CAT.length) ids.push(n);
+      });
+      return ids.length ? { name: "Geteilter Build", ids: ids, stats: {} } : null;
+    }
+
+    var d = parseExport(text);
+    if (!d) return null;
+    var r = idsFromExport(d);
+    return {
+      name: d.name || "Fremder Build", level: d.level, path: d.path,
+      cls: d.cls, ids: r.ids, miss: r.miss, stats: d.stats || {},
+      ilvl: d.ilvl, inspect: !!d.inspect, weapons: d.weapons || []
+    };
+  }
+
+  // Kennzahlen, die einen Build in einer Zeile beschreiben.
+  function fingerprint(ids) {
+    var p = profile(ids);
+    var mult = 0, wsum = 0, ele = 0;
+    ids.forEach(function (i) {
+      var s = SC[i];
+      if (!s) return;
+      if (s.w) { wsum += s.w; if (s.sch) ele++; }
+      (s.inc || []).forEach(function (x) {
+        if (x[2] === "dmg" || x[2] === "heal") mult += x[0];
+      });
+    });
+    var q = [0, 0, 0, 0, 0];
+    ids.forEach(function (i) { q[CAT[i][3]]++; });
+    return {
+      n: ids.length,
+      abi: ids.filter(function (i) { return CAT[i][1] === 0; }).length,
+      tal: ids.filter(function (i) { return CAT[i][1] === 1; }).length,
+      w: p.w, wm: p.wm, h: p.h, ele: ele,
+      wsum: wsum, mult: mult, q: q,
+      path: scorePaths(p)[0]
+    };
+  }
+
+  // Die Farbe liest sich aus DEINER Sicht: gruen heisst, du liegst vorn.
+  // Ein "+" in der Spalte heisst immer, dass er mehr davon hat.
+  function cmpCell(a, b, label, unit) {
+    var d = b - a;
+    var cls = d === 0 ? "" : (d > 0 ? "down" : "up");
+    return "<tr><td>" + esc(label) + '</td><td class="num">' + fmtN(a) + (unit || "") +
+      '</td><td class="num">' + fmtN(b) + (unit || "") +
+      '</td><td class="num ' + cls + '">' +
+      (d === 0 ? "—" : (d > 0 ? "+" : "") + fmtN(d) + (unit || "")) + "</td></tr>";
+  }
+  function fmtN(v) {
+    if (typeof v !== "number" || isNaN(v)) return "—";
+    return String(Math.round(v * 10) / 10).replace(".", ",");
+  }
+
+  function renderCompare() {
+    var box = document.getElementById("cmpbox");
+    var hd = document.getElementById("cX");
+    if (!box) return;
+    if (!RIVAL) {
+      hd.textContent = "—"; hd.className = "cnt";
+      return;   // Eingabefeld bleibt stehen, nur das Ergebnis fehlt
+    }
+
+    var mine = Object.keys(picked).map(Number);
+    var his = RIVAL.ids;
+    var hasMine = {}; mine.forEach(function (i) { hasMine[i] = 1; });
+    var hasHis = {}; his.forEach(function (i) { hasHis[i] = 1; });
+
+    var both = mine.filter(function (i) { return hasHis[i]; });
+    var onlyMine = mine.filter(function (i) { return !hasHis[i]; });
+    var onlyHis = his.filter(function (i) { return !hasMine[i]; });
+
+    var A = fingerprint(mine), B = fingerprint(his);
+    hd.textContent = both.length + " gleich";
+    hd.className = "cnt ok";
+
+    var o = [];
+
+    o.push('<div class="cmphd"><span>' +
+      esc(CHAR && CHAR.name ? CHAR.name : "Dein Build") + "</span>" +
+      '<span class="vs">gegen</span><span>' + esc(RIVAL.name) +
+      (RIVAL.level ? " · Stufe " + RIVAL.level : "") +
+      (RIVAL.path ? " · Path of " + esc(RIVAL.path) : "") +
+      (RIVAL.inspect ? ' <span class="tagm">inspiziert</span>' : "") +
+      "</span></div>");
+
+    o.push('<div class="cmpsplit"><span class="c-mine">' + onlyMine.length +
+      " nur bei dir</span><span class=\"c-both\">" + both.length +
+      ' gleich</span><span class="c-his">' + onlyHis.length +
+      " nur bei ihm</span></div>");
+
+    // Zahlen nebeneinander
+    o.push('<div class="tblwrap"><table class="stat cmp"><thead><tr><th></th>' +
+      "<th>du</th><th>er</th><th>er − du</th></tr></thead><tbody>");
+    o.push(cmpCell(A.abi, B.abi, "Abilities"));
+    o.push(cmpCell(A.tal, B.tal, "Talente"));
+    o.push(cmpCell(A.w, B.w, "Waffenangriffe"));
+    o.push(cmpCell(A.ele, B.ele, "davon elementar"));
+    o.push(cmpCell(A.wsum, B.wsum, "Waffenprozente gesamt", " %"));
+    o.push(cmpCell(A.mult, B.mult, "Multiplikatoren", " %"));
+    o.push(cmpCell(A.h, B.h, "heilende Einträge"));
+    o.push(cmpCell(A.q[4], B.q[4], "Legendary"));
+    o.push(cmpCell(A.q[3], B.q[3], "Epic"));
+    if (CHAR && RIVAL.stats && RIVAL.stats.SP !== undefined) {
+      o.push('<tr class="sep"><td colspan="4">Charakterwerte</td></tr>');
+      o.push(cmpCell(CHAR.stats.SP, RIVAL.stats.SP, "Spell Power"));
+      o.push(cmpCell(CHAR.stats.AP, RIVAL.stats.AP, "Attack Power"));
+      o.push(cmpCell(CHAR.stats.CRIT, RIVAL.stats.CRIT, "Melee-Crit", " %"));
+      o.push(cmpCell(CHAR.stats.SCRIT, RIVAL.stats.SCRIT, "Spell-Crit", " %"));
+    }
+    if (CHAR && CHAR.ilvl && RIVAL.ilvl) {
+      o.push(cmpCell(CHAR.ilvl, RIVAL.ilvl, "Gegenstandsstufe"));
+    }
+    o.push("</tbody></table></div>");
+    o.push('<div class="qhint"><span class="lg up">grün</span> du liegst vorn · ' +
+      '<span class="lg down">orange</span> er liegt vorn. Mehr ist nicht ' +
+      "automatisch besser — zwei Legendaries weniger können am Budget liegen, " +
+      "nicht an schlechteren Skills.</div>");
+
+    // Empfohlener Path je Build - der interessanteste Unterschied
+    if (A.path && B.path && A.path.k !== B.path.k) {
+      o.push('<div class="flag syn"><b>Andere Ausrichtung</b> ' +
+        "Dein Build spricht für <b>" + esc(PATHBY[A.path.k].n) + "</b>, seiner für <b>" +
+        esc(PATHBY[B.path.k].n) + "</b>. Ihr baut nicht dasselbe — ein direkter " +
+        "Vergleich der Zahlen oben führt in die Irre.</div>");
+    }
+
+    // Listen
+    function list(title, arr, addable) {
+      if (!arr.length) return;
+      o.push('<div class="schd">' + title + "</div>");
+      arr.sort(function (a, b) { return CAT[b][3] - CAT[a][3]; })
+        .slice(0, 14).forEach(function (i) {
+          // Warum du das nicht einfach uebernehmen kannst - vor dem Klick,
+          // nicht erst danach.
+          var stop = null;
+          if (addable) {
+            if (tooHigh(i)) stop = "Stufe " + CAT[i][4];
+            else if (overBudget(i)) stop = QN[CAT[i][3]] + "-Budget voll";
+            else if (CAT[i][1] === 1 && counts().t >= MAX_T) stop = "Talente voll";
+            else if (CAT[i][1] === 0 && counts().a >= MAX_A) stop = "Abilities voll";
+          }
+          o.push('<div class="cmprow' + (addable ? " add" : "") +
+            (stop ? " locked" : "") + '"' +
+            (addable && !stop ? ' data-add="' + i + '" role="button" tabindex="0"' : "") + ">" +
+            '<span class="icon" style="width:20px;height:20px;flex:0 0 20px;' +
+            iconStyle(i) + ";background-size:" + (SPR.cols * 20) + 'px auto"></span>' +
+            '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+            esc(CAT[i][0]) + "</span>" +
+            (stop ? '<span class="stop">' + esc(stop) + "</span>"
+                  : (addable ? '<span class="sugadd">+</span>' : "")) + "</div>");
+        });
+      if (arr.length > 14) {
+        o.push('<div class="qhint">… und ' + (arr.length - 14) + " weitere</div>");
+      }
+    }
+    list("Hat er, du nicht — klicken zum Übernehmen", onlyHis, true);
+    list("Hast nur du", onlyMine, false);
+
+    if (RIVAL.miss && RIVAL.miss.length) {
+      o.push('<div class="qhint">' + RIVAL.miss.length +
+        " Einträge seines Builds kennt der Katalog nicht: " +
+        RIVAL.miss.slice(0, 5).map(esc).join(", ") + ".</div>");
+    }
+
+    box.innerHTML = o.join("");
+  }
+
+  document.getElementById("bCmp").addEventListener("click", function () {
+    var v = document.getElementById("cmpBox").value;
+    var r = parseRival(v);
+    if (!r) { toast("Weder Link noch Export erkannt"); return; }
+    RIVAL = r;
+    renderCompare();
+    toast("Vergleich mit " + r.name);
+  });
+  document.getElementById("bCmpClear").addEventListener("click", function () {
+    RIVAL = null;
+    document.getElementById("cmpBox").value = "";
+    document.getElementById("cmpbox").innerHTML = "";
+    document.getElementById("cX").textContent = "—";
+  });
+
   // ---------- Teilen ----------
   function encode() {
     var ids = Object.keys(picked).map(Number).sort(function (a, b) { return a - b; });
@@ -2244,6 +2503,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
     renderIssues(ids);
     renderScale(ids);
     renderSuggest(ids);
+    renderCompare();
     analyse();
     render();
     save();
