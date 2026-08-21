@@ -163,6 +163,27 @@ details.panel:not([open])>summary{border-bottom:0}
   text-transform:uppercase;color:var(--ink-faint);padding:9px 14px 4px;
   border-top:1px solid var(--rule-soft)}
 
+.row.lock{opacity:.42}
+.row.lock:hover{background:var(--warn-soft)}
+.lvlbad{color:var(--warn);font-weight:700}
+.qrow{display:grid;grid-template-columns:66px 1fr auto;gap:8px;align-items:center;
+  padding:5px 14px;font-size:11px;font-family:"JetBrains Mono",monospace}
+.qn{font-weight:700}
+.qbar{height:7px;background:var(--sunken);border:1px solid var(--rule);display:block}
+.qbar i{display:block;height:100%}
+.qv{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.qv.over{color:var(--warn);font-weight:700}
+.qhint{padding:9px 14px;font-size:11.5px;color:var(--ink-faint);
+  border-bottom:1px solid var(--rule-soft)}
+.sug{display:flex;gap:9px;align-items:center;padding:7px 14px;cursor:pointer;
+  border-bottom:1px solid var(--rule-soft)}
+.sug:hover{background:var(--good-soft)}
+.sugb{flex:1;min-width:0}
+.sug .nm{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;display:block}
+.sugwhy{font-size:11.5px;color:var(--ink-soft)}
+.sugadd{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--good);
+  font-size:15px;padding:0 3px}
+
 section.ref{margin-top:22px}
 @media(max-width:560px){
   .twocol{grid-template-columns:1fr}
@@ -334,6 +355,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
         <div class="panel-hd"><h2>DEIN BUILD</h2>
           <span class="cntpair"><span class="cnt" id="cA">0 / 30</span><span
             class="cnt" id="cT">0 / 25</span></span></div>
+        <div id="budget"></div>
         <div class="twocol">
           <div><div class="subhd">Abilities</div><div id="slotsA"></div></div>
           <div><div class="subhd">Talente</div><div id="slotsT"></div></div>
@@ -346,6 +368,8 @@ table.stat tr.dead td{color:var(--ink-faint)}
             class="cnt" id="cP">—</span></button>
           <button class="tab" data-tab="tIssues" role="tab">Befund<span
             class="cnt" id="cI">—</span></button>
+          <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
+            class="cnt" id="cV">—</span></button>
           <button class="tab" data-tab="tScale" role="tab">Skalierung<span
             class="cnt" id="cS">—</span></button>
           <button class="tab" data-tab="tFlags" role="tab">Analyse<span
@@ -354,6 +378,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
         </div>
         <div class="tabp on" id="tPath"><div id="paths"></div></div>
         <div class="tabp" id="tIssues"><div id="issues"></div></div>
+        <div class="tabp" id="tSug"><div id="sugbox"></div></div>
         <div class="tabp" id="tScale"><div id="scalebox"></div></div>
         <div class="tabp" id="tFlags"><div id="flags"></div></div>
         <div class="tabp" id="tShare">
@@ -790,40 +815,33 @@ table.stat tr.dead td{color:var(--ink-faint)}
     var q = el.q.value.trim().toLowerCase();
     var fk = el.fKind.value, fc = el.fClass.value, fq = el.fQual.value;
     var fs = el.fScale.value;
-    var rows = [], n = 0;
-    for (var i = 0; i < CAT.length && rows.length < 300; i++) {
+    var rows = [], total = 0, CAP = 300;
+    for (var i = 0; i < CAT.length; i++) {
       var r = CAT[i];
       if (fk !== "" && String(r[1]) !== fk) continue;
       if (fc !== "" && r[2] !== fc) continue;
       if (fq !== "" && String(r[3]) !== fq) continue;
       if (!scaleMatch(i, fs)) continue;
       if (q && r[0].toLowerCase().indexOf(q) < 0 && r[5].toLowerCase().indexOf(q) < 0) continue;
-      n++;
-      rows.push(row(i, r));
-    }
-    // Gesamtzahl separat zählen (rows ist gekappt)
-    var total = 0;
-    for (var j = 0; j < CAT.length; j++) {
-      var s = CAT[j];
-      if (fk !== "" && String(s[1]) !== fk) continue;
-      if (fc !== "" && s[2] !== fc) continue;
-      if (fq !== "" && String(s[3]) !== fq) continue;
-      if (!scaleMatch(j, fs)) continue;
-      if (q && s[0].toLowerCase().indexOf(q) < 0 && s[5].toLowerCase().indexOf(q) < 0) continue;
       total++;
+      if (rows.length < CAP) rows.push(row(i, r));
     }
-    el.hits.textContent = total + " Treffer" + (total > rows.length ? " (" + rows.length + " gezeigt)" : "");
+    el.hits.textContent = total + " Treffer" +
+      (total > rows.length ? " (" + rows.length + " gezeigt)" : "");
     el.list.innerHTML = rows.join("");
   }
 
   function row(i, r) {
     var a = archOf[i];
-    return '<div class="row' + (picked[i] ? " picked" : "") + '" data-i="' + i + '" role="button" tabindex="0">' +
+    var block = tooHigh(i) ? " lock" : (overBudget(i) && !picked[i] ? " lock" : "");
+    return '<div class="row' + (picked[i] ? " picked" : block) + '" data-i="' + i + '" role="button" tabindex="0">' +
       '<span class="icon" style="width:32px;height:32px;flex:0 0 32px;' + iconStyle(i) + '"></span>' +
       '<span class="body"><span class="nm" style="color:var(--q' + r[3] + ')">' + esc(r[0]) + "</span>" +
       (a ? ' <span class="meta" style="color:var(--accent)">' + esc(a) + "</span>" : "") +
       '<span class="ds">' + esc(r[5]) + "</span>" + badges(i) + "</span>" +
-      '<span class="meta">' + (r[1] ? "TAL" : "ABI") + "<br>" + esc(r[2]) + "<br>lvl" + r[4] + "</span></div>";
+      '<span class="meta">' + (r[1] ? "TAL" : "ABI") + "<br>" + esc(r[2]) +
+      "<br>" + (tooHigh(i) ? '<span class="lvlbad">lvl' + r[4] + "</span>" : "lvl" + r[4]) +
+      "</span></div>";
   }
 
   el.list.addEventListener("click", function (e) {
@@ -835,7 +853,14 @@ table.stat tr.dead td{color:var(--ink-faint)}
     var t = e.target.closest(".row");
     if (t) { e.preventDefault(); toggle(+t.dataset.i); }
   });
-  ["q", "fKind", "fClass", "fQual", "fScale"].forEach(function (id) {
+  // Tippen soll nicht bei jedem Zeichen 3.071 Eintraege durchrechnen.
+  var renderTimer;
+  function renderSoon() {
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(render, 110);
+  }
+  el.q.addEventListener("input", renderSoon);
+  ["fKind", "fClass", "fQual", "fScale"].forEach(function (id) {
     el[id].addEventListener("input", render);
   });
 
@@ -845,6 +870,15 @@ table.stat tr.dead td{color:var(--ink-faint)}
       var c = counts();
       if (CAT[i][1] === 1 && c.t >= MAX_T) { toast("Talente voll (" + MAX_T + ")"); return; }
       if (CAT[i][1] === 0 && c.a >= MAX_A) { toast("Abilities voll (" + MAX_A + ")"); return; }
+      // Zwei Grenzen, die es nur mit importiertem Charakter gibt.
+      if (tooHigh(i)) {
+        toast(CAT[i][0] + " braucht Stufe " + CAT[i][4] + " — du bist " + CHAR.level);
+        return;
+      }
+      if (overBudget(i)) {
+        toast(QN[CAT[i][3]] + "-Budget ist voll (" + qualityLimit(CAT[i][3]) + ")");
+        return;
+      }
       picked[i] = true;
     }
     refresh();
@@ -1343,6 +1377,28 @@ table.stat tr.dead td{color:var(--ink-faint)}
                            : { n: t, r: 1 };
             });
           break;
+        case "QUALITY":
+          d.qlimit = d.qlimit || {}; d.qused = d.qused || {};
+          parts.forEach(function (p) {
+            var m = p.split(":");
+            var q = QUAL_KEY[(m[0] || "").toLowerCase()];
+            var v = String(m[1] || "").split("/");
+            if (q) {
+              d.qused[q] = +v[0] || 0;
+              d.qlimit[q] = +v[1] || 0;
+            }
+          });
+          break;
+        case "QCOST":
+          d.qcost = d.qcost || {};
+          parts.forEach(function (p) {
+            var m = p.split(":");
+            var q = QUAL_KEY[(m[0] || "").toLowerCase()];
+            // Eine Spanne wie "1-2" heisst: nicht einheitlich, also nicht
+            // hochrechnen. Dann lieber gar keinen Wert setzen.
+            if (q && String(m[1]).indexOf("-") < 0) d.qcost[q] = +m[1] || 0;
+          });
+          break;
         case "CODE":
           d.code = parts[0];
           break;
@@ -1441,6 +1497,22 @@ table.stat tr.dead td{color:var(--ink-faint)}
       push("krit", "Du hast " + bits.join(" und ") + " liegen",
         " Das ist Schaden, den du geschenkt bekommst, sobald du sie ausgibst. " +
         "Nichts an deinem Build ist wichtiger als das.");
+    }
+
+    // 1b. Ueber dem Seltenheits-Budget: so ist der Build im Spiel nicht baubar.
+    var over = [];
+    for (var q = 4; q >= 1; q--) {
+      var lim = qualityLimit(q);
+      if (lim && USE[q] > lim) {
+        over.push(QN[q] + " " + USE[q] + " / " + lim);
+      }
+    }
+    if (over.length) {
+      push("krit", "Über dem Seltenheits-Budget",
+        " " + over.join(", ") + ". Ascension begrenzt nicht nur die Plätze, " +
+        "sondern auch, wie viel Seltenheit ein Build tragen darf — im Spiel " +
+        "ließe sich das so nicht lernen. Tausch die überzähligen gegen " +
+        "niedrigere Stufen.");
     }
 
     // 2. Path gegen Build.
@@ -1566,9 +1638,11 @@ table.stat tr.dead td{color:var(--ink-faint)}
                                : " Einträge nicht im Katalog gefunden"),
         " " + UNMATCHED.slice(0, 8).map(esc).join(", ") +
         (UNMATCHED.length > 8 ? " …" : "") +
-        (UNMATCHED.length === 1 ? ". Der fehlt in der Analyse — der Katalog "
-                                : ". Die fehlen in der Analyse — der Katalog ") +
-        "stammt aus dem Season-10-Export und kennt sie nicht.");
+        (UNMATCHED.length === 1
+          ? ". Der fehlt in der Analyse — der Katalog stammt aus dem " +
+            "Season-10-Export und kennt ihn nicht."
+          : ". Die fehlen in der Analyse — der Katalog stammt aus dem " +
+            "Season-10-Export und kennt sie nicht."));
     }
 
     return out;
@@ -1660,16 +1734,43 @@ table.stat tr.dead td{color:var(--ink-faint)}
   });
 
   // ---------- Reiter ----------
-  document.addEventListener("click", function (e) {
-    var b = e.target.closest(".tab");
-    if (!b) return;
+  function activateTab(b) {
     var bar = b.parentNode;
-    [].forEach.call(bar.children, function (x) { x.classList.remove("on"); });
+    [].forEach.call(bar.children, function (x) {
+      x.classList.remove("on");
+      x.setAttribute("aria-selected", "false");
+      x.tabIndex = -1;
+    });
     b.classList.add("on");
+    b.setAttribute("aria-selected", "true");
+    b.tabIndex = 0;
     var host = bar.parentNode;
     [].forEach.call(host.querySelectorAll(":scope > .tabp"), function (p) {
       p.classList.toggle("on", p.id === b.dataset.tab);
     });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".tab");
+    if (b) activateTab(b);
+  });
+  // Pfeiltasten innerhalb einer Reiterleiste, wie es sich gehoert.
+  document.addEventListener("keydown", function (e) {
+    var b = e.target.closest && e.target.closest(".tab");
+    if (!b) return;
+    var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    var sibs = [].slice.call(b.parentNode.children);
+    var next = sibs[(sibs.indexOf(b) + dir + sibs.length) % sibs.length];
+    activateTab(next);
+    next.focus();
+  });
+  [].forEach.call(document.querySelectorAll(".tabp"), function (p) {
+    p.setAttribute("role", "tabpanel");
+  });
+  [].forEach.call(document.querySelectorAll(".tab"), function (t) {
+    t.setAttribute("aria-selected", t.classList.contains("on") ? "true" : "false");
+    t.tabIndex = t.classList.contains("on") ? 0 : -1;
   });
 
   // ---------- Skalierung ----------
@@ -1858,6 +1959,232 @@ table.stat tr.dead td{color:var(--ink-faint)}
       "nicht im Text.</div>";
   }
 
+  // ---------- Seltenheits-Budget ----------
+  // Ascension begrenzt nicht nur Plaetze, sondern auch Seltenheit. Ohne die
+  // Zahlen aus dem Spiel kennen wir nur die Verteilung, nicht die Grenze -
+  // dann wird angezeigt statt blockiert.
+
+  var QUAL_KEY = { uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+
+  function qualityUse(ids) {
+    var u = [0, 0, 0, 0, 0];
+    ids.forEach(function (i) { u[CAT[i][3]] += qualityCost(CAT[i][3]); });
+    return u;
+  }
+  // Kosten je Stufe: nur wenn das Addon einen einheitlichen Wert gemessen hat.
+  function qualityCost(q) {
+    var c = CHAR && CHAR.qcost && CHAR.qcost[q];
+    return (typeof c === "number" && c > 0) ? c : 1;
+  }
+  function qualityLimit(q) {
+    return CHAR && CHAR.qlimit && CHAR.qlimit[q];
+  }
+  // Der Verbrauch aendert sich nur, wenn sich die Auswahl aendert.
+  // Einmal pro refresh() ausrechnen statt einmal pro geprueftem Eintrag.
+  var USE = [0, 0, 0, 0, 0];
+  function recountBudget() {
+    USE = qualityUse(Object.keys(picked).map(Number));
+  }
+  function overBudget(i) {
+    var q = CAT[i][3];
+    var lim = qualityLimit(q);
+    if (!lim) return false;
+    return USE[q] + qualityCost(q) > lim;
+  }
+
+  function renderBudget() {
+    var box = document.getElementById("budget");
+    if (!box) return;
+    recountBudget();
+    var use = USE;
+    var any = false;
+    var o = [];
+    for (var q = 4; q >= 1; q--) {
+      var lim = qualityLimit(q);
+      if (!lim) continue;
+      any = true;
+      var pct = Math.min(100, use[q] / lim * 100);
+      o.push('<div class="qrow"><span class="qn" style="color:var(--q' + q + ')">' +
+        QN[q] + '</span><span class="qbar"><i style="width:' + pct + "%;" +
+        "background:var(--q" + q + ')"></i></span><span class="qv' +
+        (use[q] > lim ? " over" : "") + '">' + use[q] + " / " + lim + "</span></div>");
+    }
+    if (!any) {
+      box.innerHTML = '<div class="qhint">Seltenheits-Budget unbekannt — importiere ' +
+        "deinen Charakter, dann wird hier mitgezählt. Im Spiel darfst du nicht " +
+        "beliebig viele Epics und Legendaries tragen.</div>";
+      return;
+    }
+    box.innerHTML = o.join("");
+  }
+
+  // ---------- Levelsperre ----------
+  function tooHigh(i) {
+    return CHAR && CHAR.level ? (CAT[i][4] || 0) > CHAR.level : false;
+  }
+
+  // ---------- Vorschlaege: was fehlt dem Build noch? ----------
+  // Umkehrindex zu BM: welches Talent verbessert welche Basis?
+  var MODOF = {};
+  Object.keys(BM).forEach(function (base) {
+    BM[base].forEach(function (t) {
+      (MODOF[t] = MODOF[t] || []).push(+base);
+    });
+  });
+
+  function suggest(ids) {
+    if (!ids.length) return [];
+    var have = {}; ids.forEach(function (i) { have[i] = 1; });
+
+    // Welche Basen deckt der Build ab - eigene Faehigkeiten und die Basen
+    // ihrer Varianten.
+    var bases = {};
+    ids.forEach(function (i) {
+      bases[i] = 1;
+      var b = REL[i][0];
+      if (b !== null && b !== undefined) bases[b] = 1;
+    });
+
+    // Was nennen meine Talente, das ich nicht habe?
+    var wanted = {};
+    ids.forEach(function (i) {
+      (REL[i][2] || []).forEach(function (j) { if (!have[j]) wanted[j] = (wanted[j] || 0) + 1; });
+    });
+
+    // Welcher Archetyp dominiert?
+    var acount = {};
+    ids.forEach(function (i) {
+      var a = archOf[i];
+      if (a) acount[a] = (acount[a] || 0) + 1;
+    });
+    var topArch = Object.keys(acount).sort(function (a, b) {
+      return acount[b] - acount[a];
+    })[0];
+
+    var mine = CHAR ? normPath(CHAR.path) : "";
+    var dupHave = {};
+    ids.forEach(function (i) { if (REL[i][3] >= 0) dupHave[REL[i][3]] = 1; });
+
+    var cnt = counts();
+    var out = [];
+
+    for (var i = 0; i < CAT.length; i++) {
+      if (have[i]) continue;
+      var isTal = CAT[i][1] === 1;
+      if (isTal && cnt.t >= MAX_T) continue;
+      if (!isTal && cnt.a >= MAX_A) continue;
+
+      var score = 0, why = null;
+
+      // a) Talent, das eine meiner Basen verbessert - der staerkste Grund
+      var mods = MODOF[i] || [];
+      var hitBase = mods.filter(function (b) { return bases[b]; });
+      if (hitBase.length) {
+        score += 6;
+        why = "verbessert <b>" + esc(CAT[hitBase[0]][0]) + "</b>, das dein Build nutzt";
+      }
+
+      // b) eines meiner Talente nennt es, ich habe es aber nicht
+      if (wanted[i]) {
+        score += 5 + Math.min(wanted[i], 3);
+        why = why || (wanted[i] === 1
+          ? "eines deiner Talente verbessert es — es fehlt dir aber"
+          : wanted[i] + " deiner Talente verbessern es — es fehlt dir aber");
+      }
+
+      // c) es nennt etwas, das ich habe
+      var refs = (REL[i][2] || []).filter(function (j) { return have[j]; });
+      if (refs.length) {
+        score += 3;
+        why = why || ("nennt <b>" + esc(CAT[refs[0]][0]) + "</b> aus deinem Build");
+      }
+
+      if (!score) continue;
+
+      // Abwertungen: was im Spiel gar nicht ginge
+      if (REL[i][3] >= 0 && dupHave[REL[i][3]]) continue;      // Dublette
+      if (tooHigh(i)) continue;                                 // Level zu hoch
+      if (overBudget(i)) continue;                              // Budget voll
+      var gate = REL[i][4];
+      if (gate && gate[0] === "Path" && mine &&
+          normPath(gate[1]) && normPath(gate[1]) !== mine) continue;
+
+      if (topArch && archOf[i] === topArch) score += 1;
+      if (CAT[i][3] >= 3) score += 1;                           // Epic+ etwas hoeher
+
+      out.push({ i: i, s: score, why: why, gate: gate });
+    }
+
+    out.sort(function (a, b) { return b.s - a.s || CAT[b.i][3] - CAT[a.i][3]; });
+    return out.slice(0, 10);
+  }
+
+  function renderSuggest(ids) {
+    var box = document.getElementById("sugbox");
+    var hd = document.getElementById("cV");
+    if (!box) return;
+    var list = suggest(ids);
+    hd.textContent = list.length ? String(list.length) : "—";
+    hd.className = "cnt " + (list.length ? "ok" : "");
+
+    if (!ids.length) {
+      box.innerHTML = '<div class="empty">Wähle etwas — dann schlägt die Seite ' +
+        "vor, was dazu passt.</div>";
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = '<div class="empty">Kein Vorschlag. Entweder passt schon ' +
+        "alles zusammen, oder deine Plätze sind voll.</div>";
+      return;
+    }
+    box.innerHTML =
+      '<div class="qhint">Aus den Tooltip-Verweisen deiner Auswahl abgeleitet. ' +
+      "Dubletten, zu hohe Stufen, gesperrte Paths und volles Seltenheits-Budget " +
+      "sind schon aussortiert.</div>" +
+      list.map(function (x) {
+        return '<div class="sug" data-add="' + x.i + '" role="button" tabindex="0">' +
+          '<span class="icon" style="width:26px;height:26px;flex:0 0 26px;' +
+          iconStyle(x.i) + ';background-size:' + (SPR.cols * 26) + 'px auto"></span>' +
+          '<span class="sugb"><span class="nm" style="color:var(--q' + CAT[x.i][3] +
+          '">' + esc(CAT[x.i][0]) + "</span>" +
+          '<span class="sugwhy">' + x.why + "</span></span>" +
+          '<span class="sugadd">+</span></div>';
+      }).join("");
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-add]");
+    if (b) toggle(+b.dataset.add);
+  });
+
+  // ---------- Merken ----------
+  var STORE = "aldi-buildschmiede-v1";
+  function save() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify({
+        b: encode(), c: CHAR ? document.getElementById("pasteBox").value : ""
+      }));
+    } catch (e) { /* Privatmodus: dann eben nicht */ }
+  }
+  function restore() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (d.c) {
+        var p = parseExport(d.c);
+        if (p) {
+          document.getElementById("pasteBox").value = d.c;
+          applyImport(p);
+          document.getElementById("impPanel").open = false;
+          return true;
+        }
+      }
+      if (d.b) { decode(d.b); return true; }
+    } catch (e) { /* kaputter Eintrag: ignorieren */ }
+    return false;
+  }
+
   // ---------- Teilen ----------
   function encode() {
     var ids = Object.keys(picked).map(Number).sort(function (a, b) { return a - b; });
@@ -1910,17 +2237,27 @@ table.stat tr.dead td{color:var(--ink-faint)}
   function refresh() {
     var ids = Object.keys(picked).map(Number);
     slots();
+    recountBudget();
     renderChar();
+    renderBudget();
     renderPaths(ids);
     renderIssues(ids);
     renderScale(ids);
+    renderSuggest(ids);
     analyse();
     render();
+    save();
   }
 
   // Build aus URL laden
   var h = location.hash.match(/b=([0-9a-z.]+)/);
   if (h) { decode(h[1]); el.url.value = shareUrl(); }
+  else { restore(); }
+  var ht = location.hash.match(/t=([A-Za-z]+)/);
+  if (ht) {
+    var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
+    if (tb) tb.click();
+  }
   window.addEventListener("hashchange", function () {
     var m = location.hash.match(/b=([0-9a-z.]+)/);
     if (m) { decode(m[1]); refresh(); }
