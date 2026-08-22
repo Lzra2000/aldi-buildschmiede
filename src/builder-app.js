@@ -2074,11 +2074,17 @@
   document.addEventListener("keydown", function (e) {
     var b = e.target.closest && e.target.closest(".tab");
     if (!b) return;
-    var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-    if (!dir) return;
+    var sibs = [].filter.call(b.parentNode.children, function (x) {
+      return x.classList && x.classList.contains("tab") && !x.hidden;
+    });
+    var i = sibs.indexOf(b);
+    var next = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") next = sibs[(i + 1) % sibs.length];
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = sibs[(i - 1 + sibs.length) % sibs.length];
+    else if (e.key === "Home") next = sibs[0];
+    else if (e.key === "End") next = sibs[sibs.length - 1];
+    if (!next) return;
     e.preventDefault();
-    var sibs = [].slice.call(b.parentNode.children);
-    var next = sibs[(sibs.indexOf(b) + dir + sibs.length) % sibs.length];
     activateTab(next);
     next.focus();
   });
@@ -3409,17 +3415,46 @@
   // ---------- Ansichten ----------
   function showView(id) {
     [].forEach.call(document.querySelectorAll(".view"), function (v) {
-      v.classList.toggle("on", v.id === id);
+      var on = v.id === id;
+      v.classList.toggle("on", on);
+      v.setAttribute("aria-hidden", on ? "false" : "true");
     });
     [].forEach.call(document.querySelectorAll(".vtab"), function (t) {
       var on = t.dataset.view === id;
       t.classList.toggle("on", on);
       t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
     });
   }
   document.addEventListener("click", function (e) {
     var b = e.target.closest(".vtab[data-view]");
     if (b) showView(b.dataset.view);
+  });
+  // Pfeiltasten in der Ansichts-Leiste (wie bei .tab).
+  document.addEventListener("keydown", function (e) {
+    var b = e.target.closest && e.target.closest(".vtab[data-view]");
+    if (!b) return;
+    var sibs = [].filter.call(b.parentNode.querySelectorAll(".vtab[data-view]"), function (t) {
+      return !t.hidden && t.getAttribute("aria-hidden") !== "true";
+    });
+    if (!sibs.length) sibs = [].slice.call(b.parentNode.querySelectorAll(".vtab[data-view]"));
+    var i = sibs.indexOf(b);
+    var next = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") next = sibs[(i + 1) % sibs.length];
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = sibs[(i - 1 + sibs.length) % sibs.length];
+    else if (e.key === "Home") next = sibs[0];
+    else if (e.key === "End") next = sibs[sibs.length - 1];
+    if (!next) return;
+    e.preventDefault();
+    showView(next.dataset.view);
+    next.focus();
+  });
+  [].forEach.call(document.querySelectorAll(".vtab"), function (t) {
+    t.setAttribute("aria-selected", t.classList.contains("on") ? "true" : "false");
+    t.tabIndex = t.classList.contains("on") ? 0 : -1;
+  });
+  [].forEach.call(document.querySelectorAll(".view"), function (v) {
+    v.setAttribute("aria-hidden", v.classList.contains("on") ? "false" : "true");
   });
 
   // ---------- Wirkungsketten ----------

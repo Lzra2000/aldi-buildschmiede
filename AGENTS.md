@@ -85,12 +85,12 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | `pathtags.py` | `pathtags.json` | `catalog.json` | nein |
 | `scaling.py` | `scaling.json` | `catalog.json` | nein |
 | `spellids.py` | `spellids.json` | `data/CatalogData.lua` | nein |
-| `mechanics.py` | `mechanics.json` | `Spell.dbc` + `spellids.json` | **ja** |
+| `mechanics.py` | `mechanics.json` | `Spell.dbc` + `spellids.json` (+ optional `SpellCharges*` → `ch`/`chr`) | **ja** |
 | `methods.py` | `methods.json` | catalog + scaling + mechanics + basemods + relations (+ CatalogData rollgate) | nein |
 | `statsuggest.py` | `statsuggest.json` | `SpellStatSuggestions.dbc` ∩ Katalog | nein |
 | `spellsuggest.py` | `spellsuggest.json` | `SpellSpellSuggestions.dbc` ∩ Katalog (Top-N) | nein |
 | `desireelig.py` | `desireelig.json` | `CatalogData.lua` (`desiredEligible`) | nein |
-| `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (nur Testexport-ItemIds) | **ja** |
+| `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (Testexport- + Seed-/Levelrun-ItemIds) | **ja** |
 | `dbcicons.py`, `mksprite.py` | `sprite.webp`, `spriteindex.json` | `Spell.dbc`, `SpellIcon.dbc`, BLP-Icons | **ja** |
 
 Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
@@ -98,8 +98,14 @@ Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
 `stags` ← `method-spelltags.json`, `tagn` ← `tagnames.json`,
 `ssug` ← `statsuggest.json` (Path-Hints), `ssugsp` ← `spellsuggest.json`
 (Related-Spell-Graph — **nicht** mit `ssug` verwechseln),
-`iic` ← `itemicons.json` (flach `itemId → iconName`, nur Export-/Seed-Ids;
-Einbettung nur wenn Datei ≤ 512 KB — kein Vollscan von Item.dbc).
+`iic` ← `itemicons.json` (flach `itemId → {i,cls,sub,inv[,url]}` oder Legacy-String;
+Testexport- + Seed-/Levelrun-Ids; Einbettung nur wenn Datei ≤ 512 KB —
+kein Vollscan von Item.dbc).
+
+`mechanics.json` (Kern-Payload `mc`): pro Katalogindex u. a. `cd`/`cast`/`cost`/`res`/
+`dur`/`range`/`proc`; Ascension-Charges wenn vorhanden: **`ch`** (max. Ladungen),
+**`chr`** (Recharge in Sekunden). Die Seite zeigt beides als Badges an Ability-Karten
+(18 Katalog-Spells mit Charges). Nicht raten — fehlende Keys weglassen.
 
 Die client-abhängigen Schritte laufen nur mit lokal entpackten DBC-Dateien.
 Die Pfade stehen oben in den jeweiligen Skripten. Ohne Client bleiben die

@@ -48,7 +48,7 @@
 */
 :root{
   --ground:#D8D2C4; --raised:#EDE6D6; --sunken:#C9C1B0;
-  --ink:#1A1510; --ink-soft:#4A4034; --ink-faint:#7A6E5C;
+  --ink:#1A1510; --ink-soft:#3F362C; --ink-faint:#5C5244;
   --rule:#8A7E68; --rule-soft:#B0A48E;
   --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E8D9A8;
   --ember:#B84A12; --ember-soft:#F0DCC8;
@@ -65,7 +65,7 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#B8AE9A; --ink-faint:#8A8070;
+  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886;
   --rule:#3A3428; --rule-soft:#2A241C;
   --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
   --ember:#FF8000; --ember-soft:#2A1608;
@@ -81,7 +81,7 @@
 }}
 :root[data-theme="dark"]{
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#B8AE9A; --ink-faint:#8A8070;
+  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886;
   --rule:#3A3428; --rule-soft:#2A241C;
   --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
   --ember:#FF8000; --ember-soft:#2A1608;
@@ -161,11 +161,12 @@ code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); pa
   background:var(--chrome-taboff,none) center bottom/100% 100% no-repeat;
   background-color:transparent;border:0;border-bottom:2px solid transparent;
   padding:18px 14px 14px;font-family:"JetBrains Mono",monospace;font-size:12px;
-  font-weight:700;color:var(--ink-faint);text-decoration:none;white-space:nowrap;
+  font-weight:700;color:var(--ink-soft);text-decoration:none;white-space:nowrap;
   transition:color var(--dur-chip),filter var(--dur-chip)}
 .prodnav a:hover{color:var(--ink);filter:brightness(1.1)}
 .prodnav a.on{color:var(--gold-hi);background-image:var(--chrome-tabon,none);
   border-bottom-color:var(--gold)}
+.prodnav a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* ---------- masthead ---------- */
 .mast{border-bottom:1px solid var(--rule);padding:clamp(28px,5vw,48px) 0 26px;position:relative}
@@ -303,6 +304,20 @@ footer{padding:40px 0 64px;color:var(--ink-faint);font-size:14px;line-height:1.6
 footer p{max-width:70ch}
 a{color:var(--gold)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+a.cta:focus-visible,nav a:focus-visible,.brand:focus-visible{
+  outline:2px solid var(--gold);outline-offset:2px}
+.skip{position:absolute;left:12px;top:0;z-index:200;transform:translateY(-120%);
+  background:var(--accent);color:var(--accent-ink);padding:10px 14px;
+  font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
+  text-decoration:none;border:1px solid var(--gold);
+  transition:transform .15s}
+.skip:focus,.skip:focus-visible{transform:translateY(12px);outline-offset:3px}
+.startnote{
+  margin:18px 0 0;padding:12px 14px;max-width:66ch;
+  background:var(--accent-soft);border:1px solid var(--accent);
+  font-size:15px;color:var(--ink);line-height:1.45}
+.startnote a{font-family:"JetBrains Mono",monospace;font-weight:700;
+  color:var(--accent);text-decoration:underline}
 @media(max-width:560px){
   .tbin{min-height:0;padding-top:10px;padding-bottom:10px;gap:10px}
   .bmark{width:36px;height:36px;flex-basis:36px}
@@ -316,6 +331,7 @@ a{color:var(--gold)}
 
 </style>
 
+<a class="skip" href="#main">Zum Inhalt springen</a>
 <header class="topbar">
   <div class="tbin">
     <a class="brand" href="index.html" title="Zur Buildschmiede">
@@ -336,9 +352,11 @@ a{color:var(--gold)}
 <div class="wrap">
   <header class="mast">
     <p class="kicker">Project Ascension · Season 10 Wildcard</p>
-    <h1>Wildcard Synergiekompendium</h1>
+    <h1 id="main" tabindex="-1">Wildcard Synergiekompendium</h1>
     <p class="dek">Der Katalog hat 3.071 Einträge. Mitnehmen darfst du 55. Diese Seite handelt
       davon, welche Kombinationen diese 55 Plätze verdienen — und welche nur so aussehen.</p>
+    <p class="startnote">Zum Bauen und Importieren: <a href="index.html">Buildschmiede</a>
+      (Addon → <code>/bs</code> → Werkzeuge). Hier nur die Regeln hinter Dubletten, Modifiern und Ketten.</p>
   </header>
 
   <div class="layout">

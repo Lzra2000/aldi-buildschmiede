@@ -163,7 +163,9 @@ Stichprobe (Testexport-Gear):
 | 19863 | 4/0 | 11 | `INV_Jewelry_Ring_47` |
 | 17774 | 4/0 | 12 | `INV_Jewelry_Talisman_08` |
 
-Produkt: `data/itemicons.json` → Assemble `iic` (`pipeline/itemicons.py`, Default kompakt). Nur Icon-Basename + Klassen-IDs (kein externes CDN — CSP).
+Produkt: `data/itemicons.json` → Assemble `iic` (`pipeline/itemicons.py`, Default kompakt).
+Eintrag: Icon-Basename + `cls`/`sub`/`inv` aus `Item.dbc`; optional `url` (32px-WebP via `mkchrome.py`).
+Quelle der Ids: alle `data/testexport*.txt` (GEAR/WEAPON) + Seed + Levelrun-Seed — kein Item.dbc-Vollscan.
 
 ## 8. Was bewusst nicht Produkt wird
 
@@ -171,7 +173,9 @@ Produkt: `data/itemicons.json` → Assemble `iic` (`pipeline/itemicons.py`, Defa
 - `SpellAddon` / `SpellCustomAttr` Flag-Semantik ohne zweite Quelle.
 - `SpellStatSuggestions` Wert `0` als Agility.
 - `ItemAddon.dbc` (48 Felder, 115 MB) — Name/Stats spaeter, Layout noch nicht vollstaendig kartiert.
-- `SpellEnchantSuggestions` (hunderttausende Zeilen) — Join-Heuristik offen.
+- `SpellEnchantSuggestions` (1 144 863 × 4, Layout wie SpellSpellSuggestions:
+  `rowId, spellId, enchantId?, weight`) — Katalog-Hits auf Feld 1 hoch (~619k Zeilen),
+  Ziel ist Enchant nicht Spell; **kein Embed** (zu gross, Join zu SpellItemEnchantment offen).
 
 ## 9. SpellSpellSuggestions (Related-Spell-Graph)
 

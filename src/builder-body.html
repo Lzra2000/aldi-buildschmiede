@@ -1,3 +1,4 @@
+<a class="skip" href="#main">Zum Inhalt springen</a>
 <header class="topbar">
   <div class="tbin">
     <div class="brand">
@@ -10,11 +11,11 @@
     </div>
 
     <nav class="views" role="tablist" aria-label="Ansicht">
-      <button class="vtab on" data-view="vBuild" role="tab">Bauen</button>
-      <button class="vtab" data-view="vAnalyse" role="tab">Auswertung</button>
-      <button class="vtab" data-view="vChain" role="tab">Ketten<span class="cnt" id="cK">—</span></button>
-      <button class="vtab" data-view="vTools" role="tab">Werkzeuge</button>
-      <button class="vtab" data-view="vWissen" role="tab">Wissen</button>
+      <button class="vtab on" data-view="vBuild" role="tab" aria-controls="vBuild" aria-selected="true" id="tab-vBuild">Bauen</button>
+      <button class="vtab" data-view="vAnalyse" role="tab" aria-controls="vAnalyse" aria-selected="false" id="tab-vAnalyse" tabindex="-1">Auswertung</button>
+      <button class="vtab" data-view="vChain" role="tab" aria-controls="vChain" aria-selected="false" id="tab-vChain" tabindex="-1">Ketten<span class="cnt" id="cK">—</span></button>
+      <button class="vtab" data-view="vTools" role="tab" aria-controls="vTools" aria-selected="false" id="tab-vTools" tabindex="-1">Werkzeuge</button>
+      <button class="vtab" data-view="vWissen" role="tab" aria-controls="vWissen" aria-selected="false" id="tab-vWissen" tabindex="-1">Wissen</button>
     </nav>
     <a class="slink" href="synergien.html" title="Synergiekompendium — Dubletten, Modifier, Ketten">Synergien</a>
   </div>
@@ -32,8 +33,20 @@
   </div>
 </div>
 
-<div class="wrap">
-  <section class="view on" id="vBuild" role="tabpanel">
+<aside class="startrow" aria-label="Erste Schritte">
+  <div class="startin">
+    <p class="shd">Erste Schritte</p>
+    <p>Für Level 10–59: Addon laden, im Spiel <code>/bs</code> kopieren, unter Werkzeuge einfügen — dann Befund und Path lesen. Synergien erklären Dubletten und Modifier.</p>
+    <div class="slinks">
+      <a href="#t=vTools">Import</a>
+      <a href="#t=rAddon">Addon</a>
+      <a href="synergien.html">Synergien</a>
+    </div>
+  </div>
+</aside>
+
+<main class="wrap" id="main">
+  <section class="view on" id="vBuild" role="tabpanel" aria-labelledby="tab-vBuild" tabindex="-1">
     <div class="cols cols-build">
       <div class="panel col-main">
         <div class="panel-hd">
@@ -91,7 +104,7 @@
     </div>
   </section>
 
-  <section class="view" id="vAnalyse" role="tabpanel">
+  <section class="view" id="vAnalyse" role="tabpanel" aria-labelledby="tab-vAnalyse" tabindex="-1">
     <div class="analyse">
       <div class="panel analyse-lead">
         <div class="panel-hd"><h2>BEFUND</h2><span class="cnt" id="cI2">—</span></div>
@@ -124,7 +137,7 @@
     </div>
   </section>
 
-  <section class="view" id="vChain" role="tabpanel">
+  <section class="view" id="vChain" role="tabpanel" aria-labelledby="tab-vChain" tabindex="-1">
     <div class="panel">
       <div class="panel-hd"><h2>WIRKUNGSKETTEN</h2>
         <span class="cnt" id="cK2">—</span></div>
@@ -136,7 +149,7 @@
     </div>
   </section>
 
-  <section class="view" id="vTools" role="tabpanel">
+  <section class="view" id="vTools" role="tabpanel" aria-labelledby="tab-vTools" tabindex="-1">
     <div class="tools">
       <div class="panel tools-lead">
         <div class="panel-hd"><h2>AUS DEM SPIEL EINFÜGEN</h2>
@@ -202,7 +215,7 @@
     </div>
   </section>
 
-  <section class="view" id="vWissen" role="tabpanel">
+  <section class="view" id="vWissen" role="tabpanel" aria-labelledby="tab-vWissen" tabindex="-1">
     <div class="panel">
       <div class="flag syn"><b>Synergiekompendium</b>
         Die Regeln hinter Dubletten, Modifiern und Ketten stehen im
@@ -579,5 +592,5 @@
       in keinem Tooltip. Für „welcher meiner Angriffe schlägt härter zu“ reicht es.
       Ob ein Build stark ist, entscheidet die Übungspuppe.</p>
   </footer>
-</div>
+</main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
