@@ -1,0 +1,32 @@
+---
+description: Always practice ethical Ascension calculation reverse engineering — mine real numbers, never invent coefficients
+alwaysApply: true
+---
+
+# Ascension calculation reverse engineering (ethical)
+
+User mandate: **always** practice Ascension calc RE as part of Buildschmiede work.
+Prefer **level-run 10–59** usefulness over L60 purity when they conflict (see `AGENTS.md`).
+
+How agents work / ship: `.cursor/rules/full-agent-utilization.mdc`.
+
+## Do (ethical RE)
+
+- Mine **AscensionDBC**, tooltip text, and **Safe** live Ascension APIs for real numbers:
+  CD, cost, range, cast, charges, weapon %, flats from description text
+- Improve `sync_tooltips`, `scaling`, `methods`, `mechanics` (and related pipeline) from measured data
+- **Never invent** SP/AP coefficients (or other ratios) missing from data — omit or mark missing
+- Document findings in `pipeline/NOTES-*.md`
+- Read-only client extracts for research are fine; derived JSON/notes go in repo
+
+## Don't
+
+- Invent coefficients / guess SP–AP ratios / fabricate tooltip numbers
+- Commit proprietary Ascension/Blizzard client Lua
+- Exe decompile, anticheat bypass, memory hacks, or other client-tampering RE
+
+## Anchors
+
+- `AGENTS.md` → „Nichts raten, was nicht in den Daten steht“
+- Pipeline notes: `pipeline/NOTES-*.md`
+- Auto-allow read-only DBC/API research: `full-agent-utilization.mdc`

@@ -16,8 +16,10 @@ Endgame-Raid. Wenn eine Entscheidung zwischen „für Level 60 korrekt" und
 python3 pipeline/assemble.py
 ```
 
-Liest `src/` und `data/`, schreibt `index.html`. Sonst nichts — kein
-Bundler, keine Abhängigkeiten, kein Node.
+Liest `src/` und `data/`, schreibt **`index.html` und `synergien.html`**
+(Synergien aus `src/synergien-source.html`). Sonst nichts — kein Bundler,
+keine Abhängigkeiten, kein Node. Beide Pages-URLs müssen nach jedem
+Website-Ship zusammenpassen.
 
 Danach prüfen:
 
@@ -33,17 +35,26 @@ Der Rest der Prüfung läuft im Browser, siehe **Verifizieren**.
 
 ```
 index.html          gebaut — nicht von Hand bearbeiten
-synergien.html      gebaut
+synergien.html      gebaut — gleichrangig mit dem Builder (Pages)
 AscBuildschmiede.zip gebaut aus addon/
 
 src/                Quelle der Seite
   builder-head.html   <title>, CSS, Farbtokens
   builder-body.html   Markup
   builder-app.js      die gesamte Logik, eine IIFE
+  synergien-source.html  Synergie-Nachschlagewerk (→ synergien.html)
 pipeline/           Datenaufbereitung (Python 3, nur Standardbibliothek)
 data/               Ergebnis der Pipeline, wird eingebettet
 addon/              Lua-Quelle des Companion-Addons
 ```
+
+**Synergien ist Produktbestandteil**, nicht Beiwerk: Live
+[Builder](https://lzra2000.github.io/aldi-buildschmiede/) und
+[Synergien](https://lzra2000.github.io/aldi-buildschmiede/synergien.html).
+`assemble.py` schreibt immer beide HTML-Dateien. Chrome-/Token-/Nav-/a11y-
+Änderungen am Builder gehören auch in `src/synergien-source.html`
+(bidirektionale Navigation Builder ↔ Synergien). Details:
+`.cursor/rules/synergien-first-class.mdc`.
 
 **Website-Chrome:** Agents dürfen eigenes Chrome (CSS/SVG/PNG/WebP) erfinden und
 generieren. Verboten: Ascension-/WoW-BLP oder 1:1-Client-UI-Rahmen (DialogFrame,
@@ -52,8 +63,10 @@ PaperDoll-Tabs, caCorner usw.). Aus Client-Extracts nur Spell-/Item-Icons
 
 ### Aufbau der Oberfläche
 
-Fünf Ansichten, umgeschaltet über den Kopfbalken; nur eine ist gleichzeitig
-sichtbar (`.view.on`). `showView()` schaltet um, sonst nichts.
+**Zwei Pages-Oberflächen:** Builder (`index.html`) und Synergien
+(`synergien.html`). Im Builder fünf Ansichten, umgeschaltet über den
+Kopfbalken; nur eine ist gleichzeitig sichtbar (`.view.on`). `showView()`
+schaltet um, sonst nichts.
 
 | Ansicht | Zweck |
 |---|---|
@@ -130,6 +143,14 @@ Spell-Power-Anteil eines Zaubers nicht nennt, dann steht auf der Seite, dass
 er fehlt — es wird kein Koeffizient erfunden. Der ganze Wert dieses Werkzeugs
 liegt darin, dass man den Zahlen trauen kann. Eine plausible erfundene Zahl
 ist schlimmer als eine fehlende.
+
+**Ascension-Berechnungen: ethisches Reverse Engineering.** Zahlen aus
+AscensionDBC, Tooltip-Text und Safe Live-APIs gewinnen (CD, Kosten, Reichweite,
+Cast, Charges, Waffenprozente, Flats aus Text) — `sync_tooltips`, Scaling,
+Methods, Mechanics verbessern; fehlende SP/AP-Koeffizienten **nicht** erfinden.
+Findings in `pipeline/NOTES-*.md`. Kein proprietäres Client-Lua committen,
+kein Exe-Decompile / Anticheat / Memory-Hacks. Details:
+`.cursor/rules/ascension-calc-re.mdc`.
 
 **Die Seite bleibt eigenständig.** Ein Artifact läuft unter strenger CSP:
 erlaubt sind nur Google Fonts. Kein CDN, kein Fetch, keine externen Bilder.

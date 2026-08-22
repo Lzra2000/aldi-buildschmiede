@@ -7,6 +7,9 @@ alwaysApply: true
 
 Hard product rules live in `AGENTS.md`. This rule adds **how agents work** on this repo.
 
+**Ascension calc RE (always):** mine real numbers from DBC/tooltips/Safe APIs;
+never invent SP/AP coefficients — see `.cursor/rules/ascension-calc-re.mdc`.
+
 ## Volle Agenten-Auslastung
 
 When Multitask / continuous progress is desired: keep **multiple independent background agents** busy on **non-overlapping file lanes**. Do not idle on one agent while other Ascension-parity lanes are free.
@@ -18,10 +21,12 @@ Assign one lane per agent; no shared write paths:
 | **addon** | `addon/**` | Lua, `.toc`, SkillCards, live sync + zip |
 | **pipeline+data** | `pipeline/**`, `data/**` | DBC/scripts → JSON, methods, mechanics |
 | **src-js** | `src/builder-app.js` (+ related JS only) | parseExport, UI logic, analysis |
-| **src-css** | `src/builder-head.html`, markup chrome in `src/builder-body.html` | tokens, layout, views |
+| **src-css** | `src/builder-head.html`, markup chrome in `src/builder-body.html`, **`src/synergien-source.html`** | tokens, layout, views — **Synergien stays in sync** (see `synergien-first-class.mdc`) |
 | **docs** | `AGENTS.md`, `pipeline/NOTES-*.md`, `pipeline/README-*.md` | notes only — no product invent |
 
 Built artifacts (`index.html`, `synergien.html`, `AscBuildschmiede.zip`) are produced by the owning lane’s assemble/zip step — don’t hand-edit them in parallel.
+
+**Synergien mandate:** every website/visual/chrome/tokens/a11y/nav/assemble ship updates Builder **and** Synergien (`src/synergien-source.html` → rebuilt `synergien.html`). Bidirectional nav; never leave Synergien as an orphan — details in `.cursor/rules/synergien-first-class.mdc`.
 
 ## Auto-allow (proceed without asking)
 
@@ -87,6 +92,6 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 
 - Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
 - After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
-- Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict
+- Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict — ethical calc RE: `.cursor/rules/ascension-calc-re.mdc`
 - After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
 - Product German: correct grammar, **du**, short clear sentences — `.cursor/rules/german-language.mdc`
