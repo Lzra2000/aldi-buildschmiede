@@ -1422,7 +1422,7 @@
       hd.textContent = "—"; hd.className = "cnt";
       box.innerHTML = '<div class="empty">Noch kein Charakter eingelesen. ' +
         '<a href="#t=vTools">Import unter Werkzeuge</a> — im Spiel <code>/bs</code> ' +
-        "kopieren und einfügen.</div>";
+        "tippen, kopieren und hier einfügen.</div>";
       renderGearBox(null);
       return;
     }
@@ -1746,7 +1746,7 @@
       var bits = [];
       if (c.essA > 0) bits.push(c.essA + " Ability Essence");
       if (c.essT > 0) bits.push(c.essT + " Talent Essence");
-      push("krit", "Du hast " + bits.join(" und ") + " liegen",
+      push("krit", "Du hast noch " + bits.join(" und ") + " übrig",
         " Das ist Schaden, den du geschenkt bekommst, sobald du sie ausgibst. " +
         "Nichts an deinem Build ist wichtiger als das.");
     }
@@ -1982,7 +1982,7 @@
       if (cnt.t < MAX_T) free.push((MAX_T - cnt.t) + " Talent-Plätze");
       push("fix", free.join(" und ") + " frei",
         " Ein leerer Platz gibt dir nichts. Selbst ein mittelmäßiger Eintrag " +
-        "schlägt einen leeren Slot.");
+        "schlägt einen leeren Platz.");
     }
 
     // 9. Katalogluecken ehrlich benennen
