@@ -214,6 +214,17 @@ table.cmp tr.sep td{background:var(--sunken);font-family:"JetBrains Mono",monosp
 .lg{font-weight:700}
 .lg.up{color:var(--good)}
 .lg.down{color:var(--warn)}
+.archgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+  gap:1px;background:var(--rule-soft)}
+.archb{background:var(--raised);border:0;padding:9px 10px;text-align:left;
+  font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:baseline;gap:6px}
+.archb:hover{background:var(--accent-soft);color:var(--accent)}
+.archb span{color:var(--ink-faint);font-weight:400;font-size:10px}
+.offlink{padding:9px 14px;font-size:12px;border-top:1px solid var(--rule-soft)}
+.offlink a{color:var(--accent)}
+
 section.ref{margin-top:22px}
 @media(max-width:560px){
   .twocol{grid-template-columns:1fr}
@@ -352,6 +363,10 @@ table.stat tr.dead td{color:var(--ink-faint)}
         <select id="fKind" aria-label="Art"><option value="">Alle Arten</option>
           <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
         <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
+        <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
+          <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
+          <option value="level">Stufe</option><option value="wpct">Waffenprozent</option>
+          <option value="dmg">Geschätzter Treffer</option></select>
         <select id="fScale" aria-label="Skalierung"><option value="">Jede Skalierung</option>
           <option value="w">Waffenschaden</option><option value="s">Elementar</option>
           <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
@@ -404,6 +419,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
             class="cnt" id="cS">—</span></button>
           <button class="tab" data-tab="tFlags" role="tab">Analyse<span
             class="cnt" id="cF">—</span></button>
+          <button class="tab" data-tab="tArch" role="tab">Archetypen</button>
           <button class="tab" data-tab="tCmp" role="tab">Vergleich<span
             class="cnt" id="cX">—</span></button>
           <button class="tab" data-tab="tShare" role="tab">Teilen</button>
@@ -413,6 +429,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
         <div class="tabp" id="tSug"><div id="sugbox"></div></div>
         <div class="tabp" id="tScale"><div id="scalebox"></div></div>
         <div class="tabp" id="tFlags"><div id="flags"></div></div>
+        <div class="tabp" id="tArch"><div id="archbox"></div></div>
         <div class="tabp" id="tCmp">
           <div class="pastewrap">
             <p class="pastehint">Build-Link eines Gildenkollegen oder ein
@@ -433,6 +450,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
             <button id="bText">Als Text kopieren</button>
             <button id="bClear">Leeren</button>
             <input type="text" id="url" readonly aria-label="Build-Link">
+            <div class="offlink" id="official"></div>
           </div>
         </div>
       </div>
@@ -815,7 +833,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
 
   var picked = Object.create(null);   // idx -> true
   var el = {};
-  ["q", "fKind", "fClass", "fQual", "fScale", "list", "hits", "slotsA", "slotsT",
+  ["q", "fKind", "fClass", "fQual", "fScale", "fSort", "list", "hits", "slotsA", "slotsT",
    "cA", "cT", "cF", "flags", "url", "toast"].forEach(function (id) {
     el[id] = document.getElementById(id);
   });
@@ -861,7 +879,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
     var q = el.q.value.trim().toLowerCase();
     var fk = el.fKind.value, fc = el.fClass.value, fq = el.fQual.value;
     var fs = el.fScale.value;
-    var rows = [], total = 0, CAP = 300;
+    var hit = [], CAP = 300;
     for (var i = 0; i < CAT.length; i++) {
       var r = CAT[i];
       if (fk !== "" && String(r[1]) !== fk) continue;
@@ -869,9 +887,17 @@ table.stat tr.dead td{color:var(--ink-faint)}
       if (fq !== "" && String(r[3]) !== fq) continue;
       if (!scaleMatch(i, fs)) continue;
       if (q && r[0].toLowerCase().indexOf(q) < 0 && r[5].toLowerCase().indexOf(q) < 0) continue;
-      total++;
-      if (rows.length < CAP) rows.push(row(i, r));
+      hit.push(i);
     }
+    var total = hit.length;
+    var so = el.fSort.value;
+    if (so) {
+      hit.sort(function (a, b) {
+        var ka = sortKey(so, a), kb = sortKey(so, b);
+        return ka < kb ? -1 : ka > kb ? 1 : a - b;
+      });
+    }
+    var rows = hit.slice(0, CAP).map(function (i) { return row(i, CAT[i]); });
     el.hits.textContent = total + " Treffer" +
       (total > rows.length ? " (" + rows.length + " gezeigt)" : "");
     el.list.innerHTML = rows.join("");
@@ -906,7 +932,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
     renderTimer = setTimeout(render, 110);
   }
   el.q.addEventListener("input", renderSoon);
-  ["fKind", "fClass", "fQual", "fScale"].forEach(function (id) {
+  ["fKind", "fClass", "fQual", "fScale", "fSort"].forEach(function (id) {
     el[id].addEventListener("input", render);
   });
 
@@ -2435,6 +2461,8 @@ table.stat tr.dead td{color:var(--ink-faint)}
     if (!r) { toast("Weder Link noch Export erkannt"); return; }
     RIVAL = r;
     renderCompare();
+    refreshOfficial();
+    renderArchetypes();
     toast("Vergleich mit " + r.name);
   });
   document.getElementById("bCmpClear").addEventListener("click", function () {
@@ -2443,6 +2471,147 @@ table.stat tr.dead td{color:var(--ink-faint)}
     document.getElementById("cmpbox").innerHTML = "";
     document.getElementById("cX").textContent = "—";
   });
+
+  // ---------- Sortierung ----------
+  // Der Katalog kam bisher in Rohreihenfolge. Sobald ein Charakter da ist,
+  // ist "geschaetzter Treffer" die interessanteste Reihenfolge - vorher
+  // taugt sie nicht, weil ohne Waffenschaden alles 0 waere.
+  function sortKey(mode, i) {
+    var s = SC[i] || {};
+    if (mode === "name") return CAT[i][0].toLowerCase();
+    if (mode === "qual") return -(CAT[i][3] * 1000 + (1000 - (CAT[i][4] || 0)));
+    if (mode === "level") return CAT[i][4] || 0;
+    if (mode === "wpct") return -(s.w || 0);
+    if (mode === "dmg") return -estHit(i);
+    return i;
+  }
+  function estHit(i) {
+    var s = SC[i];
+    if (!s || !s.w || !CHAR) return 0;
+    var w = CHAR.weapons.filter(function (x) {
+      return x.slot === (s.wh === "oh" ? "OH" : s.wh === "ranged" ? "RANGED" : "MH");
+    })[0];
+    if (!w || !w.dmg) return 0;
+    var m = String(w.dmg).match(/(\d+)\s*-\s*(\d+)/);
+    if (!m) return 0;
+    return ((+m[1] + +m[2]) / 2) * s.w / 100;
+  }
+
+  // ---------- Archetyp als Startpunkt ----------
+  // Die 21 Archetypen lagen ungenutzt in den Daten. Sie ersetzen keine
+  // Feinarbeit, aber ein leeres Blatt ist der schlechteste Startpunkt.
+  function loadArchetype(name) {
+    var list = ARCH[name];
+    if (!list || !list.length) { toast("Unbekannter Archetyp"); return; }
+    var added = 0, addedT = 0, skipped = 0, reasons = {};
+    function note(r) { reasons[r] = (reasons[r] || 0) + 1; skipped++; }
+
+    var take = function (i) {
+      if (picked[i]) return;
+      var c = counts();
+      if (CAT[i][1] === 1 && c.t >= MAX_T) return note("Talente voll");
+      if (CAT[i][1] === 0 && c.a >= MAX_A) return note("Abilities voll");
+      if (tooHigh(i)) return note("Stufe zu hoch");
+      recountBudget();
+      if (overBudget(i)) return note("Seltenheits-Budget");
+      // Keine zweite Variante derselben Sache dazulegen.
+      var g = REL[i][3];
+      if (g >= 0) {
+        var clash = Object.keys(picked).some(function (k) { return REL[k][3] === g; });
+        if (clash) return note("Dublette");
+      }
+      picked[i] = true;
+      return true;
+    };
+
+    list.forEach(function (i) { if (take(i)) added++; });
+
+    // Die Archetypen im Katalog bestehen ausschliesslich aus Faehigkeiten.
+    // Ein Grundgeruest ohne ein einziges Talent skaliert nicht - also die
+    // Talente dazuholen, die genau diese Faehigkeiten verbessern.
+    var wantT = {};
+    Object.keys(picked).map(Number).forEach(function (i) {
+      (BM[i] || []).forEach(function (t) { wantT[t] = (wantT[t] || 0) + 1; });
+      var b = REL[i][0];
+      if (b !== null && b !== undefined) {
+        (BM[b] || []).forEach(function (t) { wantT[t] = (wantT[t] || 0) + 1; });
+      }
+    });
+    Object.keys(wantT).map(Number)
+      .sort(function (a, b) { return wantT[b] - wantT[a] || CAT[b][3] - CAT[a][3]; })
+      .forEach(function (t) { if (take(t)) addedT++; });
+
+    refresh();
+    var tail = Object.keys(reasons).map(function (r) {
+      return reasons[r] + "× " + r;
+    }).join(", ");
+    toast(added + " Fähigkeiten" +
+      (addedT ? " + " + addedT + " passende Talente" : "") +
+      (skipped ? " · " + skipped + " übersprungen (" + tail + ")" : ""));
+  }
+
+  function renderArchetypes() {
+    var box = document.getElementById("archbox");
+    if (!box) return;
+    var names = Object.keys(ARCH).sort(function (a, b) {
+      return ARCH[b].length - ARCH[a].length || a.localeCompare(b);
+    });
+
+    // Wie viele davon passen ueberhaupt in dein Budget? Das vorher zu sagen
+    // ist ehrlicher, als hinterher "11 uebersprungen" zu melden.
+    function fits(n) {
+      var free = [0, 0, 0, 0, 0], any = false;
+      for (var q = 1; q <= 4; q++) {
+        var lim = qualityLimit(q);
+        if (lim) { any = true; free[q] = Math.max(0, lim - USE[q]); }
+      }
+      if (!any) return null;
+      var used = [0, 0, 0, 0, 0], ok = 0;
+      ARCH[n].forEach(function (i) {
+        var q = CAT[i][3];
+        if (picked[i]) return;
+        if (!qualityLimit(q)) { ok++; return; }
+        if (used[q] + qualityCost(q) <= free[q]) { used[q] += qualityCost(q); ok++; }
+      });
+      return ok;
+    }
+
+    // Zusammensetzung: Archetypen sind im Katalog reine Faehigkeitslisten.
+    function mix(n) {
+      var q = {};
+      ARCH[n].forEach(function (i) { q[CAT[i][3]] = (q[CAT[i][3]] || 0) + 1; });
+      return Object.keys(q).sort(function (a, b) { return b - a; })
+        .map(function (k) { return q[k] + " " + QN[k]; }).join(", ");
+    }
+
+    box.innerHTML =
+      '<div class="qhint">Ein Archetyp ist im Katalog eine <em>reine ' +
+      "Fähigkeitsliste</em> — Talente bringt er keine mit, die suchst du " +
+      "danach selbst (der Reiter <em>Vorschläge</em> hilft dabei). Fast alle " +
+      "bestehen aus Epics, dein Epic-Budget entscheidet also, wie viele du " +
+      "wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</div>" +
+      '<div class="archgrid">' + names.map(function (n) {
+        var f = fits(n);
+        return '<button class="archb" data-arch="' + esc(n) + '" title="' +
+          esc(mix(n)) + '">' + esc(n) +
+          "<span>" + (f === null ? ARCH[n].length
+                                 : f + " / " + ARCH[n].length) + "</span></button>";
+      }).join("") + "</div>";
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-arch]");
+    if (b) loadArchetype(b.dataset.arch);
+  });
+
+  // ---------- Offizieller Build-Code ----------
+  // Das Addon liefert ihn mit; der Client baut daraus eine ascension.gg-URL
+  // (CharacterAdvancementUtil.GetBuildWebURL).
+  function officialLink() {
+    if (!CHAR || !CHAR.code) return "";
+    return "https://ascension.gg/v2/builder/area-52/overview/" +
+      encodeURIComponent(CHAR.code);
+  }
 
   // ---------- Teilen ----------
   function encode() {
@@ -2486,6 +2655,18 @@ table.stat tr.dead td{color:var(--ink-faint)}
     try { navigator.clipboard.writeText(txt); toast("Build als Text kopiert"); }
     catch (e) { toast("Kopieren nicht möglich"); }
   });
+  // Wenn das Addon den offiziellen Code mitgeliefert hat, ist der Link
+  // zum Ascension-Builder geschenkt.
+  function refreshOfficial() {
+    var host = document.getElementById("official");
+    if (!host) return;
+    var u = officialLink();
+    host.innerHTML = u
+      ? 'Offizieller Build-Code aus dem Spiel: <a href="' + esc(u) +
+        '" target="_blank" rel="noopener">bei ascension.gg öffnen</a>'
+      : "";
+  }
+
   document.getElementById("bClear").addEventListener("click", function () {
     picked = Object.create(null);
     location.hash = "";
@@ -2504,6 +2685,8 @@ table.stat tr.dead td{color:var(--ink-faint)}
     renderScale(ids);
     renderSuggest(ids);
     renderCompare();
+    refreshOfficial();
+    renderArchetypes();
     analyse();
     render();
     save();
@@ -2523,6 +2706,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
     if (m) { decode(m[1]); refresh(); }
   });
 
+  renderArchetypes();
   refresh();
 })();
 
