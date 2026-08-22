@@ -89,20 +89,55 @@ Produkt: `data/tagnames.json` → Assemble-Schlüssel `tagn`.
 
 ## 4. SpellStatSuggestions (Path-Hinweis)
 
-Layout: `rowId`, `spellId`, `statHint`, `flag(=1)`.
+Layout: `rowId`, `spellId`, `pathCode`, `flag(=1)`.
 Katalog-Treffer: **505** / 1121 Tabellenzeilen.
+DBC-Code-Zählung (alle Zeilen): `0`×249, `1`×298, `3`×384, `4`×190 — **kein Code 2**.
 
-**DBC-Codes ≠ Enum.PrimaryStat** (1/2/3/4/6). Verifiziert an Klassenspells:
+### Drei Namespaces (nicht vermischen)
 
-| Code | Path | Anker |
+| Quelle | IDs / Keys | Produkt-Labels |
+|---|---|---|
+| `SpellStatSuggestions.dbc` `pathCode` | **0 / 1 / 3 / 4** | Strength / Agility / Intelligence / Healing → `D.ssug` |
+| `Enum.PrimaryStat` (`SharedXML/Enum.lua`) | **1 / 2 / 3 / 4 / 6** (+5 Stamina reserved) | Strength / Agility / Intellect / Spirit / Duality → `PATH\|` |
+| `GetSuggestedStats()` → Export `SUGGEST\|` | Enum-**Stringkeys** (`"Strength"`, … `"Spirit"`) | Addon mappt Intellect→Intelligence, Spirit→Healing |
+
+**Nicht** `pathCode` als PrimaryStat-ID lesen: 0≠Strength-Enum, 1≠Agility-Enum.
+Zufällige Zahlen-Gleichheit nur bei Int/Heal (3 und 4) — Str/Agi sind absichtlich verschoben.
+Duality (Enum 6) kommt in SpellStatSuggestions **nicht** vor.
+
+### DBC-Anker (spellId gemessen, Katalog vorhanden)
+
+| Code | `D.ssug` / `PATH_FROM_DBC` | Anker (spellId) |
 |---:|---|---|
-| 0 | Strength | Charge, Heroic Strike, Defensive Stance |
-| 1 | Agility | Backstab, Sinister Strike, Mangle |
-| 3 | Intelligence | Frostbolt, Fireball, Shadow Bolt |
-| 4 | Healing | Renew, Healing Touch, Healing Wave |
+| 0 | Strength | Charge 100, Heroic Strike 78, Defensive Stance 71 |
+| 1 | Agility | Backstab 53, Sinister Strike 1752, Mangle 33917 |
+| 3 | Intelligence | Frostbolt 116, Fireball 133, Shadow Bolt 686 |
+| 4 | Healing | Renew 139, Healing Touch 5185, Healing Wave 331 |
 
-Duality (6) fehlt in der Tabelle. Produkt: `data/statsuggest.json` → Assemble `ssug`
-(`pipeline/statsuggest.py`). Leerer String = kein Eintrag — nichts erfinden.
+Stichprobe Zeilenkopf DBC (rowId, spellId, pathCode, flag):
+`(1,10,3,1)` Blizzard→3, `(2,17,4,1)` PW:Shield→4, `(3,53,1,1)` Backstab→1,
+`(5,71,0,1)` Defensive Stance→0, `(7,78,0,1)` Heroic Strike→0.
+
+### GetSuggestedStats (live, ≠ DBC-Codes)
+
+Evidence: `Ascension_ForcedPrimaryStat/PrimaryStat.lua:108–122`
+(`NOTES-live-api-map.md`):
+
+```lua
+local topStat, topStats = C_CharacterAdvancement.GetSuggestedStats()
+local topStatEntry = Enum.PrimaryStat[topStat]   -- topStat = Stringkey
+for _, stat in pairs(topStats) do
+  local statID = Enum.PrimaryStat[stat]
+```
+
+Form: `(topStat: string|nil, topStats: table of string keys)`.
+Keys sind `Enum.PrimaryStat`-Namen (`Strength`/`Agility`/`Intellect`/`Spirit`/…),
+**keine** SpellStatSuggestions-`pathCode`-Zahlen.
+Addon: `BS.CollectSuggestedStats` → `SUGGEST|Intelligence;Healing` (Testexporte).
+
+Produkt: `data/statsuggest.json` → Assemble `ssug` (`pipeline/statsuggest.py`).
+Website liest **bereits aufgelöste Namen** in `D.ssug.path[i]` (nicht Rohcodes).
+Leerer String = kein Eintrag — nichts erfinden.
 
 ## 5. SpellAddon (Ascension-Eigen)
 

@@ -23,10 +23,14 @@ Collect **1.4.0** bleibt unangetastet — Hinweise sind additiv.
 Pfad-Basis Evidence: `AscensionLuaExtract/by-archive/patch-B.MPQ/`.
 
 ### 1. `C_CharacterAdvancement.GetSuggestedStats`
-- **Evidence:** `Interface/AddOns/Ascension_ForcedPrimaryStat/PrimaryStat.lua:108`
+- **Evidence:** `Interface/AddOns/Ascension_ForcedPrimaryStat/PrimaryStat.lua:108–122`
   - `local topStat, topStats = C_CharacterAdvancement.GetSuggestedStats()`
-- **Nutzen:** Liefert vom Client vorgeschlagene PrimaryStats zum aktuellen Build — passt zur Path-Empfehlung auf der Analyse-Seite.
-- **Export/Pipeline-Idee:** PATHSUG|statId;… oder Abgleich mit bestehender Path-Heuristik
+  - `Enum.PrimaryStat[topStat]` / `Enum.PrimaryStat[stat]` — Rückgabe = **Stringkeys**
+    (`"Strength"`, `"Agility"`, `"Intellect"`, `"Spirit"`, …), nicht DBC-`pathCode`.
+- **Nutzen:** Client-Path-Vorschläge zum aktuellen Build → Export `SUGGEST|`
+  (Addon mappt Intellect→Intelligence, Spirit→Healing; siehe Collect.lua).
+- **Nicht verwechseln:** Offline `SpellStatSuggestions.dbc` Codes **0/1/3/4** → `D.ssug`
+  (eigene Tabelle; Details `NOTES-dbc-ascension.md` §4). `Enum.PrimaryStat` ist **1/2/3/4/6**.
 
 ### 2. `C_CharacterAdvancement.GetEntryBySpellID`
 - **Evidence:** `Interface/AddOns/Ascension_BuildCreator/BuildSpell.lua:170`
@@ -132,15 +136,18 @@ Haeufigste `tagType` auf Katalog-Spells:
 - id=62 len=31 preview=`$charges=$?s58673[${4+2}][${4}]`
 - id=63 len=170 preview=`$dur1=$?s56801[${6+2+5}][${6+2}]\r\n$dur2=$?s56801[${6+4+5}][${6+4}]\r\n$dur3=$?s56801[${6+6+5}][${6`
 
-**SpellStatSuggestions:** rc=1121 fc=4 — Stichprobe `(rowId, spellOrEntry?, stat?, flag?)`:
-- `(1, 10, 3, 1)`
-- `(2, 17, 4, 1)`
-- `(3, 53, 1, 1)`
-- `(4, 66, 3, 1)`
-- `(5, 71, 0, 1)`
-- `(6, 72, 0, 1)`
-- `(7, 78, 0, 1)`
-- `(8, 99, 1, 1)`
+**SpellStatSuggestions:** rc=1121 fc=4 — Stichprobe `(rowId, spellId, pathCode, flag)`:
+- `(1, 10, 3, 1)` Blizzard → Intelligence
+- `(2, 17, 4, 1)` Power Word: Shield → Healing
+- `(3, 53, 1, 1)` Backstab → Agility
+- `(4, 66, 3, 1)` Invisibility → Intelligence
+- `(5, 71, 0, 1)` Defensive Stance → Strength
+- `(6, 72, 0, 1)` Shield Bash → Strength
+- `(7, 78, 0, 1)` Heroic Strike → Strength
+- `(8, 99, 1, 1)` Demoralizing Roar → Agility
+
+Mapping **0/1/3/4 = Strength/Agility/Intelligence/Healing** (kein Code 2; ≠ Enum.PrimaryStat).
+Website `D.ssug.path[]` trägt die aufgelösten Namen — siehe `NOTES-dbc-ascension.md` §4.
 
 ## 3. Bereits im Addon genutzt (nicht anfassen)
 

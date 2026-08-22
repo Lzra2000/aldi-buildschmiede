@@ -95,8 +95,11 @@ DBC-Notes: `pipeline/NOTES-dbc-ascension.md`.
 ## Offline-Path (`ssug`)
 
 `pipeline/statsuggest.py` → `data/statsuggest.json` → `D.ssug`.
-SpellStatSuggestions.dbc, 505 Katalog-Treffer. DBC-Codes 0/1/3/4 =
-Strength/Agility/Intelligence/Healing (≠ Enum.PrimaryStat).
+SpellStatSuggestions.dbc, 505 Katalog-Treffer. DBC-Codes **0/1/3/4** =
+Strength/Agility/Intelligence/Healing — Evidence + Anker-spellIds in
+`NOTES-dbc-ascension.md` §4. **≠** `Enum.PrimaryStat` (1/2/3/4/6) und **≠**
+`GetSuggestedStats` / Export `SUGGEST|` (Enum-Stringkeys; Intellect/Spirit →
+Intelligence/Healing im Addon). Website liest fertige Namen in `D.ssug.path[i]`.
 
 ```bash
 python3 pipeline/statsuggest.py

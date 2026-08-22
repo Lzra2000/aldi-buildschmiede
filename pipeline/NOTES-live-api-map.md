@@ -8,6 +8,7 @@ Safe read exports on Collect/SkillCards — only APIs with extract evidence:
 
 | Export | API | Since |
 |---|---|---|
+| `SUGGEST\|Path;Path;…` | `C_CharacterAdvancement.GetSuggestedStats` (Enum string keys → PATH_NAME) | 1.5.0 |
 | `PATHENTRY\|entryId` | `C_PrimaryStat:GetInternalID` / `GetPrimaryStatInfo`[2] | 1.5.1 |
 | `SPEC\|id\|name\|CHR:n` | `GetActiveChrSpec` (additive field) | 1.5.1 |
 | `TRAIT\|entryId;…` | `C_CharacterAdvancement.IsTrait` | 1.5.1 |
@@ -202,7 +203,7 @@ Skill-card quality/active already in SkillCards 1.5 (`:qN` / `:A`).
 | `GetSpellTagTypeDisplayInfo` | read |  | 5 | `Interface/AddOns/Ascension_CharacterAdvancement/Browser/CharacterAdvancementBrowser.lua:119`<br>`Interface/AddOns/Ascension_CharacterAdvancementSeason9/Browser/CharacterAdvancementBrowser.lua:79`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:627`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:638`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:650` |
 | `GetSpellTagTypes` | read |  | 2 | `Interface/FrameXML/Util/CharacterAdvancementUtil.lua:633`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:646` |
 | `GetSpellsByClass` | read |  | 2 | `Interface/AddOns/Ascension_CharacterAdvancement/CharacterAdvancement.lua:1807`<br>`Interface/AddOns/Ascension_CharacterAdvancementSeason9/CharacterAdvancement.lua:1039` |
-| `GetSuggestedStats` | read | yes | 1 | `Interface/AddOns/Ascension_ForcedPrimaryStat/PrimaryStat.lua:108` |
+| `GetSuggestedStats` | read | yes | 1 | `Interface/AddOns/Ascension_ForcedPrimaryStat/PrimaryStat.lua:108` — **shape:** `topStat, topStats`; keys are `Enum.PrimaryStat` **strings** (`"Strength"`…`"Spirit"`), looked up via `Enum.PrimaryStat[topStat]`. **Not** SpellStatSuggestions DBC codes 0/1/3/4. Export: `SUGGEST\|` (Intellect→Intelligence, Spirit→Healing). Offline mirror: `D.ssug` from DBC, separate namespace — see `NOTES-dbc-ascension.md` §4. |
 | `GetTabName` | read |  | 1 | `Interface/FrameXML/GameTooltip.lua:235` |
 | `GetTabTEInvestment` | read | yes | 7 | `Interface/AddOns/Ascension_CharacterAdvancement/CharacterAdvancement.lua:1585`<br>`Interface/AddOns/Ascension_CharacterAdvancement/Templates/CAClassButton.lua:70`<br>`Interface/AddOns/Ascension_CharacterAdvancement/Templates/CAGate.lua:320`<br>`Interface/AddOns/Ascension_CharacterAdvancement/Templates/CATalentBrowser.lua:49`<br>`Interface/AddOns/Ascension_CharacterAdvancement/Templates/CATalentBrowser.lua:242`<br>`Interface/FrameXML/Util/GlobalOverwrites.lua:333`<br>… +1 more |
 | `GetTalentEssenceCost` | read | yes | 8 | `Interface/AddOns/Ascension_Draft/DraftCardMixin.lua:495`<br>`Interface/FrameXML/GameTooltip.lua:399`<br>`Interface/FrameXML/SpellListItem.lua:287`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:72`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:80`<br>`Interface/FrameXML/Util/CharacterAdvancementUtil.lua:96`<br>… +2 more |
