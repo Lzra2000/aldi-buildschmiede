@@ -25,6 +25,7 @@
   var SSUG = D.ssug || null;   // SpellStatSuggestions path-codes (≠ PrimaryStat-IDs)
   var SSUGSP = D.ssugsp || null; // SpellSpellSuggestions related-graph (optional)
   var FRM = D.frm || [];       // Form-Familie (formtags.py), "" wenn unbekannt
+  var PREQ = D.preq || null;   // harte Path-Requires (pathreq.py) ≠ D.ssug
 
   // SpellTag-Index: Katalogindex → {facets[], schools[], tagCount}
   var STAG_BY_I = {};
@@ -106,6 +107,27 @@
   function ssugPathLabel(i) {
     if (!SSUG || !SSUG.path) return "";
     return SSUG.path[i] || "";
+  }
+  // Harte Path-Sperre (CatalogData / Katalog / relations.Pfad) — nicht ssug.
+  var PATH_REQ_DE = {
+    str: "Strength", agi: "Agility", int: "Intelligence",
+    heal: "Healing", dua: "Duality"
+  };
+  function pathReqKeys(i) {
+    if (!PREQ || !PREQ.req) return [];
+    var s = PREQ.req[i];
+    if (s === undefined || s === null) s = PREQ.req[String(i)];
+    if (!s) return [];
+    return String(s).split("+").filter(Boolean);
+  }
+  function pathReqRaw(i) {
+    if (!PREQ || !PREQ.raw) return "";
+    return PREQ.raw[i] || PREQ.raw[String(i)] || "";
+  }
+  function pathReqLabel(keys) {
+    return (keys || []).map(function (k) {
+      return PATH_REQ_DE[k] || k;
+    }).join(" / ");
   }
   // Related-Spell-Graph (SpellSpellSuggestions) — flat [idx, weight, …], keine Kanten erfinden.
   function ssugspPairs(i) {
@@ -207,7 +229,7 @@
 
   var picked = Object.create(null);   // idx -> true
   var el = {};
-  ["q", "fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort", "list", "hits", "slotsA", "slotsT",
+  ["q", "fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort", "fPathReq", "list", "hits", "slotsA", "slotsT",
    "cA", "cT", "cF", "flags", "url", "toast"].forEach(function (id) {
     el[id] = document.getElementById(id);
   });
@@ -687,10 +709,11 @@
       isW = true;
       isM = true;
     }
-    // Waffen-% ohne gemessene Magie-/*strike-Schule ist kein Hybrid.
-    // Tag-MAGIC durch Nebenklauseln (Shadow-Rider, Nature-Amp) zählt nicht —
-    // sonst wird Scourge Strike / Stormstrike fälschlich Duality.
-    if (sc.w && !isMagicSchool(school) && !isStrikeSchool(school)) isM = false;
+    // Explizit Physical/Bleed + Waffen-% ist kein Hybrid — auch wenn der Tag
+    // wegen einer Nebenklausel MAGIC trägt (Scourge Strike / Shadow-Rider).
+    // Ohne gemessene Schule bleibt Tag-MAGIC: Frost Strike / Flameshred
+    // haben „as Frost/Firestrike“ im Text, scaling zieht die Schule nicht immer.
+    if (sc.w && school && !isMagicSchool(school)) isM = false;
     var isH = !!(t & T_HEAL) || !!sc.heal;
     // Heil-Hauptjob nur bei gemessener Tooltip-Heilung — nicht bei
     // „healing reduced“ / Bleed-Schnipseln, und nicht auf Waffen-Hybriden.
@@ -821,6 +844,16 @@
     ];
     s.sort(function (a, b) { return b.v - a.v || a.k.localeCompare(b.k); });
     return s;
+  }
+
+  // Leerzustand: eine Zeile sichtbar, Erklärung zugeklappt.
+  function emptyState(line, moreHtml, moreLabel) {
+    return '<div class="empty">' + line + "</div>" +
+      (moreHtml ? wrapDetails(moreHtml, moreLabel || "Mehr dazu") : "");
+  }
+  function emptyHint(line, moreHtml, moreLabel) {
+    return '<div class="qhint">' + line + "</div>" +
+      (moreHtml ? wrapDetails(moreHtml, moreLabel || "Mehr dazu") : "");
   }
 
   function renderPaths(ids) {
@@ -2183,6 +2216,8 @@
     var hd = document.getElementById("cC");
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
+      hd.removeAttribute("data-krit");
+      hd.removeAttribute("data-fix");
       box.innerHTML = emptyState(
         "Noch kein Charakter eingelesen.",
         '<p><a href="#t=vTools">Import unter Werkzeuge</a> — im Spiel <code>/bs</code> ' +
@@ -2459,9 +2494,10 @@
     }
     if (!c || (!hasGear && !hasCards)) {
       if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
-      box.innerHTML = '<div class="empty">Keine Ausrüstung und keine Skill Cards ' +
-        "im Export. Gear im Addon mit <code>/bs gear</code> einschalten und " +
-        "neu kopieren — Karten kommen mit Wildcard-Export (Addon 1.5+).</div>";
+      box.innerHTML = emptyState(
+        "Keine Ausrüstung und keine Skill Cards im Export.",
+        "<p>Gear im Addon mit <code>/bs gear</code> einschalten und neu kopieren. " +
+          "Karten kommen mit Wildcard-Export (Addon 1.5+).</p>");
       return;
     }
     var bits = [];
@@ -3050,6 +3086,8 @@
     var list = charIssues(ids);
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
+      hd.removeAttribute("data-krit");
+      hd.removeAttribute("data-fix");
       box.innerHTML = emptyState(
         "Importiere deinen Charakter mit <code>/bs</code>.",
         "<p>Dann steht hier, was kritisch ist und was du verbessern kannst — " +
@@ -3394,8 +3432,9 @@
     var hd = document.getElementById("cS");
     if (!ids.length) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Wähle etwas aus — dann steht hier, ' +
-        "woraus dein Schaden kommt.</div>";
+      box.innerHTML = emptyState(
+        "Wähle etwas aus.",
+        "<p>Dann steht hier, woraus dein Schaden kommt.</p>");
       return;
     }
 
@@ -3832,8 +3871,9 @@
     hd.className = "cnt " + (list.length ? "ok" : "");
 
     if (!ids.length) {
-      box.innerHTML = '<div class="empty">Wähle etwas — dann schlägt die Seite ' +
-        "vor, was dazu passt.</div>";
+      box.innerHTML = emptyState(
+        "Wähle etwas.",
+        "<p>Dann schlägt die Seite vor, was dazu passt.</p>");
       return;
     }
     if (!list.length) {
@@ -3889,8 +3929,10 @@
   // gegen die vorhandenen Daten bewertet, und jede Aufnahme laesst sich
   // begruenden. Was im Spiel nicht ginge, kommt gar nicht erst in Frage.
   //
-  // Form-Familien kommen nur aus Name+Beschreibung (kein Coeff-Raten).
-  // Eine Kampf-Form, eine Presence, eine Kriegerhaltung — nicht drei.
+  // Form-Familien: D.frm (formtags.py) zuerst, sonst Name+Beschreibung.
+  // Kein Coeff-Raten, keine DBC-Shapeshift-IDs. Eine Kampf-Form, eine
+  // Presence, eine Kriegerhaltung — nicht drei. Shared GCD und
+  // Talentvererbung bleiben eigene Regeln, nicht Form-Identität.
 
   var FORM_DE = {
     bear: "Bärenform", cat: "Katzenform", moonkin: "Moonkin-Form",
@@ -3944,13 +3986,21 @@
   function formDe(f) {
     return FORM_DE[f] || f || "ohne Form";
   }
+  function formNormTag(f) {
+    if (f === "stance_battle") return "warrior_battle";
+    if (f === "stance_defensive") return "warrior_def";
+    if (f === "stance_berserker") return "warrior_berserker";
+    return f;
+  }
   function formNormWarrior(f) {
+    f = formNormTag(f);
     if (f === "warrior_battle" || f === "warrior_def" || f === "warrior_berserker") {
       return "warrior_stance";
     }
     return f;
   }
   function formWarriorVariant(f) {
+    f = formNormTag(f);
     if (f === "warrior_battle") return "battle";
     if (f === "warrior_def") return "def";
     if (f === "warrior_berserker") return "berserker";
@@ -3964,8 +4014,29 @@
   }
   function formCompat(primary, other) {
     if (!primary || !other || primary === other) return true;
-    // Worgen-/Serpent-Form (Katalog): erlauben Cat-Form-Fähigkeiten, nicht die Katzenform selbst.
-    if ((primary === "worgen" || primary === "serpent") && other === "cat") return true;
+    // Worgen Form: Cat-Fähigkeiten ja — Katze/Bär/Worgen-Form selbst exclusiv.
+    if (primary === "worgen" && other === "cat") return true;
+    return false;
+  }
+  function formGrantClash(primary, family) {
+    if (!primary || !family || primary === family) return false;
+    if (FORM_EXCL[primary] && FORM_EXCL[family]) return true;
+    return formIsCombat(primary) && formIsCombat(family);
+  }
+  function formPresenceKey(have) {
+    if (/blood/.test(have)) return "presence_blood";
+    if (/frost/.test(have)) return "presence_frost";
+    if (/unholy/.test(have)) return "presence_unholy";
+    return have;
+  }
+  function formMatchesHave(info, have) {
+    if (!have) return true;
+    if (info.variant && info.variant === have) return true;
+    if (info.family === have) return true;
+    var ai;
+    for (ai = 0; ai < info.allow.length; ai++) {
+      if (info.allow[ai] === have || formCompat(have, info.allow[ai])) return true;
+    }
     return false;
   }
   function formPushAllow(allow, f) {
@@ -4020,6 +4091,33 @@
     function pushMention(f) {
       formPushAllow(mention, f);
       info.strong = true;
+    }
+
+    // D.frm ist die primäre Familienquelle (formtags.py). Leer = Fallback.
+    var tagStr = (i < FRM.length && FRM[i]) ? String(FRM[i]) : "";
+    var tagged = tagStr.length > 0;
+    var tagFams = [];
+    var tagRaw = [];
+    if (tagged) {
+      var parts = tagStr.split("+");
+      var tp, tcode, tmapped;
+      for (tp = 0; tp < parts.length; tp++) {
+        tcode = parts[tp];
+        if (!tcode) continue;
+        if (tcode === "ushift") {
+          info.shapeshiftOk = true;
+          continue;
+        }
+        if (tcode === "humanoid") {
+          info.humanoidOnly = true;
+          continue;
+        }
+        tmapped = formNormTag(tcode);
+        if (!tmapped || tmapped === "ushift" || tmapped === "humanoid") continue;
+        tagRaw.push(tmapped);
+        formPushAllow(tagFams, tmapped);
+      }
+      if (tagFams.length) info.humanoidOnly = false;
     }
 
     var paren = /\((cat|bear|feral)(?:\s+form)?\)/i.exec(name);
@@ -4081,7 +4179,8 @@
       if (FORM_PATS[bi].rx.test(blob)) pushMention(FORM_PATS[bi].f);
     }
 
-    if (!req.length) {
+    // Stems nur wenn D.frm keine konkrete Familie nennt (Rake/Rip/…).
+    if (!tagFams.length && !req.length) {
       var si, sj, stemHits;
       for (si = 0; si < FORM_STEMS.length; si++) {
         if (FORM_STEMS[si].rx.test(name)) {
@@ -4091,7 +4190,8 @@
       }
     }
 
-    if (!req.length && !mention.length) {
+    // Form-Identität ≠ Talentvererbung: inheritBase nur ohne D.frm-Tag.
+    if (!tagged && !req.length && !mention.length) {
       var base = inheritBase(i);
       if (base !== null && base !== undefined && base !== i) {
         var parent = formInfo(base);
@@ -4101,14 +4201,17 @@
             if (parent.require) pushReq(parent.allow[pa]);
             else pushMention(parent.allow[pa]);
           }
+          if (parent.shapeshiftOk) info.shapeshiftOk = true;
+          if (parent.humanoidOnly && !tagFams.length) info.humanoidOnly = true;
         }
       }
     }
 
-    var allow = req.length ? req.slice() : mention.slice();
+    var allow = tagFams.length
+      ? tagFams.slice()
+      : (req.length ? req.slice() : mention.slice());
     info.allow = allow;
     if (grantFamily) info.family = grantFamily;
-    else if (req.length === 1) info.family = req[0];
     else if (allow.length === 1) info.family = allow[0];
     else if (allow.length > 1) {
       var pref = ["bear", "cat", "moonkin", "tree", "worgen", "serpent", "meta",
@@ -4122,9 +4225,16 @@
     }
     info.utility = formIsUtility(info.family);
     info.stanceGroup = FORM_STANCE_GROUP[info.family] || null;
-    if (rawAllow.length) {
+    if (tagRaw.length) {
+      var tr, tv;
+      for (tr = 0; tr < tagRaw.length; tr++) {
+        tv = formWarriorVariant(tagRaw[tr]);
+        if (tv) { info.variant = tv; break; }
+      }
+    }
+    if (!info.variant && rawAllow.length) {
       info.variant = formWarriorVariant(rawAllow[0]);
-    } else if (info.family === "warrior_stance") {
+    } else if (!info.variant && info.family === "warrior_stance") {
       var wv;
       for (wv = 0; wv < FORM_PATS.length; wv++) {
         if (/warrior_/.test(FORM_PATS[wv].f) && FORM_PATS[wv].rx.test(blob)) {
@@ -4298,8 +4408,11 @@
 
     function rememberStance(info) {
       if (!info.stanceGroup) return;
-      var key = info.variant || info.family;
-      if (!stanceHave[info.stanceGroup]) stanceHave[info.stanceGroup] = key;
+      if (stanceHave[info.stanceGroup]) return;
+      var key = info.variant;
+      if (!key && info.allow.length === 1) key = info.allow[0];
+      if (!key && info.grants) key = info.family;
+      if (key) stanceHave[info.stanceGroup] = key;
     }
 
     function adoptForm(i, forced) {
@@ -4683,8 +4796,8 @@
     o.push(wrapDetails(
       "<p>Er geht den Katalog durch: erst Fähigkeiten der Ausrichtung, " +
       "dann Talente dazu. Dubletten, zu hohe Stufen, gesperrte Paths und dein " +
-      "Seltenheits-Budget zählen mit. Eine Kampf-Form pro Build — Katze und " +
-      "Bär werden nicht gemischt.</p>",
+      "Seltenheits-Budget zählen mit. Eine Kampf-Form plus Haltung — Katze " +
+      "und Bär werden nicht gemischt.</p>",
       "So arbeitet der Generator"));
 
     o.push('<div class="genlist">' + THEMES.map(function (t) {
@@ -5318,10 +5431,10 @@
     paths: { view: "vAnalyse", sel: "#paths", openTab: null },
     stats: { view: "vAnalyse", sel: "#statbox", openTab: null },
     gear: { view: "vAnalyse", sel: "#gearBox", openTab: null },
-    scards: { view: "vAnalyse", sel: "#scardPanel", openTab: null },
-    scard: { view: "vAnalyse", sel: "#scardPanel", openTab: null },
-    scale: { view: "vAnalyse", sel: "#aScale", openTab: "aScale" },
-    struct: { view: "vAnalyse", sel: "#aStruct", openTab: "aStruct" },
+    scards: { view: "vAnalyse", sel: "#scardJump", openTab: null },
+    scard: { view: "vAnalyse", sel: "#scardJump", openTab: null },
+    scale: { view: "vAnalyse", sel: "#scalebox", openTab: "aScale" },
+    struct: { view: "vAnalyse", sel: "#flags", openTab: "aStruct" },
     chain: { view: "vChain", sel: "#chainbox", openTab: null },
     chains: { view: "vChain", sel: "#chainbox", openTab: null },
     import: { view: "vTools", sel: "#pasteBox", openTab: null },
@@ -5334,11 +5447,17 @@
     slotsA: { view: "vBuild", sel: "#slotsA", openTab: null },
     talents: { view: "vBuild", sel: "#slotsT", openTab: null },
     slotsT: { view: "vBuild", sel: "#slotsT", openTab: null },
+    essence: { view: "vAnalyse", sel: "#issues-krit", openTab: null },
+    essbox: { view: "vTools", sel: "#essbox", openTab: null },
     sug: { view: "vBuild", sel: "#sugbox", openTab: null },
-    meth: { view: "vAnalyse", sel: "#aMeth", openTab: "aMeth" }
+    meth: { view: "vAnalyse", sel: "#methbox", openTab: "aMeth" }
   };
 
   function resolveJump(key) {
+    if (key && key.nodeType) {
+      var host = key.closest && key.closest(".view");
+      return { view: host ? host.id : null, sel: null, el: key, openTab: null };
+    }
     if (JUMP[key]) {
       var src = JUMP[key];
       return { view: src.view, sel: src.sel, openTab: src.openTab || null };
@@ -5347,14 +5466,27 @@
     return { view: null, sel: key.charAt(0) === "#" ? key : "#" + key, openTab: null };
   }
 
-  function jumpTo(key, filter) {
+  function jumpTo(key, filterOrOpts) {
     if (key === "synergien") {
       window.location.href = "synergien.html";
       return;
     }
+    var filter = "";
+    if (typeof filterOrOpts === "string") filter = filterOrOpts;
+    else if (filterOrOpts && typeof filterOrOpts === "object") {
+      filter = filterOrOpts.filter || "";
+    }
     var j = resolveJump(key);
     if (!j) return;
-    var el = document.querySelector(j.sel);
+    if (filter && typeof filter === "object") filter = filter.filter || "";
+    var keyStr = typeof key === "string" ? key : "";
+    if (!filter && /issues-krit$/.test(keyStr)) filter = "krit";
+    if (!filter && /issues-(fix|info)$/.test(keyStr)) filter = "info";
+    var el = j.el || (j.sel && document.querySelector(j.sel));
+    if (!el && keyStr.indexOf("issues") === 0) {
+      j = resolveJump("issues");
+      el = j && document.querySelector(j.sel);
+    }
     if (!el) return;
     if (!j.view) {
       var host = el.closest(".view");
@@ -5365,11 +5497,14 @@
       var tab = document.querySelector('.tab[data-tab="' + j.openTab + '"]');
       if (tab) tab.click();
     }
+    var box = document.getElementById("issues") || el;
     var focus = el;
     if (filter === "krit") {
-      focus = el.querySelector(".issue.krit") || el;
-    } else if (filter === "info") {
-      focus = el.querySelector(".issue.info, .issue.fix, .issue.warn") || el;
+      focus = document.getElementById("issues-krit") ||
+        box.querySelector(".issue.krit") || el;
+    } else if (filter === "info" || filter === "fix") {
+      focus = document.getElementById("issues-fix") ||
+        box.querySelector(".issue.info, .issue.fix, .issue.warn") || el;
     }
     var node = focus;
     while (node && node !== document.body) {
@@ -5377,28 +5512,30 @@
       node = node.parentElement;
     }
     requestAnimationFrame(function () {
-      var reduce = false;
-      try {
-        reduce = !!(window.matchMedia &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-      } catch (err) { /* */ }
-      if (!focus.hasAttribute("tabindex") &&
-          !/^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/i.test(focus.tagName)) {
-        focus.setAttribute("tabindex", "-1");
-      }
-      focus.scrollIntoView({
-        behavior: reduce ? "auto" : "smooth",
-        block: "start"
-      });
-      focus.classList.remove("jumpflash");
-      void focus.offsetWidth;
-      focus.classList.add("jumpflash");
-      window.setTimeout(function () {
+      requestAnimationFrame(function () {
+        var reduce = false;
+        try {
+          reduce = !!(window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        } catch (err) { /* */ }
+        if (!focus.hasAttribute("tabindex") &&
+            !/^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/i.test(focus.tagName)) {
+          focus.setAttribute("tabindex", "-1");
+        }
+        focus.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start"
+        });
         focus.classList.remove("jumpflash");
-      }, 1400);
-      if (focus.focus) {
-        try { focus.focus({ preventScroll: true }); } catch (e) { /* */ }
-      }
+        void focus.offsetWidth;
+        focus.classList.add("jumpflash");
+        window.setTimeout(function () {
+          focus.classList.remove("jumpflash");
+        }, 1400);
+        if (focus.focus) {
+          try { focus.focus({ preventScroll: true }); } catch (e) { /* */ }
+        }
+      });
     });
   }
 
@@ -5406,7 +5543,9 @@
     var j = e.target.closest("[data-jump]");
     if (!j) return;
     e.preventDefault();
-    jumpTo(j.getAttribute("data-jump"), j.getAttribute("data-jump-filter") || "");
+    jumpTo(j.getAttribute("data-jump"), {
+      filter: j.getAttribute("data-jump-filter") || ""
+    });
   });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
@@ -5710,7 +5849,9 @@
       var inheritOn = mods.some(function (t) { return have[t]; });
       rows.push(["Erbt Talente",
         "<em>von</em> " + pill(base, inheritOn, false) +
-        " <em>— Basis muss nicht in deinem Build stehen</em>"]);
+        ((REL[i][0] === null || REL[i][0] === undefined)
+          ? " <em>uses-Basis — Talente, nicht die Fähigkeit selbst</em>"
+          : "")]);
       if (inheritOn) live++;
     }
 
@@ -5777,6 +5918,7 @@
     if (gate) {
       rows.push(["Sperre", '<em>' + esc(gate[0]) + ":</em> " + esc(gate[1])]);
     }
+    var gcdPeers = [];
     var dg = REL[i][3];
     if (dg >= 0) {
       gcdPeers = Object.keys(have).map(Number).filter(function (k) {
@@ -5789,6 +5931,7 @@
         dead++;
       }
     }
+    var cdPeers = [];
     var cg = REL[i][5];
     if (cg >= 0) {
       cdPeers = Object.keys(have).map(Number).filter(function (k) {
@@ -5801,6 +5944,8 @@
       }
     }
 
+    var fromUses = (REL[i][0] === null || REL[i][0] === undefined) &&
+      base !== null && base !== undefined;
     return {
       rows: rows, live: live, dead: dead,
       gcdPeers: gcdPeers, cdPeers: cdPeers, fromUses: fromUses
@@ -5978,11 +6123,17 @@
       if (title) el.setAttribute("aria-label", title);
     }
     var ci = document.getElementById("chipIssues");
+    var ciHd = document.getElementById("cI");
+    var nKrit = ciHd ? +(ciHd.getAttribute("data-krit") || 0) : 0;
+    var nFix = ciHd ? +(ciHd.getAttribute("data-fix") || 0) : 0;
     if (ci) {
-      var t = (document.getElementById("cI") || {}).textContent || "";
-      ci.classList.toggle("bad", /[1-9]\d*\s*kritisch/.test(t) || /^[1-9]/.test(t));
+      ci.classList.toggle("bad", nKrit > 0);
     }
-    bindJumpChip(ci, "issues", "Zu Befund springen");
+    bindJumpChip(ci,
+      nKrit ? "issues-krit" : nFix ? "issues-fix" : "issues",
+      nKrit ? "Zu kritischen Befunden springen"
+        : nFix ? "Zu verbesserbaren Befunden springen"
+        : "Zum Befund springen");
     bindJumpChip(document.getElementById("chipPath"), "paths",
       "Zur Path-Empfehlung springen");
     bindJumpChip(document.getElementById("chipChar"), CHAR ? "char" : "import",
@@ -5993,6 +6144,11 @@
     bindJumpChip(ca && ca.parentElement, "slotsA", "Zu den Abilities springen");
     var ct = document.getElementById("cT");
     bindJumpChip(ct && ct.parentElement, "slotsT", "Zu den Talenten springen");
+    var ketten = document.getElementById("tab-vChain");
+    if (ketten) {
+      ketten.setAttribute("data-jump", "chain");
+      ketten.title = "Zu den Wirkungsketten springen";
+    }
     function bindCnt(id, key, title) {
       var el = document.getElementById(id);
       if (!el) return;
@@ -6004,7 +6160,10 @@
         if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
       }
     }
-    bindCnt("cI2", "issues", "Zu Befund springen");
+    bindCnt("cI2", nKrit ? "issues-krit" : nFix ? "issues-fix" : "issues",
+      nKrit ? "Zu kritischen Befunden springen"
+        : nFix ? "Zu verbesserbaren Befunden springen"
+        : "Zum Befund springen");
     bindCnt("cP2", "paths", "Zur Path-Empfehlung springen");
     bindCnt("cB", "stats", "Zur Stat-Priorität springen");
     var hasCards = !!(CHAR && CHAR.scard && CHAR.scard.some(function (s) {
@@ -6139,7 +6298,7 @@
     };
   }
 
-  // Die Farbe liest sich aus DEINER Sicht: gruen heisst, du liegst vorn.
+  // Semantik aus DEINER Sicht: gut = du liegst vorn, warn = er liegt vorn.
   // Ein "+" in der Spalte heisst immer, dass er mehr davon hat.
   function cmpCell(a, b, label, unit) {
     var d = b - a;
@@ -6160,9 +6319,10 @@
     if (!box) return;
     if (!RIVAL) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Noch nichts zu vergleichen. Füge oben einen ' +
-        "Build-Link oder einen Export ein — <code>/bs target</code> im Spiel " +
-        "liest den Build deines Ziels aus.</div>";
+      box.innerHTML = emptyState(
+        "Noch nichts zu vergleichen.",
+        "<p>Füge oben einen Build-Link oder einen Export ein. " +
+          "<code>/bs target</code> im Spiel liest den Build deines Ziels aus.</p>");
       return;
     }
 

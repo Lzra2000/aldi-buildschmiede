@@ -2,42 +2,42 @@
 <header class="topbar">
   <div class="tbin">
     <div class="brand">
-      <span class="bmark" aria-hidden="true" title="Aldi Ehrfürchtig"><span class="bmark-txt">AE</span></span>
+      <span class="bmark" aria-hidden="true" title="Aldi Ehrf?rchtig"><span class="bmark-txt">AE</span></span>
       <span class="btext">
-        <em class="bguild">Aldi Ehrfürchtig</em>
+        <em class="bguild">Aldi Ehrf?rchtig</em>
         <b>Buildschmiede</b>
-        <i id="brandFrame">Season 10 Wildcard · Level 10–60</i>
+        <i id="brandFrame">Season 10 Wildcard ? Level 10?60</i>
       </span>
     </div>
 
     <nav class="views" role="tablist" aria-label="Ansicht">
       <button class="vtab on" data-view="vBuild" role="tab" aria-controls="vBuild" aria-selected="true" id="tab-vBuild">Bauen</button>
       <button class="vtab" data-view="vAnalyse" role="tab" aria-controls="vAnalyse" aria-selected="false" id="tab-vAnalyse" tabindex="-1">Auswertung</button>
-      <button class="vtab" data-view="vChain" role="tab" aria-controls="vChain" aria-selected="false" id="tab-vChain" tabindex="-1">Ketten<span class="cnt" id="cK">—</span></button>
+      <button class="vtab" data-view="vChain" role="tab" aria-controls="vChain" aria-selected="false" id="tab-vChain" tabindex="-1">Ketten<span class="cnt" id="cK">?</span></button>
       <button class="vtab" data-view="vTools" role="tab" aria-controls="vTools" aria-selected="false" id="tab-vTools" tabindex="-1">Werkzeuge</button>
       <button class="vtab" data-view="vWissen" role="tab" aria-controls="vWissen" aria-selected="false" id="tab-vWissen" tabindex="-1">Wissen</button>
     </nav>
     <nav class="prodnav" aria-label="Seiten">
       <a class="on" href="index.html" aria-current="page">Buildschmiede</a>
-      <a href="synergien.html" title="Synergiekompendium — Dubletten, Modifier, Ketten">Synergien</a>
+      <a href="synergien.html" title="Synergiekompendium ? Dubletten, Modifier, Ketten">Synergien</a>
     </nav>
   </div>
 </header>
 
-<div class="statusrow" aria-label="Build-Status">
+<div class="statusrow" role="region" aria-label="Build-Status">
   <div class="statusin">
     <div class="chips">
       <span class="chip num" id="chipChar" title="Importierter Charakter">
         <i>CHAR</i><b id="chipCharVal">kein Charakter</b>
       </span>
       <a class="chip chip-go" id="chipImport" href="#t=vTools"
-        title="Addon /bs kopieren und unter Werkzeuge einfügen">Import</a>
+        title="Addon /bs kopieren und unter Werkzeuge einf?gen">Import</a>
       <span class="chip num"><i>ABI</i><b id="cA">0 / 30</b></span>
       <span class="chip num"><i>TAL</i><b id="cT">0 / 25</b></span>
-      <span class="chip num" id="chipPath"><i>PATH</i><b id="cP">—</b></span>
-      <span class="chip num warnable" id="chipIssues"><i>BEFUND</i><b id="cI">—</b></span>
+      <span class="chip num" id="chipPath"><i>PATH</i><b id="cP">?</b></span>
+      <span class="chip num warnable" id="chipIssues"><i>BEFUND</i><b id="cI">?</b></span>
     </div>
-    <p class="statushint" id="statusHint">Noch kein Export — <a href="#t=vTools">Werkzeuge → Import</a> mit <code>/bs</code>.</p>
+    <p class="statushint" id="statusHint">Noch kein Export ? <a href="#pasteBox" data-jump="import">Werkzeuge ? Import</a> mit <code>/bs</code>.</p>
   </div>
 </div>
 
@@ -55,27 +55,32 @@
     <div class="tut-top">
       <p class="tut-kicker">Tutorial</p>
       <p class="tut-progress" id="tutProgress" aria-live="polite">Schritt 1 von 9</p>
-      <button type="button" class="tut-x" id="tutClose" title="Tutorial einklappen" aria-label="Tutorial einklappen">×</button>
+      <h2 class="tut-title" id="tutTitle"></h2>
+      <div class="tut-actions">
+        <button type="button" class="tut-btn" id="tutPrev">Zur?ck</button>
+        <button type="button" class="tut-btn primary" id="tutNext">Weiter</button>
+        <button type="button" class="tut-btn" id="tutSkip">?berspringen</button>
+        <button type="button" class="tut-x" id="tutClose" title="Tutorial einklappen" aria-label="Tutorial einklappen">?</button>
+      </div>
     </div>
-    <h2 class="tut-title" id="tutTitle"></h2>
-    <p class="tut-body" id="tutBody"></p>
-    <div class="tut-cta" id="tutCta"></div>
-    <ol class="tut-steps">
-      <li>Addon laden und im Spiel <code>/bs</code> kopieren.</li>
-      <li>Unter Werkzeuge einfügen — danach Befund und Path lesen.</li>
-      <li>Bei Dubletten, Modifiern und geteiltem GCD unter Synergien nachschlagen.</li>
-    </ol>
-    <div class="tut-actions">
-      <button type="button" class="tut-btn" id="tutPrev">Zurück</button>
-      <button type="button" class="tut-btn primary" id="tutNext">Weiter</button>
-      <button type="button" class="tut-btn" id="tutSkip">Überspringen</button>
-      <button type="button" class="tut-btn" id="tutDone">Fertig &amp; nicht mehr zeigen</button>
-    </div>
-    <nav class="tut-quick" aria-label="Schnellzugriff">
-      <a href="#t=vTools">Import</a>
-      <a href="#t=rAddon">Addon</a>
-      <a href="synergien.html">Synergien</a>
-    </nav>
+    <details class="disclose tut-more">
+      <summary>Mehr zum Schritt</summary>
+      <div class="more-body">
+        <p class="tut-body" id="tutBody"></p>
+        <div class="tut-cta" id="tutCta"></div>
+        <ol class="tut-steps">
+          <li>Addon laden und im Spiel <code>/bs</code> kopieren.</li>
+          <li>Unter Werkzeuge einf?gen ? danach Befund und Path lesen.</li>
+          <li>Bei Dubletten, Modifiern und geteiltem GCD unter Synergien nachschlagen.</li>
+        </ol>
+        <nav class="tut-quick" aria-label="Schnellzugriff">
+          <a href="#t=vTools">Import</a>
+          <a href="#t=rAddon">Addon</a>
+          <a href="synergien.html">Synergien</a>
+        </nav>
+        <button type="button" class="tut-btn" id="tutDone">Fertig &amp; nicht mehr zeigen</button>
+      </div>
+    </details>
   </div>
 </aside>
 
@@ -89,37 +94,37 @@
           <span class="cnt" id="hits">3071 Treffer</span>
         </div>
         <div class="controls">
-          <input type="search" id="q" placeholder="Name oder Beschreibung suchen …" aria-label="Suche">
+          <input type="search" id="q" placeholder="Name oder Beschreibung suchen ?" aria-label="Suche">
           <select id="fKind" aria-label="Art"><option value="">Alle Arten</option>
             <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
           <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
           <select id="fTree" aria-label="Spec"><option value="">Alle Specs</option></select>
           <select id="fDesire" aria-label="Desire-Board"><option value="">Desire egal (alle)</option>
-            <option value="1">Desire-fähig</option>
-            <option value="0">Nicht Desire-fähig</option></select>
+            <option value="1">Desire-f?hig</option>
+            <option value="0">Nicht Desire-f?hig</option></select>
           <details class="filtmore" id="filtMore">
             <summary>Weitere Filter<span class="filtmore-n" id="filtMoreN" hidden></span></summary>
             <div class="filtmore-in">
               <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
-                <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
+                <option value="name">Name A?Z</option><option value="qual">Seltenheit</option>
                 <option value="level">Stufe</option><option value="wpct">Waffenprozent</option>
-                <option value="dmg">Geschätzter Treffer</option>
+                <option value="dmg">Gesch?tzter Treffer</option>
                 <option value="cyc">Schaden pro Cooldown</option></select>
               <select id="fScale" aria-label="Skalierung"><option value="">Jede Skalierung</option>
                 <option value="w">Waffenschaden</option><option value="s">Elementar</option>
-                <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
+                <option value="m">Multiplikatoren</option><option value="d">?ber Zeit</option>
                 <option value="h">Heilung</option>
                 <option value="sp">Spell Power</option>
                 <option value="ap">Attack Power</option>
                 <option value="cd">Mit Cooldown</option><option value="nocd">Ohne Cooldown</option>
                 <option value="free">Kostenlos</option>
                 <option value="g">Ressourcen-Generator</option></select>
-              <select id="fQual" aria-label="Qualität"><option value="">Alle Qualitäten</option>
+              <select id="fQual" aria-label="Qualit?t"><option value="">Alle Qualit?ten</option>
                 <option value="4">Legendary</option><option value="3">Epic</option>
                 <option value="2">Rare</option><option value="1">Uncommon</option>
                 <option value="0">Normal</option></select>
               <button type="button" id="filtMoreReset" class="filtreset"
-                title="Sortierung, Skalierung und Qualität zurücksetzen">Zurücksetzen</button>
+                title="Sortierung, Skalierung und Qualit?t zur?cksetzen">Zur?cksetzen</button>
             </div>
           </details>
         </div>
@@ -137,8 +142,8 @@
           </div>
         </div>
         <div class="panel">
-          <div class="panel-hd"><h2>PASST DAZU</h2><span class="cnt" id="cV">—</span></div>
-          <div id="sugbox" tabindex="-1" aria-label="Vorschläge"></div>
+          <div class="panel-hd"><h2>PASST DAZU</h2><span class="cnt" id="cV">?</span></div>
+          <div id="sugbox" tabindex="-1" aria-label="Vorschl?ge"></div>
         </div>
       </div>
     </div>
@@ -147,13 +152,13 @@
   <section class="view" id="vAnalyse" role="tabpanel" aria-labelledby="tab-vAnalyse" tabindex="-1">
     <div class="analyse">
       <div class="panel analyse-lead" id="befundIssues" role="region" aria-label="Befund" tabindex="-1">
-        <div class="panel-hd"><h2>BEFUND</h2><span class="cnt" id="cI2">—</span></div>
+        <div class="panel-hd"><h2>BEFUND</h2><span class="cnt" id="cI2">?</span></div>
         <div class="framectl" role="group" aria-label="Auswertungsrahmen">
           <span class="framelbl">Rahmen</span>
           <button type="button" class="frameb" data-frame="auto" id="frameAuto"
             title="Endgame ab Stufe 60, sonst Levelrun">Auto</button>
           <button type="button" class="frameb" data-frame="levelrun" id="frameLevelrun"
-            title="Levelrun 10–60">Levelrun</button>
+            title="Levelrun 10?60">Levelrun</button>
           <button type="button" class="frameb" data-frame="endgame" id="frameEndgame"
             title="Endgame Stufe 60">Endgame</button>
           <span class="framehint" id="frameHint"></span>
@@ -162,24 +167,24 @@
       </div>
       <div class="analyse-sec">
         <div class="panel">
-          <div class="panel-hd"><h2>PATH</h2><span class="cnt" id="cP2">—</span></div>
+          <div class="panel-hd"><h2>PATH</h2><span class="cnt" id="cP2">?</span></div>
           <div id="paths" role="region" aria-label="Path" tabindex="-1"></div>
         </div>
         <div class="panel">
-          <div class="panel-hd"><h2>STAT-PRIORITÄT</h2><span class="cnt" id="cB">—</span></div>
-          <div id="statbox" tabindex="-1" aria-label="Stat-Priorität"></div>
+          <div class="panel-hd"><h2>STAT-PRIORIT?T</h2><span class="cnt" id="cB">?</span></div>
+          <div id="statbox" tabindex="-1" aria-label="Stat-Priorit?t"></div>
         </div>
-        <div class="panel" id="gearPanel" role="region" aria-label="Ausrüstung und Skill Cards" tabindex="-1">
-          <div class="panel-hd"><h2>AUSRÜSTUNG</h2><span class="cnt" id="cG">—</span></div>
-          <div id="gearBox" tabindex="-1" aria-label="Ausrüstung"></div>
+        <div class="panel" id="gearPanel" role="region" aria-label="Ausr?stung und Skill Cards" tabindex="-1">
+          <div class="panel-hd"><h2>AUSR?STUNG</h2><span class="cnt" id="cG">?</span></div>
+          <div id="gearBox" tabindex="-1" aria-label="Ausr?stung"></div>
           <div class="scard-panel" id="scardPanel" hidden role="region" aria-label="Skill Cards" tabindex="-1"></div>
         </div>
       </div>
       <div class="panel analyse-more">
         <div class="tabbar" role="tablist" aria-label="Weitere Auswertung">
-          <button class="tab on" data-tab="aScale" role="tab">Skalierung<span class="cnt" id="cS">—</span></button>
-          <button class="tab" data-tab="aStruct" role="tab">Struktur<span class="cnt" id="cF">—</span></button>
-          <button class="tab" data-tab="aMeth" role="tab" id="methTab" hidden>Tag-Struktur<span class="cnt" id="cM">—</span></button>
+          <button class="tab on" data-tab="aScale" role="tab">Skalierung<span class="cnt" id="cS">?</span></button>
+          <button class="tab" data-tab="aStruct" role="tab">Struktur<span class="cnt" id="cF">?</span></button>
+          <button class="tab" data-tab="aMeth" role="tab" id="methTab" hidden>Tag-Struktur<span class="cnt" id="cM">?</span></button>
         </div>
         <div class="tabp on" id="aScale" tabindex="-1"><div id="scalebox"></div></div>
         <div class="tabp" id="aStruct" tabindex="-1"><div id="flags"></div></div>
@@ -191,9 +196,9 @@
   <section class="view" id="vChain" role="tabpanel" aria-labelledby="tab-vChain" tabindex="-1">
     <div class="panel" id="chains" role="region" aria-label="Wirkungsketten" tabindex="-1">
       <div class="panel-hd"><h2>WIRKUNGSKETTEN</h2>
-        <span class="cnt" id="cK2">—</span></div>
+        <span class="cnt" id="cK2">?</span></div>
       <div class="chainctl">
-        <label><input type="checkbox" id="chainOnlyLive" checked> nur Einträge mit Verkettung</label>
+        <label><input type="checkbox" id="chainOnlyLive" checked> nur Eintr?ge mit Verkettung</label>
         <label><input type="checkbox" id="chainShowMissing"> auch zeigen, was fehlt</label>
       </div>
       <div id="chainbox" tabindex="-1" aria-label="Wirkungsketten-Liste"></div>
@@ -203,16 +208,23 @@
   <section class="view" id="vTools" role="tabpanel" aria-labelledby="tab-vTools" tabindex="-1">
     <div class="tools">
       <div class="panel tools-lead">
-        <div class="panel-hd"><h2>AUS DEM SPIEL EINFÜGEN</h2>
-          <span class="cnt" id="cC">—</span></div>
-        <div class="pastewrap" id="importPaste" role="region" aria-label="Export einfügen" tabindex="-1">
+        <div class="panel-hd"><h2>AUS DEM SPIEL EINF?GEN</h2>
+          <span class="cnt" id="cC">?</span></div>
+        <div class="pastewrap" id="importPaste" role="region" aria-label="Export einf?gen" tabindex="-1">
           <p class="pastehint">Im Spiel <code>/bs</code> tippen,
-            <kbd>Strg</kbd>+<kbd>C</kbd>, hier einfügen. Installation unter Wissen →
+            <kbd>Strg</kbd>+<kbd>C</kbd>, hier einf?gen. Installation unter Wissen ?
             Addon.</p>
-          <textarea id="pasteBox" rows="4" spellcheck="false" aria-label="Addon-Export einfügen"
-            placeholder="=== BUILDSCHMIEDE v1 ===&#10;CHAR|…"></textarea>
+          <details class="disclose paste-more">
+            <summary>Was der Export mitbringt</summary>
+            <div class="more-body">
+              <p>IDs, Essence, Locks und Gear kommen mit. Zuordnung ?ber
+                <code>spellId</code> und <code>itemId</code>, nicht ?ber den Namen.</p>
+            </div>
+          </details>
+          <textarea id="pasteBox" rows="4" spellcheck="false" aria-label="Addon-Export einf?gen"
+            placeholder="=== BUILDSCHMIEDE v1 ===&#10;CHAR|?"></textarea>
           <div class="pastebtns">
-            <button class="primary" id="bPaste">Build übernehmen</button>
+            <button class="primary" id="bPaste">Build ?bernehmen</button>
             <button id="bPasteClear">Verwerfen</button>
           </div>
         </div>
@@ -225,7 +237,7 @@
         <div class="tabbar" role="tablist" aria-label="Weitere Werkzeuge">
           <button class="tab on" data-tab="tGen" role="tab">Generator</button>
           <button class="tab" data-tab="tAI" role="tab">KI</button>
-          <button class="tab" data-tab="tCmp" role="tab">Vergleich<span class="cnt" id="cX">—</span></button>
+          <button class="tab" data-tab="tCmp" role="tab">Vergleich<span class="cnt" id="cX">?</span></button>
           <button class="tab" data-tab="tArch" role="tab">Archetypen</button>
           <button class="tab" data-tab="tShare" role="tab">Teilen</button>
         </div>
@@ -239,7 +251,7 @@
             <p class="pastehint">Build-Link eines Gildenkollegen oder ein Export.
               <code>/bs target</code> liest den Build deines Ziels aus.</p>
             <textarea id="cmpBox" rows="3" spellcheck="false"
-              placeholder="Link mit #b=… oder === BUILDSCHMIEDE v1 ==="></textarea>
+              placeholder="Link mit #b=? oder === BUILDSCHMIEDE v1 ==="></textarea>
             <div class="pastebtns">
               <button class="primary" id="bCmp">Vergleichen</button>
               <button id="bCmpClear">Verwerfen</button>
@@ -254,11 +266,11 @@
           <div class="share">
             <button class="primary" id="bLink">Link kopieren</button>
             <button id="bText">Als Text kopieren</button>
-            <button id="bAI">Für KI kopieren</button>
+            <button id="bAI">F?r KI kopieren</button>
             <button id="bClear">Leeren</button>
             <input type="text" id="url" readonly aria-label="Build-Link">
             <div class="offlink" id="official"></div>
-            <p class="aihint">„Für KI kopieren“ legt einen fertigen Prompt in die
+            <p class="aihint">?F?r KI kopieren? legt einen fertigen Prompt in die
               Zwischenablage: deine Werte, dein kompletter Build mit allen Zahlen
               und die Ascension-Regeln, die ein Modell sonst nicht kennt.</p>
           </div>
@@ -269,85 +281,79 @@
 
   <section class="view" id="vWissen" role="tabpanel" aria-labelledby="tab-vWissen" tabindex="-1">
     <div class="panel" id="wissen" role="region" aria-label="Wissen" tabindex="-1">
-      <div class="flag syn"><b>Synergiekompendium</b>
-        Dubletten, Modifier und Ketten stehen im
-        <a href="synergien.html">Synergiekompendium</a>. Hier: Paths,
-        Stats und Addon.</div>
+      <p class="viewline">Dubletten, Modifier und Ketten stehen im
+        <a href="synergien.html">Synergiekompendium</a>. Hier: Paths, Stats und Addon.</p>
       <div class="tabbar big" role="tablist" aria-label="Wissen-Themen">
-        <button class="tab on" data-tab="rPaths" role="tab">Die fünf Paths</button>
+        <button class="tab on" data-tab="rPaths" role="tab">Die f?nf Paths</button>
         <button class="tab" data-tab="rStats" role="tab">Stat-Scaling</button>
         <button class="tab" data-tab="rScale" role="tab">Skalierung lesen</button>
         <button class="tab" data-tab="rAddon" role="tab">Companion-Addon</button>
         <button class="tab" data-tab="rMethoden" role="tab">Methoden</button>
       </div>
       <div class="tabp on" id="rPaths">
-      <div class="headline">
-        <b>Warum der Path vor dem Build kommt</b>
-        Der Path entscheidet, ob Spell Power einfach, 1,75-fach oder doppelt
-        zählt. Weil <strong>14 Spell Power = 1 Waffen-DPS</strong>, gilt derselbe Multiplikator
-        für Waffenschaden — der Tooltip ändert sich trotzdem nicht.
-      </div>
-
-      <div class="pathref">
+      <details class="disclose" id="rPathCards">
+        <summary>Die f?nf Path-Karten</summary>
+        <div class="more-body">
+<div class="pathref">
         <div class="pcard">
           <h3>Path of Strength</h3>
-          <span class="mult">Spell Power ×1</span>
-          <p>Gibt dir Strength obendrauf, und jeder Punkt Strength gibt dir zusätzlich
+          <span class="mult">Spell Power ?1</span>
+          <p>Gibt dir Strength obendrauf, und jeder Punkt Strength gibt dir zus?tzlich
             Attack Power und Parry.
-            Für schwere Treffer und rüstungsbrechende Angriffe, vor allem für Plattenträger.</p>
+            F?r schwere Treffer und r?stungsbrechende Angriffe, vor allem f?r Plattentr?ger.</p>
           <dl>
-            <dt>Einhand — Devastating Strikes</dt><dd>Armor Penetration +20 %.</dd>
-            <dt>Zweihand — Heavy Swings</dt><dd>Physische Melee- und Ranged-Fähigkeiten
+            <dt>Einhand ? Devastating Strikes</dt><dd>Armor Penetration +20 %.</dd>
+            <dt>Zweihand ? Heavy Swings</dt><dd>Physische Melee- und Ranged-F?higkeiten
               machen 10 % mehr Schaden.</dd>
           </dl>
         </div>
 
         <div class="pcard">
           <h3>Path of Agility</h3>
-          <span class="mult">Spell Power ×1</span>
+          <span class="mult">Spell Power ?1</span>
           <p>Gibt dir Agility obendrauf, und jeder Punkt gibt dir Attack Power, Crit-Chance
-            <em>und</em> Crit-Schaden. Für schnelle Angriffe und Crits, vor allem für
-            Leder- und Kettenträger.</p>
+            <em>und</em> Crit-Schaden. F?r schnelle Angriffe und Crits, vor allem f?r
+            Leder- und Kettentr?ger.</p>
           <dl>
-            <dt>Einhand — Agile Strikes</dt><dd>Globaler Cooldown und Kosten deiner
-              Melee- und Ranged-Fähigkeiten −8 %.</dd>
-            <dt>Zweihand — Fatal Wounds</dt><dd>Crit-Schaden deiner
-              Melee- und Ranged-Fähigkeiten +20 %.</dd>
+            <dt>Einhand ? Agile Strikes</dt><dd>Globaler Cooldown und Kosten deiner
+              Melee- und Ranged-F?higkeiten ?8 %.</dd>
+            <dt>Zweihand ? Fatal Wounds</dt><dd>Crit-Schaden deiner
+              Melee- und Ranged-F?higkeiten +20 %.</dd>
           </dl>
         </div>
 
         <div class="pcard">
           <h3>Path of Duality</h3>
-          <span class="mult">Spell Power ×1,75</span>
-          <p>Der Hybrid-Path. Du bekommst Attack Power in Höhe deines besseren Attributs
-            — Strength oder Agility, je nachdem, was höher ist. <strong>Intellect gibt hier Melee-Crit, Agility gibt
-            Spell-Crit.</strong> Zaubern setzt deinen Autoangriff nicht mehr zurück.</p>
+          <span class="mult">Spell Power ?1,75</span>
+          <p>Der Hybrid-Path. Du bekommst Attack Power in H?he deines besseren Attributs
+            ? Strength oder Agility, je nachdem, was h?her ist. <strong>Intellect gibt hier Melee-Crit, Agility gibt
+            Spell-Crit.</strong> Zaubern setzt deinen Autoangriff nicht mehr zur?ck.</p>
           <dl>
-            <dt>Einhand — Twin Flurry</dt><dd>Spell-, Ranged- und Melee-Haste +10 %.</dd>
-            <dt>Zweihand — Unleashed Force</dt><dd>Magischer und physischer Schaden +6 %.</dd>
+            <dt>Einhand ? Twin Flurry</dt><dd>Spell-, Ranged- und Melee-Haste +10 %.</dd>
+            <dt>Zweihand ? Unleashed Force</dt><dd>Magischer und physischer Schaden +6 %.</dd>
           </dl>
         </div>
 
         <div class="pcard">
           <h3>Path of Intelligence</h3>
-          <span class="mult">Spell Power ×2</span>
+          <span class="mult">Spell Power ?2</span>
           <p>Gibt dir Spell Power, Intellect und Spirit obendrauf. Spell Power aus Items und
-            Effekten wird <strong>verdoppelt</strong> — der stärkste Multiplikator im Spiel.</p>
+            Effekten wird <strong>verdoppelt</strong> ? der st?rkste Multiplikator im Spiel.</p>
           <dl>
-            <dt>Einhand — Devastating Spells</dt><dd>Zauberschaden +5 %.</dd>
-            <dt>Zweihand — Magic Acceleration</dt><dd>Spell Haste +12 %.</dd>
+            <dt>Einhand ? Devastating Spells</dt><dd>Zauberschaden +5 %.</dd>
+            <dt>Zweihand ? Magic Acceleration</dt><dd>Spell Haste +12 %.</dd>
           </dl>
         </div>
 
         <div class="pcard">
           <h3>Path of Healing</h3>
-          <span class="mult">Spell Power → Healing Power</span>
+          <span class="mult">Spell Power ? Healing Power</span>
           <p>Der einzige Weg in die Heiler-Rolle. Gibt dir Healing Power, Intellect und
-            Spirit obendrauf. Jeder Punkt Spell Power erhöht zusätzlich deine
+            Spirit obendrauf. Jeder Punkt Spell Power erh?ht zus?tzlich deine
             Healing Power.</p>
           <dl>
-            <dt>Einhand — Empowered Mending</dt><dd>Heilung +5 %.</dd>
-            <dt>Zweihand — Spiritual Acceleration</dt><dd>Spell Haste +10 %,
+            <dt>Einhand ? Empowered Mending</dt><dd>Heilung +5 %.</dd>
+            <dt>Zweihand ? Spiritual Acceleration</dt><dd>Spell Haste +10 %,
               Spell-Crit +3 %.</dd>
           </dl>
         </div>
@@ -356,30 +362,33 @@
           <h3>Einhand oder Zweihand?</h3>
           <span class="mult">gilt auf jedem Path</span>
           <p>Jeder Path hat zwei getrennte Boni. Welchen du bekommst, entscheidet allein
-            deine Waffe. Diese Entscheidung wird am häufigsten übersehen:</p>
+            deine Waffe. Diese Entscheidung wird am h?ufigsten ?bersehen:</p>
           <dl>
             <dt>Zweihand belohnt</dt><dd>rohen Schaden und Tempo (Strength +10 % phys.,
               Agility +20 % Crit-Schaden, Duality +6 % auf alles, Intelligence +12 % Spell Haste).</dd>
             <dt>Einhand belohnt</dt><dd>Durchsatz und Durchdringung (Strength +20 % ArPen,
-              Agility −8 % GCD und Kosten, Duality +10 % Tempo auf allen drei Achsen).</dd>
+              Agility ?8 % GCD und Kosten, Duality +10 % Tempo auf allen drei Achsen).</dd>
           </dl>
         </div>
       </div>
+
+              </div>
+      </details>
 
       <div class="tblwrap">
         <table class="stat">
           <thead><tr><th>Was du baust</th><th>Path</th><th>Warum</th></tr></thead>
           <tbody>
-            <tr class="top"><td>Waffenschaden <em>als Element</em> — Burning Slam,
-              Voltaic Bite, Lava Sweep …</td>
+            <tr class="top"><td>Waffenschaden <em>als Element</em> ? Burning Slam,
+              Voltaic Bite, Lava Sweep ?</td>
               <td class="num">Duality</td>
-              <td>×1,75 Spell Power fließt über 14:1 in den Waffenanteil; der Elementanteil
-                ignoriert Rüstung.</td></tr>
+              <td>?1,75 Spell Power flie?t ?ber 14:1 in den Waffenanteil; der Elementanteil
+                ignoriert R?stung.</td></tr>
             <tr class="top"><td>Physisch <em>und</em> Zauber gemischt</td>
               <td class="num">Duality</td>
               <td>Hebt beide Seiten und hebt die Crit-Trennung auf.</td></tr>
             <tr><td>Fast nur Zauber</td><td class="num">Intelligence</td>
-              <td>×2 Spell Power schlägt alles andere, solange du keine Waffenangriffe
+              <td>?2 Spell Power schl?gt alles andere, solange du keine Waffenangriffe
                 brauchst.</td></tr>
             <tr><td>Rein physisch, schwere Treffer, Zweihand</td><td class="num">Strength</td>
               <td>Heavy Swings gibt pauschal +10 % auf alles Physische.</td></tr>
@@ -392,148 +401,184 @@
         </table>
       </div>
 
-      <p class="srcnote">Die Path-Empfehlung zählt, wie viele Einträge Waffenschaden, Magie, beides
-        oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p></div>
+      <details class="disclose">
+        <summary>Warum der Path vor dem Build kommt</summary>
+        <div class="more-body">
+          <div class="headline">
+          <b>Warum der Path vor dem Build kommt</b>
+          Der Path entscheidet, ob Spell Power einfach, 1,75-fach oder doppelt
+          z?hlt. Weil <strong>14 Spell Power = 1 Waffen-DPS</strong>, gilt derselbe Multiplikator
+          f?r Waffenschaden ? der Tooltip ?ndert sich trotzdem nicht.
+        </div>
+  <details class="disclose" id="rPathNote">
+        <summary>Wie die Empfehlung z?hlt</summary>
+        <div class="more-body"><p class="srcnote">Die Path-Empfehlung z?hlt, wie viele Eintr?ge Waffenschaden, Magie, beides
+          oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p></div>
+      </details>
+        </div>
+      </details>
+    </div>
       <div class="tabp" id="rStats">
-      <div class="headline">
-        <b>Das Wichtigste zuerst</b>
-        1 Spell Power = 1 Attack Power. Waffenschaden skaliert aus beidem:
-        <strong>14 Punkte = +1 Waffen-DPS</strong>. Der Waffentooltip sagt das wörtlich.
-        Die Tabelle darunter ist gemessen.
-      </div>
-
-      <div class="tblwrap">
+<div class="tblwrap">
         <table class="stat">
-          <thead><tr><th>#</th><th>Stat</th><th>1 Punkt gibt</th><th>Gemessen</th><th>Für wen</th></tr></thead>
+          <thead><tr><th>#</th><th>Stat</th><th>1 Punkt gibt</th><th>Gemessen</th><th>F?r wen</th></tr></thead>
           <tbody>
             <tr class="top">
               <td class="rank">1</td><td class="num">Spell Power</td>
               <td>+0,071 Waffen-DPS <em>und</em> vollen Zauberschaden</td>
-              <td class="num">608 → +43,4 DPS</td>
-              <td>Für jeden. Der einzige Stat, der doppelt zählt.</td>
+              <td class="num">608 ? +43,4 DPS</td>
+              <td>F?r jeden. Der einzige Stat, der doppelt z?hlt.</td>
             </tr>
             <tr class="top">
               <td class="rank">2</td><td class="num">Intellect</td>
               <td>+0,0275&nbsp;% Spell-Crit, +13,8 Mana</td>
-              <td class="num">240 → +6,60&nbsp;%, +3.320</td>
+              <td class="num">240 ? +6,60&nbsp;%, +3.320</td>
               <td>Caster und Hybriden. Gibt <strong>0,00&nbsp;% Melee-Crit</strong>.</td>
             </tr>
             <tr>
               <td class="rank">3</td><td class="num">Crit Rating</td>
               <td>+0,086&nbsp;% Crit</td>
-              <td class="num">10 → +0,86&nbsp;%</td>
-              <td>Für alle. 11,6 Rating = 1&nbsp;% auf Stufe 51.</td>
+              <td class="num">10 ? +0,86&nbsp;%</td>
+              <td>F?r alle. 11,6 Rating = 1&nbsp;% auf Stufe 51.</td>
             </tr>
             <tr>
               <td class="rank">4</td><td class="num">Agility</td>
               <td>+0,100&nbsp;% Melee-Crit, +2 Armor, +0,038&nbsp;% Dodge</td>
-              <td class="num">51 → +5,11&nbsp;%, +102</td>
+              <td class="num">51 ? +5,11&nbsp;%, +102</td>
               <td>Waffen-Builds. Gibt <strong>0,00&nbsp;% Spell-Crit</strong>.</td>
             </tr>
             <tr>
               <td class="rank">5</td><td class="num">Haste Rating</td>
               <td>+0,121&nbsp;% Spell Haste</td>
-              <td class="num">19 → +2,30&nbsp;%</td>
+              <td class="num">19 ? +2,30&nbsp;%</td>
               <td>Caster. 8,3 Rating = 1&nbsp;%.</td>
             </tr>
             <tr>
               <td class="rank">6</td><td class="num">Stamina</td>
               <td>+9 Health</td>
-              <td class="num">178 → +1.600 HP</td>
-              <td>Überleben. Bringt keinen Schaden.</td>
+              <td class="num">178 ? +1.600 HP</td>
+              <td>?berleben. Bringt keinen Schaden.</td>
             </tr>
             <tr class="dead">
               <td class="rank">7</td><td class="num">Strength</td>
               <td>+1,71 Attack Power = +0,12 Waffen-DPS</td>
-              <td class="num">69 → +118 AP</td>
-              <td>Sobald du Spell Power hast, ist das dein schwächster Offensiv-Stat.</td>
+              <td class="num">69 ? +118 AP</td>
+              <td>Sobald du Spell Power hast, ist das dein schw?chster Offensiv-Stat.</td>
             </tr>
             <tr class="dead">
               <td class="rank">8</td><td class="num">Spirit</td>
               <td>Manaregeneration</td>
-              <td class="num">63 → 82/5s (35 beim Casten)</td>
+              <td class="num">63 ? 82/5s (35 beim Casten)</td>
               <td>Nur wenn dir wirklich das Mana ausgeht.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
-        Gegenstandsstufe 18,00. Rating-pro-Prozent skaliert mit der Stufe — die Verhältnisse
-        (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p>
+      <details class="disclose">
+        <summary>Was das f?r deinen Build hei?t</summary>
+        <div class="more-body">
+          <div class="headline">
+          <b>Das Wichtigste zuerst</b>
+          1 Spell Power = 1 Attack Power. Waffenschaden skaliert aus beidem:
+          <strong>14 Punkte = +1 Waffen-DPS</strong>. Der Waffentooltip sagt das w?rtlich.
+          Die Tabelle darunter ist gemessen.
+        </div>
+          <details class="disclose" id="rStatsMessung">
+        <summary>Zur Messung</summary>
+        <div class="more-body"><p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
+          Gegenstandsstufe 18,00. Rating-pro-Prozent skaliert mit der Stufe ? die Verh?ltnisse
+          (Str?AP, Agi?Crit, SP?AP) bleiben, die Rating-Kurse ?ndern sich beim Leveln.</p></div>
+      </details>
 
-      <div class="panel-hd"><h2>FOLGERUNG</h2></div>
-      <div class="flag syn"><b>Bonus Damage ist schulenneutral</b>
-        Holy bis Arcane stehen auf demselben Bonus Damage. Kein getrennter Schul-Stat.</div>
-      <div class="flag syn"><b>Elementare Waffenvarianten</b>
-        Elementare Waffenangriffe ignorieren Rüstung (rund 28&nbsp;%). Oft die
-        stärkere Wahl, keine schwächere Kopie.</div>
-      <div class="flag pre"><b>Crit ist zweigeteilt</b>
-        Agility gibt nur Melee-Crit, Intellect nur Spell-Crit. Crit-Rating hebt
-        beide; Duality hebt die Trennung auf.</div>
-      <div class="flag syn"><b>Stat-Prio in einem Satz</b>
-        Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
-        Wer auf Waffenangriffe baut, tauscht Intellect und Agility. Wer castet, lässt es
-        so stehen.</div>
+        <details class="disclose" id="rStatsFolgerung">
+        <summary>Folgerung f?r deinen Build</summary>
+        <div class="more-body">
+<div class="panel-hd"><h2>FOLGERUNG</h2></div>
+        <div class="flag syn"><b>Bonus Damage ist schulenneutral</b>
+          Holy bis Arcane stehen auf demselben Bonus Damage. Kein getrennter Schul-Stat.</div>
+        <div class="flag syn"><b>Elementare Waffenvarianten</b>
+          Elementare Waffenangriffe ignorieren R?stung (rund 28&nbsp;%). Oft die
+          st?rkere Wahl, keine schw?chere Kopie.</div>
+        <div class="flag pre"><b>Crit ist zweigeteilt</b>
+          Agility gibt nur Melee-Crit, Intellect nur Spell-Crit. Crit-Rating hebt
+          beide; Duality hebt die Trennung auf.</div>
+        <div class="flag syn"><b>Stat-Prio in einem Satz</b>
+          Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
+          Wer auf Waffenangriffe baut, tauscht Intellect und Agility. Wer castet, l?sst es
+          so stehen.</div>
+        </div>
+      </details>
+        </div>
+      </details>
     </div>
-      <div class="tabp" id="rScale">      <div class="headline">
-        <b>Was in den Abzeichen steht</b>
-        Jede Katalogzeile trägt, was im Tooltip als Zahl steht — nicht geschätzt.
-        Fehlt ein Spell-Power-Anteil, bleibt die Lücke.
-      </div>
-
+      <div class="tabp" id="rScale">
       <div class="tblwrap">
         <table class="stat">
-          <thead><tr><th>Abzeichen</th><th>Bedeutet</th><th>Warum es zählt</th></tr></thead>
+          <thead><tr><th>Abzeichen</th><th>Bedeutet</th><th>Warum es z?hlt</th></tr></thead>
           <tbody>
             <tr class="top"><td><span class="bdg w">150 % Waffe</span></td>
               <td>Der Angriff macht 150 % deines Waffenschadens.</td>
-              <td>Charakterfenster enthält AP und SP schon. Mal Faktor — fertig.</td></tr>
+              <td>Charakterfenster enth?lt AP und SP schon. Mal Faktor ? fertig.</td></tr>
             <tr class="top"><td><span class="bdg s">Fire</span></td>
-              <td>Der Schaden zählt als diese Schule.</td>
-              <td>Elementare Schule ignoriert Rüstung (~28&nbsp;%).</td></tr>
-            <tr><td><span class="bdg f">14–22</span></td>
+              <td>Der Schaden z?hlt als diese Schule.</td>
+              <td>Elementare Schule ignoriert R?stung (~28&nbsp;%).</td></tr>
+            <tr><td><span class="bdg f">14?22</span></td>
               <td>Fester Grundschaden.</td>
-              <td>SP-Anteil steht im Tooltip <strong>nicht</strong> — wird nicht geraten.</td></tr>
+              <td>SP-Anteil steht im Tooltip <strong>nicht</strong> ? wird nicht geraten.</td></tr>
             <tr><td><span class="bdg d">8 s</span></td>
-              <td>Wirkt über 8 Sekunden.</td>
-              <td>Zwei DoTs auf demselben Ziel überschreiben sich oft.</td></tr>
+              <td>Wirkt ?ber 8 Sekunden.</td>
+              <td>Zwei DoTs auf demselben Ziel ?berschreiben sich oft.</td></tr>
             <tr><td><span class="bdg m">+20 %</span></td>
               <td>Ein Multiplikator auf etwas anderes.</td>
-              <td>Talent-Multiplikator; Auswertung → Skalierung stapelt sie.</td></tr>
+              <td>Talent-Multiplikator; Auswertung ? Skalierung stapelt sie.</td></tr>
             <tr><td><span class="bdg p">15 % Proc</span></td>
-              <td>Löst mit 15 % Wahrscheinlichkeit aus.</td>
+              <td>L?st mit 15 % Wahrscheinlichkeit aus.</td>
               <td>Mit dem Durchschnitt rechnen, nicht mit dem Bestfall.</td></tr>
-            <tr><td><span class="bdg w">20 % SP</span> / <span class="bdg w">SP · Anteil fehlt</span></td>
-              <td>Spell-Power-Anteil aus dem Tooltip — oder SP genannt, Prozent fehlt.</td>
-              <td>Nur gemessene Zahlen. Fehlt der Anteil, bleibt die Lücke.</td></tr>
-            <tr><td><span class="bdg w">20 % AP</span> / <span class="bdg w">AP · Anteil fehlt</span></td>
+            <tr><td><span class="bdg w">20 % SP</span> / <span class="bdg w">SP ? Anteil fehlt</span></td>
+              <td>Spell-Power-Anteil aus dem Tooltip ? oder SP genannt, Prozent fehlt.</td>
+              <td>Nur gemessene Zahlen. Fehlt der Anteil, bleibt die L?cke.</td></tr>
+            <tr><td><span class="bdg w">20 % AP</span> / <span class="bdg w">AP ? Anteil fehlt</span></td>
               <td>Attack-Power-Anteil aus dem Tooltip.</td>
-              <td>Gleicher Maßstab wie bei Spell Power.</td></tr>
-            <tr><td><span class="bdg c">CD 8 s</span> · <span class="bdg c">1,5 s Cast</span> · <span class="bdg f">30 m</span></td>
+              <td>Gleicher Ma?stab wie bei Spell Power.</td></tr>
+            <tr><td><span class="bdg c">CD 8 s</span> ? <span class="bdg c">1,5 s Cast</span> ? <span class="bdg f">30 m</span></td>
               <td>Cooldown, Castzeit und Reichweite aus Spell.dbc.</td>
-              <td>Fast nie im Tooltip — kommt aus der DBC.</td></tr>
-            <tr><td><span class="bdg d">Wirkdauer 6 s</span> · <span class="bdg r">20 Mana</span></td>
+              <td>Fast nie im Tooltip ? kommt aus der DBC.</td></tr>
+            <tr><td><span class="bdg d">Wirkdauer 6 s</span> ? <span class="bdg r">20 Mana</span></td>
               <td>Aura-Dauer und Ressourcenkosten aus der DBC.</td>
               <td>DBC. Ladungen (<code>ch</code>/<code>chr</code>) nur wenn vorhanden.</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="flag pre"><b>Wo die Rechnung aufhört</b>
-        Die Seite multipliziert Waffenprozente mit deinem echten Waffenschaden,
-        sobald du deinen Charakter importiert hast. Sie rechnet <em>nicht</em>
-        aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
-        sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
-        weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
-        Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div></div>
+      <details class="disclose">
+        <summary>Was in den Abzeichen steht</summary>
+        <div class="more-body">
+          <div class="headline">
+          <b>Was in den Abzeichen steht</b>
+          Jede Katalogzeile tr?gt, was im Tooltip als Zahl steht ? nicht gesch?tzt.
+          Fehlt ein Spell-Power-Anteil, bleibt die L?cke.
+        </div>
+  <details class="disclose" id="rScaleLimit">
+        <summary>Wo die Rechnung aufh?rt</summary>
+        <div class="more-body"><div class="flag pre"><b>Wo die Rechnung aufh?rt</b>
+          Die Seite multipliziert Waffenprozente mit deinem echten Waffenschaden,
+          sobald du deinen Charakter importiert hast. Sie rechnet <em>nicht</em>
+          aus, was Crit, Haste, R?stung des Ziels und Procs daraus machen ? und
+          sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
+          weil die nirgends im Tooltip stehen. F?r die Frage ?welcher meiner
+          Angriffe schl?gt h?rter zu?? reicht es. F?r ein DPS-Ranking nicht.</div></div>
+      </details>
+        </div>
+      </details>
+    </div>
       <div class="tabp" id="rAddon">
       <div class="headline">
         <b>Warum du es willst</b>
         Ohne das Addon klickst du deinen Build hier von Hand zusammen. Mit dem Addon
-        tippst du im Spiel <code>/bs</code>, kopierst einen Textblock und fügst ihn
-        oben unter „Aus dem Spiel einfügen“ ein. Die Seite kennt dann deine
-        <strong>echten</strong> Fähigkeiten, deinen Path, deine Stats und dein Gear —
+        tippst du im Spiel <code>/bs</code>, kopierst einen Textblock und f?gst ihn
+        oben unter ?Aus dem Spiel einf?gen? ein. Die Seite kennt dann deine
+        <strong>echten</strong> F?higkeiten, deinen Path, deine Stats und dein Gear ?
         und sagt dir, was daran kritisch ist.
       </div>
 
@@ -542,12 +587,12 @@
           <li><a class="dl" href="https://github.com/Lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip">AscBuildschmiede.zip herunterladen</a></li>
           <li>Entpacken nach
             <code>Interface\AddOns\</code> in deinem Ascension-Ordner. Danach muss es
-            <code>Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc</code> geben —
-            ein Ordner zu tief ist der häufigste Fehler.</li>
+            <code>Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc</code> geben ?
+            ein Ordner zu tief ist der h?ufigste Fehler.</li>
           <li>Spiel neu starten (oder <code>/reload</code>, falls es schon lief).</li>
           <li>Im Spiel <code>/bs</code> tippen. Der Text ist schon markiert:
             <kbd>Strg</kbd>+<kbd>C</kbd>.</li>
-          <li>Hier oben ins Feld einfügen, <em>Build übernehmen</em> klicken.</li>
+          <li>Hier oben ins Feld einf?gen, <em>Build ?bernehmen</em> klicken.</li>
         </ol>
       </div>
 
@@ -565,30 +610,40 @@
         </table>
       </div>
 
-      <p class="srcnote">Zuordnung über <code>spellId</code> / <code>itemId</code>, nicht über den Namen.</p>
-
       <div class="flag syn"><b>Was das Addon nicht tut</b>
         Es schickt nichts ins Internet. Es liest deinen Charakter aus, schreibt den
-        Text in ein Fenster — fertig. Was damit passiert, entscheidest du mit
+        Text in ein Fenster ? fertig. Was damit passiert, entscheidest du mit
         <kbd>Strg</kbd>+<kbd>C</kbd>.</div>
 
-      <p class="srcnote">Ausgelesen werden Abilities, Talente, Path, Stats, Waffe und Gear. Fehlt
-        eine Client-Funktion, fehlt nur diese Zeile. Dubletten und Modifier:
-        <a href="synergien.html">Synergiekompendium</a>.</p></div>
+      <details class="disclose">
+        <summary>Zuordnung und was ausgelesen wird</summary>
+        <div class="more-body">
+  <details class="disclose" id="rAddonExtra">
+        <summary>Matching und Grenzen</summary>
+        <div class="more-body">
+<p class="srcnote">Zuordnung ?ber <code>spellId</code> / <code>itemId</code>, nicht ?ber den Namen.</p>
+  <p class="srcnote">Ausgelesen werden Abilities, Talente, Path, Stats, Waffe und Gear. Fehlt
+          eine Client-Funktion, fehlt nur diese Zeile. Dubletten und Modifier:
+          <a href="synergien.html">Synergiekompendium</a>.</p>
+        </div>
+      </details>
+    </div>
 
+              </div>
+      </details>
       <div class="tabp" id="rMethoden">
       <div class="headline">
-        <b>Abgeleitete Methoden — keine erfundenen Zahlen</b>
+        <b>Abgeleitete Methoden ? keine erfundenen Zahlen</b>
         Drei Auswertungen aus Katalog, Tooltip-Skalierung und Spell.dbc.
         Was der Tooltip nicht nennt (z.&nbsp;B. Spell-Power-Anteil bei Flat-Schaden),
-        erscheint als Lücke — nicht als Schätzwert. Details:
+        erscheint als L?cke ? nicht als Sch?tzwert. Details:
         <code>pipeline/README-methods.md</code>.
       </div>
       <div class="flag syn"><b>Levelrun und Endgame</b>
-        Tempo und Hitze decken Level 10–60 ab (Rahmen unter Auswertung).
-        Ein hoher Score sagt „oft und messbar“, nicht „Raid-BiS“.</div>
+        Tempo und Hitze decken Level 10?60 ab (Rahmen unter Auswertung).
+        Ein hoher Score sagt ?oft und messbar?, nicht ?Raid-BiS?.</div>
       <div id="methRoot">
-        <p class="srcnote">Methoden-Daten werden geladen…</p>
+        <p class="srcnote">Methoden-Daten werden geladen?</p>
       </div>
       <div id="stagsRoot"></div>
       </div>
@@ -596,13 +651,13 @@
   </section>
 
   <footer>
-    <p>Datenbasis: Season-10-Katalog, 3.071 Einträge. Der Link enthält deinen
-      Build — nichts wird gespeichert. Mit Import rechnet der Builder
-      Waffentreffer aus echtem Waffenschaden; Crit, Haste, Ziel-Rüstung und
+    <p>Datenbasis: Season-10-Katalog, 3.071 Eintr?ge. Der Link enth?lt deinen
+      Build ? nichts wird gespeichert. Mit Import rechnet der Builder
+      Waffentreffer aus echtem Waffenschaden; Crit, Haste, Ziel-R?stung und
       Flat-SP-Anteile fehlen. Kein DPS-Ranking.</p>
     <p class="footnav">
       <a href="synergien.html">Zum Synergiekompendium</a>
-      — Dubletten, Modifier und Ketten.</p>
+      ? Dubletten, Modifier und Ketten.</p>
   </footer>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
