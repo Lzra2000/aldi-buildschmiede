@@ -135,6 +135,13 @@ ist schlimmer als eine fehlende.
 erlaubt sind nur Google Fonts. Kein CDN, kein Fetch, keine externen Bilder.
 Alles wird eingebettet.
 
+**Deutsches Produkt: korrekt und verständlich.** UI, README, Erste Schritte,
+Fehler- und Leerzustände (Builder und Synergien) in richtigem Deutsch,
+Anrede **du**, kurze klare Sätze. Keine kaputten Komposita, keine
+dass/das-Fehler, kein `uppercase` auf Umlaut-Labels. Spielbegriffe wie Path,
+Build, Wildcard, Addon, Import bleiben erlaubt. Details:
+`.cursor/rules/german-language.mdc`.
+
 ### KI-Anbindung: der Schlüssel gehört dem Nutzer
 
 Die Seite ruft Sprachmodelle direkt auf (Reiter **KI**), aber **niemals mit

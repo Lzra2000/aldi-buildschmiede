@@ -81,6 +81,7 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 - Copy proprietary client Lua into git
 - Embed Ascension/WoW **BLP** (or BLP-converted) or 1:1 client UI chrome into the site — see `website-assets.mdc` (agents may invent original CSS/SVG/PNG/WebP; spell/item icons only via pipelines)
 - Mutate-game / write Ascension APIs in the addon (export stays clipboard-only; `BS.Safe` + `pcall`)
+- Ship broken or unclear German in UI/docs — see `.cursor/rules/german-language.mdc` (du-tone; Builder + Synergien)
 
 ## AGENTS.md anchors
 
@@ -88,3 +89,4 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 - After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
 - Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict
 - After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
+- Product German: correct grammar, **du**, short clear sentences — `.cursor/rules/german-language.mdc`

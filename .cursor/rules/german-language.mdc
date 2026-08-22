@@ -1,0 +1,55 @@
+---
+description: Product German must be correct and clear (UI, README, Erste Schritte, errors, empty states); du-tone; Builder + Synergien
+alwaysApply: true
+---
+
+# German language (product copy)
+
+User-facing German in this repo must be **grammatically correct and easy to understand**.
+Applies to Builder **and** Synergien, and to docs guild members actually read.
+
+## Scope
+
+- UI labels, buttons, tooltips, toasts, errors, empty states, Erste Schritte
+- `README.md`, `CONTRIBUTING.md`, and any AGENTS / notes text that users see
+- Strings in `src/builder-body.html`, `src/builder-app.js`, `src/synergien-source.html`
+  (and rebuilt `index.html` / `synergien.html`)
+
+Code comments and internal pipeline notes may stay mixed; **product surfaces stay German.**
+
+## Tone: **du** (informal guild)
+
+Address the player as **du** / **dein** — not **ihr** / **Sie**.
+Stay consistent in every new string. Existing copy already uses du; do not introduce ihr.
+
+## Clarity
+
+- Prefer short, clear sentences over nested clauses.
+- Avoid Anglizismen when a good German word fits (z. B. „Nachschlagewerk“ statt
+  „Lookup“, „Vorschlag“ statt „Suggestion“ in UI).
+- **OK as game terms:** Path, Build, Wildcard, Addon, Import, Export, Talent,
+  Spell, Cooldown, Crit, Hit, und ähnliche Client-/Season-Begriffe.
+
+## Grammar traps (do not ship)
+
+- Broken compounds (`Build Schmiede` → Buildschmiede; Bindestriche nur wo nötig)
+- Wrong articles / case (`der`/`die`/`das`, Genitiv, Präpositionen)
+- **dass** vs **das**
+- Dangling or mixed address (du in one line, ihr in the next)
+- `text-transform: uppercase` on labels that may contain Umlaute — Chrome leaves
+  ü/ä/ö lowercase (“Übernehmen”). No uppercase transform on such labels
+  (see AGENTS.md Fallen → Umlaute)
+
+## Both surfaces
+
+Synergien is first-class with the Builder (`.cursor/rules/synergien-first-class.mdc`).
+German quality rules apply equally to both; do not polish Builder copy and leave
+Synergien broken.
+
+## Do not mass-rewrite
+
+Fix or write German for the change you are shipping. Full-repo copyedit is a
+separate task — do not rewrite all strings “while here.”
+
+Details also anchored in `AGENTS.md` (Regeln) and
+`.cursor/rules/full-agent-utilization.mdc`.
