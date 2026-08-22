@@ -45,6 +45,23 @@ data/               Ergebnis der Pipeline, wird eingebettet
 addon/              Lua-Quelle des Companion-Addons
 ```
 
+### Aufbau der Oberfläche
+
+Fünf Ansichten, umgeschaltet über den Kopfbalken; nur eine ist gleichzeitig
+sichtbar (`.view.on`). `showView()` schaltet um, sonst nichts.
+
+| Ansicht | Zweck |
+|---|---|
+| `vBuild` | Katalog links, Build und Vorschläge rechts |
+| `vAnalyse` | Befund, Path, Stat-Priorität, Skalierung, Struktur — als Karten nebeneinander |
+| `vChain` | Wirkungsketten: was zahlt auf was ein |
+| `vTools` | Import, Generator, KI, Vergleich, Archetypen, Teilen |
+| `vWissen` | Nachschlagewerk (vier Reiter) |
+
+Zähler stehen teils doppelt (Kopfbalken und Panel-Kopf). `syncHeader()`
+spiegelt sie; wer einen neuen anlegt, trägt ihn dort ein, statt ihn zweimal
+zu berechnen.
+
 ### `src/builder-app.js` ist die Quelle der Wahrheit
 
 Die Datei ist historisch durch eine Reihe von Patch-Skripten gewachsen.

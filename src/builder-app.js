@@ -2317,6 +2317,219 @@
     }
   });
 
+  // ---------- Ansichten ----------
+  function showView(id) {
+    [].forEach.call(document.querySelectorAll(".view"), function (v) {
+      v.classList.toggle("on", v.id === id);
+    });
+    [].forEach.call(document.querySelectorAll(".vtab"), function (t) {
+      var on = t.dataset.view === id;
+      t.classList.toggle("on", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".vtab");
+    if (b) showView(b.dataset.view);
+  });
+
+  // ---------- Wirkungsketten ----------
+  // Beantwortet die Frage, die vorher nur indirekt über Warnungen zu
+  // erahnen war: was hängt an was. Jede Verbindung zeigt zugleich, ob sie
+  // im aktuellen Build tatsächlich zündet.
+
+  var REFBY = null;
+  function refBy() {
+    if (REFBY) return REFBY;
+    REFBY = {};
+    for (var i = 0; i < REL.length; i++) {
+      (REL[i][2] || []).forEach(function (r) {
+        (REFBY[r] = REFBY[r] || []).push(i);
+      });
+    }
+    return REFBY;
+  }
+
+  function pill(i, live, takeable) {
+    return '<span class="pill ' + (live ? "live" : "dead") +
+      (takeable ? " take" : "") + '"' +
+      (takeable ? ' data-add="' + i + '" role="button" tabindex="0"' : "") +
+      ' style="border-left:3px solid var(--q' + CAT[i][3] + ')">' +
+      (live ? "✓ " : "") + esc(CAT[i][0]) + "</span>";
+  }
+
+  function chainOf(i, have, showMissing) {
+    var rows = [], live = 0, dead = 0;
+
+    var base = REL[i][0];
+    if (base !== null && base !== undefined) {
+      rows.push(["Basis", "<em>erbt die Talente von</em> " + pill(base, !!have[base], false)]);
+    }
+
+    var need = REL[i][1];
+    if (need !== null && need !== undefined) {
+      rows.push(["Braucht", pill(need, !!have[need], !have[need])]);
+      if (have[need]) live++; else dead++;
+    }
+
+    // Talente, die auf diesen Eintrag oder seine Basis einzahlen.
+    var mods = [];
+    (BM[i] || []).forEach(function (t) { mods.push(t); });
+    if (base !== null && base !== undefined) {
+      (BM[base] || []).forEach(function (t) {
+        if (mods.indexOf(t) < 0) mods.push(t);
+      });
+    }
+    var modsOn = mods.filter(function (t) { return have[t]; });
+    var modsOff = mods.filter(function (t) { return !have[t]; });
+    if (modsOn.length || (showMissing && modsOff.length)) {
+      var h = modsOn.map(function (t) { return pill(t, true, false); }).join("");
+      if (showMissing) {
+        h += modsOff.slice(0, 6).map(function (t) { return pill(t, false, true); }).join("");
+        if (modsOff.length > 6) {
+          h += '<span class="pill dead">+' + (modsOff.length - 6) + "</span>";
+        }
+      }
+      rows.push(["Verbessert durch", h]);
+      live += modsOn.length;
+      if (!modsOn.length) dead++;
+    }
+
+    var refs = REL[i][2] || [];
+    var refsOn = refs.filter(function (r) { return have[r]; });
+    var refsOff = refs.filter(function (r) { return !have[r]; });
+    if (refsOn.length || (showMissing && refsOff.length)) {
+      var h2 = refsOn.map(function (r) { return pill(r, true, false); }).join("");
+      if (showMissing) {
+        h2 += refsOff.slice(0, 6).map(function (r) { return pill(r, false, true); }).join("");
+      }
+      rows.push(["Wirkt auf", h2]);
+      live += refsOn.length;
+    }
+
+    var back = (refBy()[i] || []).filter(function (r) { return have[r]; });
+    if (back.length) {
+      rows.push(["Zahlt ein auf", back.map(function (r) {
+        return pill(r, true, false);
+      }).join("")]);
+      live += back.length;
+    }
+
+    var gate = REL[i][4];
+    if (gate) {
+      rows.push(["Sperre", '<em>' + esc(gate[0]) + ":</em> " + esc(gate[1])]);
+    }
+    var cg = REL[i][5];
+    if (cg >= 0) {
+      var shared = Object.keys(have).map(Number).filter(function (k) {
+        return k !== i && REL[k][5] === cg;
+      });
+      if (shared.length) {
+        rows.push(["Geteilter CD", '<em>' + esc(CDG[cg] || "gemeinsam") + "</em> " +
+          shared.map(function (k) { return pill(k, true, false); }).join("")]);
+      }
+    }
+
+    return { rows: rows, live: live, dead: dead };
+  }
+
+  function renderChains(ids) {
+    var box = document.getElementById("chainbox");
+    if (!box) return;
+    var onlyLive = document.getElementById("chainOnlyLive");
+    var showMiss = document.getElementById("chainShowMissing");
+    onlyLive = !onlyLive || onlyLive.checked;
+    showMiss = showMiss && showMiss.checked;
+
+    var have = {}; ids.forEach(function (i) { have[i] = 1; });
+    var cards = [], linked = 0, orphans = 0;
+
+    ids.slice().sort(function (a, b) {
+      return CAT[a][1] - CAT[b][1] || CAT[b][3] - CAT[a][3];
+    }).forEach(function (i) {
+      var c = chainOf(i, have, showMiss);
+      if (c.live) linked++;
+      // Ein Talent, dessen genannte Fähigkeiten alle fehlen, ist tot.
+      var refs = REL[i][2] || [];
+      var orphan = CAT[i][1] === 1 && refs.length &&
+        !refs.some(function (r) { return have[r]; }) &&
+        !(BM[i] || []).length;
+      if (orphan) orphans++;
+      if (onlyLive && !c.rows.length && !orphan) return;
+
+      var s = SC[i] || {}, m = MC[i] || {}, foot = [];
+      if (s.w) foot.push(s.w + " % Waffe" + (s.sch ? " " + s.sch : ""));
+      if (s.flat) foot.push(s.flat[0] + "–" + s.flat[1]);
+      if (s.heal) foot.push("Heil " + s.heal[0] + "–" + s.heal[1]);
+      if (m.cd) foot.push("CD " + secs(m.cd));
+      if (m.cost) foot.push(m.cost + " " + m.res);
+
+      cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
+        '<div class="chn-hd"><span class="icon" style="width:22px;height:22px;' +
+        'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
+        '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+        esc(CAT[i][0]) + "</span>" +
+        '<span class="meta">' + (CAT[i][1] ? "TAL" : "ABI") + " · lvl" +
+        CAT[i][4] + "</span></div>" +
+        '<div class="chn-body">' +
+        (c.rows.length ? c.rows.map(function (r) {
+          return '<div class="lnk"><b>' + esc(r[0]) + "</b><span>" + r[1] + "</span></div>";
+        }).join("") : '<div class="lnk"><b>—</b><span><em>keine Verkettung ' +
+          "im Katalog</em></span></div>") +
+        "</div>" +
+        (orphan ? '<div class="chn-foot" style="color:var(--warn)">Wirkt nicht: ' +
+          "keine der genannten Fähigkeiten ist gewählt.</div>"
+                : (foot.length ? '<div class="chn-foot">' + esc(foot.join(" · ")) +
+                   "</div>" : "")) +
+        "</div>");
+    });
+
+    var k = document.getElementById("cK"), k2 = document.getElementById("cK2");
+    var label = ids.length ? (linked + " verkettet" + (orphans ? " · " + orphans + " tot" : ""))
+                           : "—";
+    if (k) { k.textContent = ids.length ? String(linked) : "—"; }
+    if (k2) {
+      k2.textContent = label;
+      k2.className = "cnt " + (orphans ? "over" : linked ? "ok" : "");
+    }
+
+    box.innerHTML = ids.length
+      ? (cards.length ? '<div class="chaingrid">' + cards.join("") + "</div>"
+         : '<div class="empty">Keiner deiner Einträge ist im Katalog mit einem ' +
+           "anderen verknüpft. Häkchen oben ausschalten, um trotzdem alle zu sehen.</div>")
+      : '<div class="empty">Wähle Fähigkeiten und Talente — dann steht hier, ' +
+        "was auf was einzahlt und was ins Leere läuft.</div>";
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "chainOnlyLive" || e.target.id === "chainShowMissing") {
+      renderChains(Object.keys(picked).map(Number));
+    }
+  });
+
+  // Zähler, die an zwei Stellen stehen (Kopfbalken und Panel-Kopf).
+  function mirror(from, to) {
+    var a = document.getElementById(from), b = document.getElementById(to);
+    if (a && b) { b.textContent = a.textContent; b.className = a.className; }
+  }
+  function syncHeader() {
+    mirror("cI", "cI2");
+    mirror("cP", "cP2");
+    var chip = document.getElementById("chipChar");
+    if (chip) {
+      chip.textContent = CHAR
+        ? (CHAR.name || "importiert") + " · " + (CHAR.level || "?") +
+          " · " + (CHAR.path || "?")
+        : "kein Charakter";
+      chip.classList.toggle("set", !!CHAR);
+    }
+    var ci = document.getElementById("chipIssues");
+    if (ci) {
+      var t = (document.getElementById("cI") || {}).textContent || "";
+      ci.classList.toggle("bad", /^[1-9]/.test(t));
+    }
+  }
+
   // ---------- Merken ----------
   var STORE = "aldi-buildschmiede-v1";
   function save() {
@@ -2785,11 +2998,13 @@
     renderScale(ids);
     renderSuggest(ids);
     renderStats(ids);
+    renderChains(ids);
     renderCompare();
     refreshOfficial();
     renderArchetypes();
     analyse();
     render();
+    syncHeader();
     save();
   }
 

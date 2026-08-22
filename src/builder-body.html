@@ -1,54 +1,124 @@
+<header class="topbar">
+  <div class="tbin">
+    <div class="brand">
+      <span class="bmark">AE</span>
+      <span class="btext"><b>Buildschmiede</b><i>Aldi Ehrfürchtig · Season 10 Wildcard</i></span>
+    </div>
+
+    <div class="chips">
+      <span class="chip" id="chipChar" title="Importierter Charakter">kein Charakter</span>
+      <span class="chip num"><i>ABI</i><b id="cA">0 / 30</b></span>
+      <span class="chip num"><i>TAL</i><b id="cT">0 / 25</b></span>
+      <span class="chip num" id="chipPath"><i>PATH</i><b id="cP">—</b></span>
+      <span class="chip num warnable" id="chipIssues"><i>BEFUND</i><b id="cI">—</b></span>
+    </div>
+
+    <nav class="views" role="tablist" aria-label="Ansicht">
+      <button class="vtab on" data-view="vBuild" role="tab">Bauen</button>
+      <button class="vtab" data-view="vAnalyse" role="tab">Auswertung</button>
+      <button class="vtab" data-view="vChain" role="tab">Ketten<span class="cnt" id="cK">—</span></button>
+      <button class="vtab" data-view="vTools" role="tab">Werkzeuge</button>
+      <button class="vtab" data-view="vWissen" role="tab">Wissen</button>
+    </nav>
+  </div>
+</header>
+
 <div class="wrap">
-  <header class="mast">
-    <div class="masttop">
-      <div>
-        <p class="guild">Gilde Aldi Ehrfürchtig · Season 10 Wildcard</p>
-        <h1>Buildschmiede</h1>
+  <section class="view on" id="vBuild" role="tabpanel">
+    <div class="cols cols-build">
+      <div class="panel col-main">
+        <div class="panel-hd">
+          <h2>KATALOG</h2>
+          <span class="cnt" id="hits">3071 Treffer</span>
+        </div>
+        <div class="controls">
+          <input type="search" id="q" placeholder="Name oder Beschreibung suchen …" aria-label="Suche">
+          <select id="fKind" aria-label="Art"><option value="">Alle Arten</option>
+            <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
+          <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
+          <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
+            <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
+            <option value="level">Stufe</option><option value="wpct">Waffenprozent</option>
+            <option value="dmg">Geschätzter Treffer</option>
+            <option value="cyc">Schaden pro Cooldown</option></select>
+          <select id="fScale" aria-label="Skalierung"><option value="">Jede Skalierung</option>
+            <option value="w">Waffenschaden</option><option value="s">Elementar</option>
+            <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
+            <option value="h">Heilung</option>
+            <option value="cd">Mit Cooldown</option><option value="nocd">Ohne Cooldown</option>
+            <option value="free">Kostenlos</option>
+            <option value="g">Ressourcen-Generator</option></select>
+          <select id="fQual" aria-label="Qualität"><option value="">Alle Qualitäten</option>
+            <option value="4">Legendary</option><option value="3">Epic</option>
+            <option value="2">Rare</option><option value="1">Uncommon</option>
+            <option value="0">Normal</option></select>
+        </div>
+        <div class="list" id="list"></div>
       </div>
-      <p class="masthint">3.071 Fähigkeiten und Talente · Build-Generator ·
-        Path- und Stat-Empfehlung<br>Import aus dem Spiel · KI-Beratung ·
-        Build per Link teilen</p>
-    </div>
-  </header>
 
-  <div class="grid">
+      <div class="col-side">
+        <div class="panel">
+          <div class="panel-hd"><h2>DEIN BUILD</h2></div>
+          <div id="budget"></div>
+          <div class="twocol">
+            <div><div class="subhd">Abilities</div><div id="slotsA"></div></div>
+            <div><div class="subhd">Talente</div><div id="slotsT"></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd"><h2>PASST DAZU</h2><span class="cnt" id="cV">—</span></div>
+          <div id="sugbox"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="vAnalyse" role="tabpanel">
+    <div class="cards">
+      <div class="panel card-wide">
+        <div class="panel-hd"><h2>BEFUND</h2><span class="cnt" id="cI2">—</span></div>
+        <div id="issues"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><h2>PATH</h2><span class="cnt" id="cP2">—</span></div>
+        <div id="paths"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><h2>STAT-PRIORITÄT</h2><span class="cnt" id="cB">—</span></div>
+        <div id="statbox"></div>
+      </div>
+      <div class="panel card-wide">
+        <div class="panel-hd"><h2>SKALIERUNG</h2><span class="cnt" id="cS">—</span></div>
+        <div id="scalebox"></div>
+      </div>
+      <div class="panel card-wide">
+        <div class="panel-hd"><h2>STRUKTUR</h2><span class="cnt" id="cF">—</span></div>
+        <div id="flags"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="vChain" role="tabpanel">
     <div class="panel">
-      <div class="panel-hd">
-        <h2>KATALOG</h2>
-        <span class="cnt" id="hits">3071 Treffer</span>
+      <div class="panel-hd"><h2>WIRKUNGSKETTEN</h2>
+        <span class="cnt" id="cK2">—</span></div>
+      <div class="chainctl">
+        <label><input type="checkbox" id="chainOnlyLive" checked> nur Einträge mit Verkettung</label>
+        <label><input type="checkbox" id="chainShowMissing"> auch zeigen, was fehlt</label>
       </div>
-      <div class="controls">
-        <input type="search" id="q" placeholder="Name oder Beschreibung suchen …" aria-label="Suche">
-        <select id="fKind" aria-label="Art"><option value="">Alle Arten</option>
-          <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
-        <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
-        <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
-          <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
-          <option value="level">Stufe</option><option value="wpct">Waffenprozent</option>
-          <option value="dmg">Geschätzter Treffer</option>
-          <option value="cyc">Schaden pro Cooldown</option></select>
-        <select id="fScale" aria-label="Skalierung"><option value="">Jede Skalierung</option>
-          <option value="w">Waffenschaden</option><option value="s">Elementar</option>
-          <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
-          <option value="h">Heilung</option>
-          <option value="cd">Mit Cooldown</option><option value="nocd">Ohne Cooldown</option>
-          <option value="free">Kostenlos</option>
-          <option value="g">Ressourcen-Generator</option></select>
-        <select id="fQual" aria-label="Qualität"><option value="">Alle Qualitäten</option>
-          <option value="4">Legendary</option><option value="3">Epic</option>
-          <option value="2">Rare</option><option value="1">Uncommon</option><option value="0">Normal</option></select>
-      </div>
-      <div class="list" id="list"></div>
+      <div id="chainbox"></div>
     </div>
+  </section>
 
-    <div class="side">
-      <details class="panel" id="impPanel" open>
-        <summary class="panel-hd"><h2>AUS DEM SPIEL EINFÜGEN</h2>
-          <span class="cnt" id="cC">—</span></summary>
+  <section class="view" id="vTools" role="tabpanel">
+    <div class="cards">
+      <div class="panel card-wide">
+        <div class="panel-hd"><h2>AUS DEM SPIEL EINFÜGEN</h2>
+          <span class="cnt" id="cC">—</span></div>
         <div class="pastewrap">
           <p class="pastehint">Im Spiel <code>/bs</code> tippen,
-            <kbd>Strg</kbd>+<kbd>C</kbd>, hier rein. Addon gibt es unten unter
-            <em>Nachschlagen</em>.</p>
+            <kbd>Strg</kbd>+<kbd>C</kbd>, hier rein. Das Addon findest du
+            unter <em>Wissen</em>.</p>
           <textarea id="pasteBox" rows="3" spellcheck="false"
             placeholder="=== BUILDSCHMIEDE v1 ===&#10;CHAR|…"></textarea>
           <div class="pastebtns">
@@ -57,97 +127,56 @@
           </div>
         </div>
         <div id="charBox"></div>
-      </details>
-
-      <div class="panel">
-        <div class="panel-hd"><h2>DEIN BUILD</h2>
-          <span class="cntpair"><span class="cnt" id="cA">0 / 30</span><span
-            class="cnt" id="cT">0 / 25</span></span></div>
-        <div id="budget"></div>
-        <div class="twocol">
-          <div><div class="subhd">Abilities</div><div id="slotsA"></div></div>
-          <div><div class="subhd">Talente</div><div id="slotsT"></div></div>
-        </div>
       </div>
 
       <div class="panel">
-        <div class="panel-hd"><h2>AUSWERTUNG</h2></div>
-        <div class="tabbar" role="tablist">
-          <button class="tab on" data-tab="tPath" role="tab">Path<span
-            class="cnt" id="cP">—</span></button>
-          <button class="tab" data-tab="tIssues" role="tab">Befund<span
-            class="cnt" id="cI">—</span></button>
-          <button class="tab" data-tab="tStat" role="tab">Stat-Prio<span
-            class="cnt" id="cB">—</span></button>
-          <button class="tab" data-tab="tScale" role="tab">Skalierung<span
-            class="cnt" id="cS">—</span></button>
-          <button class="tab" data-tab="tFlags" role="tab">Analyse<span
-            class="cnt" id="cF">—</span></button>
-        </div>
-        <div class="tabp on" id="tPath"><div id="paths"></div></div>
-        <div class="tabp" id="tIssues"><div id="issues"></div></div>
-        <div class="tabp" id="tStat"><div id="statbox"></div></div>
-        <div class="tabp" id="tScale"><div id="scalebox"></div></div>
-        <div class="tabp" id="tFlags"><div id="flags"></div></div>
+        <div class="panel-hd"><h2>GENERATOR</h2></div>
+        <div id="genbox"></div>
       </div>
 
       <div class="panel">
-        <div class="panel-hd"><h2>WERKZEUGE</h2></div>
-        <div class="tabbar" role="tablist">
-          <button class="tab on" data-tab="tAI" role="tab">KI</button>
-          <button class="tab" data-tab="tGen" role="tab">Generator</button>
-          <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
-            class="cnt" id="cV">—</span></button>
-          <button class="tab" data-tab="tArch" role="tab">Archetypen</button>
-          <button class="tab" data-tab="tCmp" role="tab">Vergleich<span
-            class="cnt" id="cX">—</span></button>
-          <button class="tab" data-tab="tShare" role="tab">Teilen</button>
-        </div>
-        <div class="tabp on" id="tAI"><div id="aibox"></div></div>
-        <div class="tabp" id="tGen"><div id="genbox"></div></div>
-        <div class="tabp" id="tSug"><div id="sugbox"></div></div>
-        <div class="tabp" id="tArch"><div id="archbox"></div></div>
-        <div class="tabp" id="tCmp">
-          <div class="pastewrap">
-            <p class="pastehint">Build-Link eines Gildenkollegen oder ein
-              Export aus dem Spiel. <code>/bs target</code> liest den Build
-              deines Ziels aus.</p>
-            <textarea id="cmpBox" rows="3" spellcheck="false"
-              placeholder="Link mit #b=… oder === BUILDSCHMIEDE v1 ==="></textarea>
-            <div class="pastebtns">
-              <button class="primary" id="bCmp">Vergleichen</button>
-              <button id="bCmpClear">Verwerfen</button>
-            </div>
+        <div class="panel-hd"><h2>KI-BERATUNG</h2></div>
+        <div id="aibox"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd"><h2>VERGLEICH</h2><span class="cnt" id="cX">—</span></div>
+        <div class="pastewrap">
+          <p class="pastehint">Build-Link eines Gildenkollegen oder ein Export.
+            <code>/bs target</code> liest den Build deines Ziels aus.</p>
+          <textarea id="cmpBox" rows="3" spellcheck="false"
+            placeholder="Link mit #b=… oder === BUILDSCHMIEDE v1 ==="></textarea>
+          <div class="pastebtns">
+            <button class="primary" id="bCmp">Vergleichen</button>
+            <button id="bCmpClear">Verwerfen</button>
           </div>
-          <div id="cmpbox"></div>
         </div>
-        <div class="tabp" id="tShare">
-          <div class="share">
-            <button class="primary" id="bLink">Link kopieren</button>
-            <button id="bText">Als Text kopieren</button>
-            <button id="bAI">Für KI kopieren</button>
-            <button id="bClear">Leeren</button>
-            <input type="text" id="url" readonly aria-label="Build-Link">
-            <div class="offlink" id="official"></div>
-            <p class="aihint">„Für KI kopieren" legt einen fertigen
-              Prompt in die Zwischenablage: deine Werte, dein kompletter
-              Build mit allen Zahlen und die Ascension-Regeln, die ein
-              Modell sonst nicht kennt. In Claude oder ChatGPT einfügen.
-              Die Seite selbst ruft kein Modell auf — dafür müsste ein
-              Schlüssel in dieser öffentlichen Datei stehen.</p>
-          </div>
+        <div id="cmpbox"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd"><h2>ARCHETYPEN</h2></div>
+        <div id="archbox"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd"><h2>TEILEN</h2></div>
+        <div class="share">
+          <button class="primary" id="bLink">Link kopieren</button>
+          <button id="bText">Als Text kopieren</button>
+          <button id="bAI">Für KI kopieren</button>
+          <button id="bClear">Leeren</button>
+          <input type="text" id="url" readonly aria-label="Build-Link">
+          <div class="offlink" id="official"></div>
+          <p class="aihint">„Für KI kopieren" legt einen fertigen Prompt in die
+            Zwischenablage: deine Werte, dein kompletter Build mit allen Zahlen
+            und die Ascension-Regeln, die ein Modell sonst nicht kennt.</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-
-
-
-
-
-
-  <section class="ref">
+  <section class="view" id="vWissen" role="tabpanel">
     <div class="panel">
       <div class="tabbar big" role="tablist">
         <button class="tab on" data-tab="rPaths" role="tab">Die fünf Paths</button>
@@ -424,8 +453,7 @@
         aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
         sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
         weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
-        Angriffe schlägt härter zu“ reicht es. Für ein DPS-Ranking nicht.</div>
-</div>
+        Angriffe schlägt härter zu“ reicht es. Für ein DPS-Ranking nicht.</div></div>
       <div class="tabp" id="rAddon">
       <div class="headline">
         <b>Warum du es willst</b>
