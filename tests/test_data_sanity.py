@@ -31,6 +31,7 @@ OPTIONAL_JSON = (
     ("ilvlbands.json", "ilb"),
     ("weapons.json", "wpn"),
     ("formtags.json", "frm"),
+    ("pathreq.json", "preq"),
 )
 # Parallele Arrays: assemble-Deckel 64 KB (des / tree / frm).
 PARALLEL_EMBED_MAX_KB = 64
@@ -332,6 +333,7 @@ class TestDataSanity(unittest.TestCase):
             "iic": ITEMICONS_EMBED_MAX_KB,
             "wpn": ITEMICONS_EMBED_MAX_KB,
             "frm": PARALLEL_EMBED_MAX_KB,
+            "preq": PARALLEL_EMBED_MAX_KB,
         }
         missing = []
         for fname, key in OPTIONAL_JSON:

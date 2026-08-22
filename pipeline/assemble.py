@@ -52,11 +52,16 @@ OPTIONAL_PAYLOAD = [
     ("ssugsp", "spellsuggest.json"),      # Related-Spell-Graph (SpellSpellSuggestions)
     ("iic", "itemicons.json"),            # itemId -> iconName (itemicons.py, kompakt)
     ("ilb", "ilvlbands.json"),            # ilvl/Waffen-Bänder 10–60 (ilvlbands.py)
-    ("wpn", "weapons.json"),              # itemId -> ilvl/dmg/Bänder (weapons.py)
+    ("wpn", "weapons.json"),              # itemId -> ItemStat-Bänder 10–60 (weapons.py)
+    ("frm", "formtags.json"),             # Form-Familie aus Katalogtext (formtags.py)
+    ("preq", "pathreq.json"),             # harte Path-Requires (pathreq.py) ≠ ssug
 ]
 
 # Sicherheitsnetz: nur einbetten wenn klein genug fuer GitHub Pages.
 ITEMICONS_EMBED_MAX_KB = 512
+# Parallele Katalog-Arrays (frm / des / tree) — nur einbetten wenn klein.
+FORMTAGS_EMBED_MAX_KB = 64
+PARALLEL_EMBED_MAX_KB = 64
 
 
 def read(path):
@@ -90,6 +95,28 @@ def main():
                       "pipeline/weapons.py Seed verkleinern"
                       % (kb, ITEMICONS_EMBED_MAX_KB))
                 continue
+        if key == "frm":
+            kb = os.path.getsize(p) / 1024.0
+            if kb > FORMTAGS_EMBED_MAX_KB:
+                print("  frm uebersprungen (%.0f KB > %d KB) — "
+                      "pipeline/formtags.py kompakter halten"
+                      % (kb, FORMTAGS_EMBED_MAX_KB))
+                continue
+        if key == "preq":
+            kb = os.path.getsize(p) / 1024.0
+            if kb > PARALLEL_EMBED_MAX_KB:
+                print("  preq uebersprungen (%.0f KB > %d KB) — "
+                      "pipeline/pathreq.py kompakter halten"
+                      % (kb, PARALLEL_EMBED_MAX_KB))
+                continue
+        if key in ("des", "tree"):
+            kb = os.path.getsize(p) / 1024.0
+            if kb > PARALLEL_EMBED_MAX_KB:
+                raise SystemExit(
+                    "data/%s %.0f KB > %d KB — nicht einbettbar "
+                    "(Desire-/Spec-Filter waere unvollstaendig)"
+                    % (fname, kb, PARALLEL_EMBED_MAX_KB)
+                )
         payload[key] = json.load(io.open(p, encoding="utf-8"))
         opt_note.append(key)
 
