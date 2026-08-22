@@ -6,7 +6,7 @@ Netzwerk**, kein Autoupload.
 
 | | |
 |---|---|
-| **Version** | 1.5.3 |
+| **Version** | 1.5.4 |
 | **Export-Format** | `BS.FORMAT` = **1** (additiv; alte Exporte bleiben lesbar) |
 | **Interface** | 30300 (WoW 3.3.5a) |
 

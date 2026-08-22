@@ -219,7 +219,7 @@ local function finishInspect()
     if payload then
         BS.ShowForeign(payload)
     else
-        BS.Print("Der Server hat nichts geschickt. Nochmal versuchen.")
+        BS.Print("Der Server hat nichts geschickt. Versuch es nochmal.")
     end
 end
 
@@ -228,7 +228,7 @@ end
 function BS.InspectTarget()
     local unit = "target"
     if not UnitExists(unit) then
-        BS.Print("Kein Ziel. Klick jemanden an und versuch es nochmal.")
+        BS.Print("Kein Ziel. Klicke jemanden an und versuche es nochmal.")
         return
     end
     if not UnitIsPlayer(unit) then
@@ -236,13 +236,13 @@ function BS.InspectTarget()
         return
     end
     if not CheckInteractDistance(unit, 1) and not UnitIsUnit(unit, "player") then
-        BS.Print("Zu weit weg zum Inspizieren.")
+        BS.Print("Du bist zu weit weg zum Inspizieren.")
         return
     end
 
     clearPending()
     pending = UnitName(unit)
-    BS.Print("Lese " .. tostring(pending) .. " aus ...")
+    BS.Print("Lese den Build von " .. tostring(pending) .. " aus ...")
 
     if not waiter then
         waiter = CreateFrame("Frame")
@@ -250,7 +250,7 @@ function BS.InspectTarget()
             if not pending then return end
             -- pcall ohne Fehler heisst nicht, dass der Server geliefert hat.
             if result and result ~= "CA_INSPECT_OK" then
-                clearPending("Inspect fehlgeschlagen: " .. tostring(_G[result] or result))
+                clearPending("Auslesen fehlgeschlagen: " .. tostring(_G[result] or result))
                 return
             end
             finishInspect()
@@ -277,7 +277,7 @@ function BS.InspectTarget()
         local expect = pending
         Timer.After(8, function()
             if pending == expect then
-                clearPending("Keine Antwort vom Server.")
+                clearPending("Keine Antwort vom Server. Versuch es nochmal.")
             end
         end)
     else
@@ -287,7 +287,7 @@ function BS.InspectTarget()
                 return
             end
             if GetTime() >= timeoutAt then
-                clearPending("Keine Antwort vom Server.")
+                clearPending("Keine Antwort vom Server. Versuch es nochmal.")
             end
         end)
     end

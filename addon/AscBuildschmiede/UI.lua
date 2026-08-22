@@ -11,7 +11,7 @@
 --   Controls: UIPanelCloseButton, UIPanelButtonTemplate, UIPanelScrollFrameTemplate,
 --             InputBoxTemplate, GameFontNormal / Highlight / HighlightSmall / DisableSmall
 --
--- Eigenen Build und Fremd-Inspect teilen sich den Frame.
+-- Eigener Build und Fremd-Inspect teilen sich den Frame.
 
 local BS = AscBuildschmiede
 
@@ -189,17 +189,17 @@ local function applyMode(f, mode, meta)
         setPortraitIcon(f, ICON_FOREIGN)
         f.subtitle:SetText(string.format("|cffFFD100Inspect|r  %s", meta.name or "?"))
         f.hint:SetText(
-            "Text ist markiert: |cffFFD100Strg+C|r, dann auf der Seite unter " ..
+            "Der Text ist markiert. |cffFFD100Strg+C|r, dann auf der Seite unter " ..
             "|cffFFD100VERGLEICH|r einfuegen.")
-        f.refresh:SetText("Eigenen Build")
+        f.refresh:SetText("Mein Build")
         f.info:SetTextColor(1, 0.82, 0)
     else
         setTitle(f, "Buildschmiede Export")
         setPortraitIcon(f, ICON_OWN)
         f.subtitle:SetText("|cffAAAAAADein Charakter|r")
         f.hint:SetText(
-            "Text ist markiert: |cffFFD100Strg+C|r, dann auf der Seite unter " ..
-            "|cffFFD100EINFUEGEN|r ablegen.")
+            "Der Text ist markiert. |cffFFD100Strg+C|r, dann auf der Seite unter " ..
+            "|cffFFD100EINFUEGEN|r einfuegen.")
         f.refresh:SetText("Neu einlesen")
         f.info:SetTextColor(0.7, 0.7, 0.7)
     end
@@ -266,8 +266,8 @@ local function statusOwn(payload)
     }
     local rich = richnessFromPayload(payload)
     for i = 1, #rich do parts[#parts + 1] = rich[i] end
-    parts[#parts + 1] = "Gear:" .. (db.includeGear and "an" or "aus")
-    parts[#parts + 1] = "Stats:" .. (db.includeStats and "an" or "aus")
+    parts[#parts + 1] = "Gear: " .. (db.includeGear and "an" or "aus")
+    parts[#parts + 1] = "Stats: " .. (db.includeStats and "an" or "aus")
     local out = {}
     for i = 1, #parts do
         if parts[i] then out[#out + 1] = parts[i] end
@@ -294,7 +294,7 @@ local function statusForeign(payload)
     }
     local rich = richnessFromPayload(payload)
     for i = 1, #rich do parts[#parts + 1] = rich[i] end
-    parts[#parts + 1] = "→ VERGLEICH auf der Seite"
+    parts[#parts + 1] = "Zum VERGLEICH auf der Seite"
     local out = {}
     for i = 1, #parts do
         if parts[i] then out[#out + 1] = parts[i] end
@@ -461,7 +461,7 @@ function BS.Refresh()
 end
 
 -- Fremder Build: gleiches Fenster, eigener Modus — Refresh ersetzt ihn
--- erst, wenn der Spieler "Eigenen Build" waehlt.
+-- erst, wenn der Spieler "Mein Build" waehlt.
 function BS.ShowForeign(payload)
     if not frame then frame = makeFrame() end
     frame:Show()

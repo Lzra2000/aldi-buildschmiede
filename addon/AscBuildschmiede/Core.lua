@@ -9,7 +9,7 @@ local ADDON = ...
 AscBuildschmiede = AscBuildschmiede or {}
 local BS = AscBuildschmiede
 
-BS.VERSION = "1.5.3"
+BS.VERSION = "1.5.4"
 BS.FORMAT = 1
 BS.SITE = "https://lzra2000.github.io/aldi-buildschmiede/"
 
@@ -90,10 +90,10 @@ SlashCmdList["ASCBUILDSCHMIEDE"] = function(msg)
         return
     end
     if msg == "help" or msg == "?" then
-        BS.Print("/bs — Exportfenster (Text markieren, Strg+C, Seite unter EINFUEGEN).")
-        BS.Print("/bs target — Build des Ziels auslesen (Fenster → VERGLEICH auf der Seite).")
+        BS.Print("/bs — Exportfenster (Text markieren, Strg+C, auf der Seite unter EINFUEGEN einfuegen).")
+        BS.Print("/bs target — Build des Ziels auslesen (Fenster → unter VERGLEICH auf der Seite einfuegen).")
         BS.Print("/bs gear — Gear im Export an/aus.  /bs stats — Stats an/aus.")
-        BS.Print("Export-Felder u.a.: SPEC, LOCK, MODE, ESSENCE; GEAR/WEAPON mit itemId wenn vorhanden.")
+        BS.Print("Export-Felder u. a.: SPEC, LOCK, MODE, ESSENCE; GEAR/WEAPON mit itemId wenn vorhanden.")
         BS.Print(BS.SITE)
         return
     end

@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Setzt die Buildschmiede zu einer einzelnen HTML-Datei zusammen.
+"""Setzt Builder und Synergien fuer GitHub Pages zusammen.
 
 Alles wird eingebettet: Katalog, Beziehungen, Skalierungszahlen, Mechanik
-und das Icon-Sprite als data:-URI. Die fertige Seite laeuft ohne jede
-externe Anfrage ausser Google Fonts.
+und das Icon-Sprite als data:-URI. Die fertige Builder-Seite laeuft ohne
+jede externe Anfrage ausser Google Fonts.
 
     python3 pipeline/assemble.py
 
-liest src/ und data/, schreibt index.html und kopiert
-src/synergien-source.html → synergien.html (GitHub Pages).
+liest src/ und data/, schreibt IMMER beides:
+
+  - index.html          ← builder-head + body + data + builder-app.js
+  - synergien.html      ← src/synergien-source.html (Synergien ist first-class;
+                          fehlende Quelle = harter Fehler, kein Skip)
+
+Beide Pages-URLs muessen nach jedem Website-Ship zusammenpassen.
 """
 import base64
 import io
@@ -123,13 +128,19 @@ def main():
     if opt_note:
         print("  Optional:", ", ".join(opt_note))
 
-    # Synergiekompendium: CSS-only chrome (no BLP UI frames).
+    # Synergien (first-class Pages sibling): always emit; never skip.
+    # CSS-only chrome (no BLP UI frames). Source missing = hard fail.
     syn_src = os.path.join(SRC, "synergien-source.html")
     syn_dest = os.path.join(ROOT, "synergien.html")
     if not os.path.exists(syn_src):
-        raise SystemExit("fehlt: src/synergien-source.html")
+        raise SystemExit(
+            "fehlt: src/synergien-source.html — Synergien ist Pflicht-Ship "
+            "(siehe .cursor/rules/synergien-first-class.mdc)"
+        )
     syn_html = read(syn_src).replace("<!-- uichrome -->", "", 1)
     io.open(syn_dest, "w", encoding="utf-8").write(syn_html)
+    if not os.path.exists(syn_dest) or os.path.getsize(syn_dest) < 100:
+        raise SystemExit("synergien.html wurde nicht korrekt geschrieben")
     print("Geschrieben:", syn_dest)
 
 

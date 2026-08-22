@@ -1,0 +1,46 @@
+---
+description: Synergien is first-class with the builder — keep both Pages URLs in sync on every website/visual/assemble ship
+alwaysApply: true
+---
+
+# Synergien first-class (never orphan)
+
+Live product has **two** equal Pages surfaces:
+
+- Builder: https://lzra2000.github.io/aldi-buildschmiede/
+- Synergien: https://lzra2000.github.io/aldi-buildschmiede/synergien.html
+
+Any website / visual / chrome / tokens / a11y / nav / assemble / site-docs ship must treat Synergien as **first-class with the builder**. Do not ship Builder-only chrome and leave Synergien behind.
+
+## When you touch Builder chrome — also Synergien
+
+If you change any of:
+
+- shared CSS tokens / colors / typography / spacing
+- header, brand, nav, footer, a11y landmarks
+- site-wide visual language (panels, borders, original chrome)
+- assemble behavior that affects shipped HTML
+
+…then you **must** also:
+
+1. Update `src/synergien-source.html` in the same ship (mirror tokens/nav/chrome as needed; Synergien may keep school-only hues).
+2. Keep **bidirectional nav**: Builder ↔ Synergien links stay present and correct (`index.html` ↔ `synergien.html`).
+3. Run `python3 pipeline/assemble.py` — it **always** writes both `index.html` **and** `synergien.html`.
+4. Commit **both** rebuilt artifacts when they change.
+
+Agents inventing original chrome (see `website-assets.mdc`) apply that freedom to **both** pages — not Builder alone.
+
+## Lanes
+
+| Surface | Source | Built artifact |
+|---|---|---|
+| Builder | `src/builder-head.html`, `builder-body.html`, `builder-app.js` | `index.html` |
+| Synergien | `src/synergien-source.html` | `synergien.html` |
+
+`pipeline/assemble.py` copies/emits Synergien every run; missing `src/synergien-source.html` is a hard fail. Never hand-edit root `synergien.html` in parallel with source edits.
+
+## Never
+
+- Ship token/chrome/nav/a11y changes only in Builder sources
+- Drop or orphan Synergien from nav, README live links, or assemble
+- Assume Pages updates from a local assemble without commit+push of **both** HTML ships
