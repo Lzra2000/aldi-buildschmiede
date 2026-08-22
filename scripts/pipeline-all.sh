@@ -67,10 +67,10 @@ else
 fi
 
 if need_data catalog.json; then
-  run_step pathtags pathtags.py
   run_step scaling scaling.py
+  run_step pathtags pathtags.py
 else
-  echo "SKIP pathtags/scaling — need data/catalog.json"
+  echo "SKIP scaling/pathtags — need data/catalog.json"
   skipped=$((skipped + 2))
 fi
 
@@ -108,9 +108,10 @@ fi
 
 if need_data CatalogData.lua catalog.json; then
   run_step desireelig desireelig.py
+  run_step pathreq pathreq.py
 else
-  echo "SKIP desireelig — need data/CatalogData.lua"
-  skipped=$((skipped + 1))
+  echo "SKIP desireelig/pathreq — need data/CatalogData.lua"
+  skipped=$((skipped + 2))
 fi
 
 if need_data spellids.json && need_files "$DBC/SpellTagTypes.dbc" "$DBC/SpellTags.dbc"; then
@@ -151,10 +152,26 @@ if [ "$sync_ran" -eq 1 ]; then
   if py pipeline/scaling.py; then
     echo "OK scaling re-run"
     ran=$((ran + 1))
+    echo "==> pathtags (re-run after scaling)"
+    if py pipeline/pathtags.py; then
+      echo "OK pathtags re-run"
+      ran=$((ran + 1))
+    else
+      echo "FAIL pathtags re-run"
+      failed=$((failed + 1))
+    fi
   else
     echo "FAIL scaling re-run"
     failed=$((failed + 1))
   fi
+fi
+
+AE_BLP="${ASCENSION_AE_BLP:-/c/Users/x/Documents/AscensionInterfaceExtract/by-archive/patch-I.MPQ/Interface/icons/inv_custom_abilityessence.blp}"
+if need_data sprite.webp spriteindex.json && need_files "$AE_BLP"; then
+  run_step essicons essicons.py
+else
+  echo "SKIP essicons — Interface-Extract missing (AE/TE BLP)"
+  skipped=$((skipped + 1))
 fi
 
 echo ""

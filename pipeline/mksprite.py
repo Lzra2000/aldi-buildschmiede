@@ -15,6 +15,12 @@ ICON_ROOT = r"C:\Users\x\Documents\AscensionInterfaceExtract\by-archive"
 TILE = 32
 COLS = 48
 
+# Gemessen (SpellListItem / MARKUP_AE_ICON / MARKUP_TE_ICON) — nicht Katalog.
+EXTRA_ICONS = (
+    "inv_custom_abilityessence",
+    "inv_custom_talentessence",
+)
+
 
 def index_blps():
     """Dateiname (klein, ohne .blp) -> vollstaendiger Pfad."""
@@ -42,7 +48,7 @@ def main():
         icon = iconmap.get(name)
         needed.append(icon if icon and icon in blps else None)
 
-    uniq = sorted({i for i in needed if i})
+    uniq = sorted({i for i in needed if i} | {n for n in EXTRA_ICONS if n in blps})
     print("Katalog:", len(catalog), "| aufloesbare Icons:", sum(1 for i in needed if i),
           "| eindeutige Kacheln:", len(uniq))
 
@@ -67,8 +73,10 @@ def main():
 
     # Index: pro Katalogposition die Kachelnummer, -1 = kein Icon
     idx = [slot.get(i, -1) if i else -1 for i in needed]
+    extra = {n: slot[n] for n in EXTRA_ICONS if n in slot}
     io.open("spriteindex.json", "w", encoding="utf-8").write(
-        json.dumps({"cols": COLS, "tile": TILE, "idx": idx}, separators=(",", ":"))
+        json.dumps({"cols": COLS, "tile": TILE, "idx": idx, "extra": extra},
+                   separators=(",", ":"))
     )
     print("Ohne Icon:", sum(1 for v in idx if v < 0))
 

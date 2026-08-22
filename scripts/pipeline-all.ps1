@@ -77,8 +77,8 @@ Write-Host "DBC dir: $DBC"
 Write-Host ""
 
 Invoke-PipeStep -Name "modifiers" -Script "modifiers.py" -NeedData @("catalog.json", "relations.json")
-Invoke-PipeStep -Name "pathtags" -Script "pathtags.py" -NeedData @("catalog.json")
 Invoke-PipeStep -Name "scaling" -Script "scaling.py" -NeedData @("catalog.json")
+Invoke-PipeStep -Name "pathtags" -Script "pathtags.py" -NeedData @("catalog.json")
 Invoke-PipeStep -Name "spellids" -Script "spellids.py" -NeedData @("CatalogData.lua", "catalog.json")
 Invoke-PipeStep -Name "methods" -Script "methods.py" -NeedData @(
     "catalog.json", "scaling.json", "mechanics.json",
@@ -107,6 +107,7 @@ if ($minerOk) {
 }
 
 Invoke-PipeStep -Name "desireelig" -Script "desireelig.py" -NeedData @("CatalogData.lua", "catalog.json")
+Invoke-PipeStep -Name "pathreq" -Script "pathreq.py" -NeedData @("catalog.json", "CatalogData.lua")
 
 $tagTypes = Join-Path $DBC "SpellTagTypes.dbc"
 $tagSpell = Join-Path $DBC "SpellTags.dbc"
@@ -117,6 +118,9 @@ Invoke-PipeStep -Name "tagnames" -Script "tagnames.py" `
 
 # itemicons.py writes {} and exits 0 if DBC missing
 Invoke-PipeStep -Name "itemicons" -Script "itemicons.py"
+
+# AE/TE essence icons (patch sprite.webp extra{} — no full mksprite rebuild)
+Invoke-PipeStep -Name "essicons" -Script "essicons.py" -NeedData @("sprite.webp", "spriteindex.json")
 
 $ssugSp = Join-Path $DBC "SpellSpellSuggestions.dbc"
 Invoke-PipeStep -Name "spellsuggest" -Script "spellsuggest.py" `
@@ -146,8 +150,23 @@ if ($syncRan) {
     } else {
         Write-Host "OK scaling re-run"
         $script:Ran++
+        Write-Host "==> pathtags (re-run after scaling)"
+        & $py pipeline/pathtags.py
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "FAIL pathtags re-run"
+            $script:Failed++
+        } else {
+            Write-Host "OK pathtags re-run"
+            $script:Ran++
+        }
     }
 }
+
+$extractIcons = "C:\Users\x\Documents\AscensionInterfaceExtract\by-archive"
+Invoke-PipeStep -Name "essicons" -Script "essicons.py" `
+    -NeedData @("sprite.webp", "spriteindex.json") `
+    -NeedFiles @($extractIcons) `
+    -SkipReason "Interface-Extract missing (AE/TE BLP)"
 
 Write-Host ""
 Write-Host ("pipeline-all: ran={0} skipped={1} failed={2}" -f $script:Ran, $script:Skipped, $script:Failed)

@@ -369,27 +369,6 @@
   }
 
   // Gemessen: inv_custom_abilityessence / inv_custom_talentessence (essicons.py).
-  var ESS_ICON = {
-    AE: "inv_custom_abilityessence",
-    TE: "inv_custom_talentessence"
-  };
-  function essIconStyle(kind, size) {
-    var key = ESS_ICON[kind];
-    if (!key || !SPR.extra) return "";
-    var t = SPR.extra[key];
-    if (typeof t !== "number" || t < 0) return "";
-    size = size || SPR.tile;
-    var x = (t % SPR.cols) * size, y = Math.floor(t / SPR.cols) * size;
-    return "background-position:-" + x + "px -" + y + "px;" +
-      "background-size:" + (SPR.cols * size) + "px auto";
-  }
-  function essIconHtml(kind, size) {
-    return namedIconHtml(ESS_ICON[kind], size);
-  }
-  function essInvestChip(kind, val, title) {
-    return '<span class="esschip invchip" title="' + esc(title || "") + '">' +
-      essIconHtml(kind, 14) + "<i>" + esc(kind) + "</i> " + val + "</span>";
-  }
   function namedIconStyle(name, size) {
     var extra = SPR.extra || {};
     var t = extra[name];
@@ -1520,6 +1499,38 @@
   }
 
   function parseExport(text) {
+    function parseFlexibleId(tok) {
+      tok = String(tok || "").trim();
+      if (!tok) return 0;
+      var at = tok.match(/@(\d+)\s*$/);
+      if (at) return +at[1] || 0;
+      if (/^\d+$/.test(tok)) return +tok;
+      return parseInt(tok, 10) || 0;
+    }
+    function parseFlexibleSid(tok) {
+      tok = String(tok || "").trim();
+      if (!tok) return 0;
+      var hash = tok.match(/#(\d+)/);
+      if (hash) return +hash[1] || 0;
+      if (/^\d+$/.test(tok)) return +tok;
+      return parseInt(tok, 10) || 0;
+    }
+    function parseIdList(parts) {
+      var out = [], seenIds = Object.create(null);
+      String(parts.join("|") || "").split(/[|;,\s]+/).forEach(function (tok) {
+        var id = parseFlexibleId(tok);
+        if (id && !seenIds[id]) { seenIds[id] = 1; out.push(id); }
+      });
+      return out;
+    }
+    function parseSidList(parts) {
+      var out = [], seenIds = Object.create(null);
+      String(parts.join("|") || "").split(/[|;,\s]+/).forEach(function (tok) {
+        var id = parseFlexibleSid(tok);
+        if (id && !seenIds[id]) { seenIds[id] = 1; out.push(id); }
+      });
+      return out;
+    }
     var d = { stats: {}, gear: [], weapons: [], abi: [], tal: [], resist: {} };
     var seen = false;
     String(text || "").split(/\r?\n/).forEach(function (raw) {
@@ -7896,54 +7907,6 @@
       if (e.relatedTarget && el.contains(e.relatedTarget)) return;
       if (cur === el) hide(false);
     });
-    document.addEventListener("focusin", function (e) {
-      var el = host(e.target);
-      if (!el) return;
-      var text = textOf(el);
-      if (!text) return;
-      hide(true);
-      show(el, text);
-    });
-    document.addEventListener("focusout", function (e) {
-      var el = host(e.target);
-      if (!el || el === pinned) return;
-      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
-      if (cur === el) hide(false);
-    });
-    document.addEventListener("click", function (e) {
-      if (!coarse()) return;
-      var el = host(e.target);
-      if (!el) { hide(true); return; }
-      if (el.hasAttribute("data-jump") || el.hasAttribute("data-add")) return;
-      var text = textOf(el);
-      if (!text) return;
-      if (pinned === el) { hide(true); return; }
-      if (pinned) pinned.classList.remove("pin");
-      pinned = el;
-      el.classList.add("pin");
-      show(el, text);
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") hide(true);
-    });
-    window.addEventListener("scroll", function () { hide(true); }, true);
-  }
-
-  renderArchetypes();
-  renderGenerator();
-  renderAI();
-  renderMethods();
-  renderLogMetaWissen();
-  try {
-    refresh();
-  } catch (err) {
-    showView("vBuild");
-  }
-  allowSave = true;
-  initHoverSystem();
-})();
-
-);
     document.addEventListener("focusin", function (e) {
       var el = host(e.target);
       if (!el) return;
