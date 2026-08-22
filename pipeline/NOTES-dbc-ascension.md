@@ -347,14 +347,17 @@ Neue / erweiterte Muster in `pipeline/scaling.py`:
 | `RX_EXTRA_ATTACKS` | „two extra attacks“ (Windfury) | `w=200` — Zahlwort×100; „46 extra attack power“ bleibt ungenutzt (kein AP-%) |
 | `RX_ABSORB` | „absorbing 347 damage“, „Absorbs 165 Fire damage“, „absorbs 12045 spell damage“ | `absorb=[N,N]`, optional `asch`; **nicht** „absorbing 75% of …“ |
 | `RX_HEAL_RESTORE` | „restore 100 health“ | `heal` |
-| `RX_HEAL_PCT` | „healed for 4% of its maximum health“ | `healpct=4` |
+| `RX_HEAL_PCT` | „healed for 4%…“, Lay on Hands „amount equal of 100%…“ | `healpct` |
+| `RX_ECHO` / `RX_ECHO_BARE` | „50% of damage dealt as Holy“, „dealing additional 100% damage“ | `echo=[pct, Schule]` |
+| `RX_RELPCT` | „damage equal to 60% of your Immolate or Shadowflame“ | `relpct` + `relsrc` |
+| `RX_BLEED_VULN` | „take 30% additional damage from bleeds“ | `inc` Bleed-Verwundbarkeit |
+| `RX_FLAT_PLUS_BARE` | „block value plus an additional 5“ | `flat` |
 
-`methods.py` Gaps: Buff-only-Filter (`RX_BUFF_ONLY`), strengere `% … weapon damage`-
-Erkennung, Mastery-Unlock-Texte ausgeschlossen. Scale-Keys fuer Luecken-Frei:
-`w/flat/ap/sp/heal/healpct/absorb/tick`.
+`methods.py` Gaps: Buff-only-Filter, Form-Einschraenkung („only use spells that deal…“),
+Mastery-Unlocks. Scale-Keys: `w/flat/ap/sp/heal/healpct/absorb/tick/echo/relpct`.
 
-Restluecken (~24) sind ehrlich: Schule ohne Zahl (Mangle-Varianten, Earthquake,
-Heroic Leap, …), Relativschaden (Conflagrate = % of Immolate), oder nur Multiplikator.
+Restluecken (~20): Schule ohne Zahl (Earthquake, Heroic Leap, …), Mangle-Schulvarianten
+nur mit Bleed-`inc`, Stampede ohne Tickzahl, Envenom ohne Flat.
 
 ## 11. Shared GCD (Dubletten) vs. geteilter Ability-CD
 

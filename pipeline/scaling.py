@@ -27,6 +27,9 @@ Ausgabe scaling.json: pro Katalogindex ein Objekt, leere Felder weggelassen.
   healpct Prozent Heilung von Max-Leben   4 -> "healed for 4% of maximum health"
   absorb [min, max] Schildstaerke         "absorbing 347 damage", "Absorbs 165 Fire damage"
   asch   Schule des Absorbs (Ward), sonst weggelassen
+  echo   [Prozent, Schule]                50% of damage dealt as Holy
+  relpct Prozent vom Schaden eines anderen Spells (Conflagrate)
+  relsrc Tooltip-Fragment der Bezugsfaehigkeit
   inc    [[Prozent, worauf], ...]         "increases X by N%"
   red    [[Prozent, worauf], ...]         "reduces X by N%"
   proc   Prozent Proc-Chance
@@ -164,7 +167,8 @@ RX_HEAL_RESTORE = re.compile(
     re.I)
 # "healed for 4% of its maximum health" — Prozent Max-Leben, kein Flat/SP
 RX_HEAL_PCT = re.compile(
-    r"heal(?:ed|s|ing)?\s+(?:for\s+)?(\d+(?:\.\d+)?)\s*%\s+of\s+"
+    r"(?:heal(?:ed|s|ing)?\s+(?:for\s+)?|(?:for\s+)?an?\s+amount\s+equal\s+(?:of|to)\s+)"
+    r"(\d+(?:\.\d+)?)\s*%\s+of\s+"
     r"(?:its|their|your|the\s+target'?s?|maximum)\s+"
     r"(?:maximum\s+|max\s+)?(?:health|hit\s+points?)",
     re.I)
@@ -173,6 +177,28 @@ RX_HEAL_PCT = re.compile(
 RX_ABSORB = re.compile(
     r"absorb(?:s|ing)\s+(?:up\s+to\s+)?(\d[\d,]*(?:\.\d+)?)\s+"
     r"(?:(" + SCHOOL + r"|[Ss]pell)\s+)?damage\b",
+    re.I)
+# Echo / Relativ / Bleed / Flat-plus — kein SP/AP erfinden
+RX_ECHO = re.compile(
+    r"(?:additional\s+)?(\d+(?:\.\d+)?)\s*%\s+of\s+(?:the\s+)?"
+    r"damage\s+dealt\s+as\s+(" + SCHOOL + r")",
+    re.I)
+RX_ECHO_BARE = re.compile(
+    r"dealing\s+additional\s+(\d+(?:\.\d+)?)\s*%\s+damage\b",
+    re.I)
+RX_RELPCT = re.compile(
+    r"damage\s+equal\s+to\s+(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?"
+    r"([A-Za-z][A-Za-z0-9'\-]+(?:\s+or\s+[A-Za-z][A-Za-z0-9'\-]+)?)"
+    r"(?!s?\s+health)"
+    r"(?=\s*(?:,|\.|$| and |, and| over |, and causes))",
+    re.I)
+RX_BLEED_VULN = re.compile(
+    r"take\s+(\d+(?:\.\d+)?)\s*%\s+additional\s+damage\s+from\s+"
+    r"(bleeds?|bleed effects?|periodic(?:\s+damage)?)",
+    re.I)
+RX_FLAT_PLUS_BARE = re.compile(
+    r"(?:damage|block\s+value)\s+plus\s+(?:an\s+)?additional\s+"
+    r"(\d[\d,]*(?:\.\d+)?)(?!\s*%)",
     re.I)
 RX_DOT = re.compile(r"over\s+(\d+)\s*sec", re.I)
 RX_TICK = re.compile(
@@ -396,6 +422,12 @@ def extract(desc):
             v = num(best[1])
             o["flat"] = [v, v]
 
+    if "flat" not in o:
+        m = RX_FLAT_PLUS_BARE.search(d)
+        if m:
+            v = num(m.group(1))
+            o["flat"] = [v, v]
+
     m = RX_HEAL.search(d)
     if m:
         lo = num(m.group(1))
@@ -424,6 +456,29 @@ def extract(desc):
         asch = school_name(m.group(2))
         if asch and asch.lower() != "spell":
             o["asch"] = asch
+
+    m = RX_ECHO.search(d)
+    if m:
+        o["echo"] = [float(m.group(1)), school_name(m.group(2)) or m.group(2)]
+    else:
+        m = RX_ECHO_BARE.search(d)
+        if m:
+            ctx = d[max(0, m.start() - 48):m.start()]
+            sch = None
+            sm = re.search(
+                r"(" + SCHOOL + r")\s+energy\s*$|"
+                r"blast\s+of\s+(" + SCHOOL + r")\s*$",
+                ctx, re.I)
+            if sm:
+                sch = school_name(sm.group(1) or sm.group(2))
+            o["echo"] = [float(m.group(1)), sch or "Physical"]
+
+    m = RX_RELPCT.search(d)
+    if m:
+        src = re.sub(r"\s+", " ", m.group(2)).strip(" ,.")
+        if src and not re.search(r"health|hit\s*points?", src, re.I):
+            o["relpct"] = float(m.group(1))
+            o["relsrc"] = src[:48]
 
     m = RX_DOT.search(d)
     if m:
@@ -478,6 +533,10 @@ def extract(desc):
         what = tidy(what)
         if what and not NOISE.search(what):
             inc.append([float(pct), what, kindOf(what)])
+    m = RX_BLEED_VULN.search(d)
+    if m:
+        what = "damage from " + m.group(2).lower()
+        inc.append([float(m.group(1)), what, "dmg"])
     if inc:
         o["inc"] = inc[:4]
 

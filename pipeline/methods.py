@@ -82,7 +82,8 @@ RX_REAL_DEALS = re.compile(
     re.I,
 )
 
-SCALE_KEYS = ("w", "flat", "ap", "sp", "heal", "healpct", "absorb", "tick")
+SCALE_KEYS = ("w", "flat", "ap", "sp", "heal", "healpct", "absorb", "tick",
+              "echo", "relpct")
 
 
 def load(name):
@@ -340,10 +341,21 @@ def build_gaps(cat, sc):
         # Mastery-Freischalttexte listen Kind-Spells — kein eigener Basisschaden
         if re.search(r"This Mastery automatically unlocks", desc, re.I):
             continue
-        # Reine Buffs („deal 20% more“) ohne echten Basisschaden-Text → keine Luecke
-        if RX_BUFF_ONLY.search(desc) and not RX_REAL_DEALS.search(desc):
+        # Form-Einschraenkung („only use spells that deal Fire…“) ≠ Schaden austeilen
+        desc_chk = re.sub(
+            r"(?:you\s+)?may\s+only\s+use\s+spells?.{0,100}?"
+            r"that\s+deal\s+.{0,60}?damage",
+            " ",
+            desc,
+            flags=re.I,
+        )
+        if (not RX_DEALS.search(desc_chk)
+                and not RX_REAL_DEALS.search(desc_chk)):
             continue
-        if RX_NOT_DEALS.search(desc) and not RX_REAL_DEALS.search(desc):
+        # Reine Buffs („deal 20% more“) ohne echten Basisschaden-Text → keine Luecke
+        if RX_BUFF_ONLY.search(desc_chk) and not RX_REAL_DEALS.search(desc_chk):
+            continue
+        if RX_NOT_DEALS.search(desc_chk) and not RX_REAL_DEALS.search(desc_chk):
             continue
         s = sc[i] or {}
         if any(k in s for k in SCALE_KEYS):
@@ -381,8 +393,9 @@ def build_gaps(cat, sc):
         "items": items[:GAPS_TOP],
         "note": (
             "Katalog beschreibt Schaden/Heilung/Absorb, scaling.json liefert aber "
-            "weder Waffen-%%, Flat, AP-%%, SP-%%, Heal, Heal%%, Absorb noch Tick. "
-            "Kein Koeffizient erfunden. nBand = Luecken in Level %d-%d."
+            "weder Waffen-%%, Flat, AP-%%, SP-%%, Heal, Heal%%, Absorb, Echo, "
+            "Relativ-%% noch Tick. Kein Koeffizient erfunden. "
+            "nBand = Luecken in Level %d-%d."
             % (LVL_LO, LVL_HI)
         ),
     }

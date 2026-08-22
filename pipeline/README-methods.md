@@ -57,7 +57,7 @@ nicht die Basisfähigkeit selbst (`basemods.json` + `relations.json`).
 aber keine messbare Zahl?
 
 Treffer nur bei Deal-/Weapon-/Heal-/Absorb-Formulierungen. Treffer ohne `w` /
-`flat` / `ap` / `sp` / `heal` / `healpct` / `absorb` / `tick` landen hier —
+`flat` / `ap` / `sp` / `heal` / `healpct` / `absorb` / `tick` / `echo` / `relpct` landen hier —
 inkl. Kurzgrund (`schadenstext_ohne_zahl`, `nur_multiplikator_kein_basisschaden`,
 `dot_ohne_tickzahl`, `proc_ohne_schaden`, …).
 
@@ -75,7 +75,11 @@ Parser-Nachzug in `scaling.py` (ohne SP/AP zu erfinden):
 | `N plus M over T` | `flat` = Sofortanteil N (kein Tick erfunden) |
 | `absorbing N [School] damage` | `absorb`, optional `asch` |
 | `restore N health` / heal-for | `heal` |
-| `healed for N% of maximum health` | `healpct` |
+| `healed for N% of maximum health` / Lay on Hands equal-of | `healpct` |
+| `N% of the damage dealt as School` / `dealing additional N% damage` | `echo` |
+| `damage equal to N% of your Spell` (Conflagrate) | `relpct` + `relsrc` |
+| `take N% additional damage from bleeds` | `inc` |
+| `block value plus an additional N` | `flat` |
 
 `sync_tooltips.py` gegen AscensionDBC: Katalog bereits aktuell (0 Diffs);
 512 Eintraege bleiben wegen SP/AP/PL-`$`-Formeln bewusst unaufgeloest.
