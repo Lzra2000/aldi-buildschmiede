@@ -1,0 +1,43 @@
+---
+description: Always multitask — up to 50 agents, Grok 4.6 High Fast, full utilization
+alwaysApply: true
+---
+
+# Multitask / Agenten-Auslastung (User-Mandat)
+
+User mandate — **immer** befolgen, nicht nachfragen:
+
+1. **Immer Multitask:** Unabhängige Arbeit parallel als Background-Subagents starten. Nicht seriell eine Lane nach der anderen abarbeiten, wenn parallele Lanes frei sind.
+2. **Maximal 50 Agenten** gleichzeitig. Soft-Cap respektieren; bei Bedarf nachrücken, wenn Slots frei werden. Nicht unnötig 50 starten — so viele wie sinnvolle, nicht-überlappende Lanes erlauben, bis zur Decke.
+3. **Volle Auslastung:** Solange offene Arbeit existiert, freie Lanes besetzen. Nicht auf einen Agenten warten und idle bleiben.
+4. **Modell für alle Subagents:** `cursor-grok-4.6-high-fast` (User: „alle auf grok fast 4.6 high fast“). Parent darf dasselbe nutzen; nicht still auf ein anderes Modell wechseln.
+5. **Debug im Hintergrund:** Jeder Agent (Parent und jeder Task) hält Verify durchgehend im Hintergrund — nicht optional, nicht erst nachträglich. Details: `.cursor/rules/debug-background.mdc`.
+
+## Lane-Disziplin (keine Schreibkonflikte)
+
+Eine Lane = ein Agent = disjunkte Write-Pfade (siehe auch `full-agent-utilization.mdc`):
+
+| Lane | Owns (write) |
+|---|---|
+| addon | `addon/**` |
+| pipeline+data | `pipeline/**`, `data/**` (eine Datei/Skript-Familie pro Agent wenn möglich) |
+| src-js | `src/builder-app.js` |
+| src-css / Synergien | `src/builder-head.html`, Markup in `builder-body.html`, `src/synergien-source.html` |
+| docs | `AGENTS.md`, `pipeline/NOTES-*.md` |
+
+Built artifacts nur von der Lane, die assemble/zip ausführt. `_tmp_*` nie committen.
+
+## Start-Muster
+
+- `run_in_background: true` für Subagents, die nicht die nächste Parent-Antwort blockieren müssen
+- `model: "cursor-grok-4.6-high-fast"` bei jedem Task-Launch
+- Mehrere Task-Calls in **einer** Parent-Nachricht, wenn parallel
+- Verify/Debug parallel zur Arbeit starten (nicht erst danach); jeder neue Task trägt das selbst **oder** der Parent startet eine Companion-Debug-Lane — siehe `debug-background.mdc`
+
+## Nicht
+
+- Force-push / destructive git
+- Koeffizienten erfinden
+- Synergien orphanen
+- Alle 50 Slots mit überlappenden Writes füllen
+- Verify nur nachträglich oder die Hauptlane darauf warten lassen

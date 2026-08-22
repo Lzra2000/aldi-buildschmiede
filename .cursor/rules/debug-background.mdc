@@ -1,0 +1,30 @@
+---
+description: Always keep debug/verify running in the background for every agent
+alwaysApply: true
+---
+
+# Debug im Hintergrund (User-Mandat)
+
+User mandate — **immer** befolgen, nicht nachfragen:
+
+**„debug immer im hintergrund laufen lassen bei jedem agenten“**
+
+Jeder Agent (Parent und jeder Task-Subagent) hält **Verify/Debug durchgehend im Hintergrund** — nicht optional, nicht erst nachträglich.
+
+Das ist **kein** Debugger am WoW-Client. Es bedeutet: kontinuierlich **prüfen, während gearbeitet wird**.
+
+## Was läuft
+
+- Nach JS-Änderungen: `node -e 'new Function(...)'` auf `src/builder-app.js` (Hintergrund ok)
+- Nach Lua: `luac5.1 -p addon/AscBuildschmiede/*.lua`
+- Nach Site/Daten: `python pipeline/assemble.py`, wenn UTF-8-Quellen das erlauben
+- Messen, nicht anstarren; keine erfundenen Koeffizienten
+- Die Hauptlane nicht auf Verify warten lassen — Verify **parallel / im Hintergrund**, damit der Agent produktiv bleibt
+- Jeder neu gestartete Task enthält dieses Hintergrund-Verify in der eigenen Schleife **oder** der Parent startet eine Companion-Debug-Lane
+- Bei Syntax-/Assemble-/luac-Fehler: sofort fixen — keine kaputte IIFE und keinen latin-1-Body shippen
+
+## Nicht
+
+- Verify erst am Ende „wenn Zeit ist“
+- Auf Verify blockieren, während andere Lanes frei sind
+- Kaputten Build shippen, weil Verify noch läuft

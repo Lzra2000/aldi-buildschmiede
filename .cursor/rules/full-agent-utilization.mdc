@@ -21,6 +21,17 @@ never invent SP/AP coefficients — see `.cursor/rules/ascension-calc-re.mdc`.
 
 ## Volle Agenten-Auslastung
 
+**User mandate (always):** Multitask by default; keep lanes full; **max 50** concurrent
+agents; all Task subagents use **`cursor-grok-4.6-high-fast`**. Details:
+`.cursor/rules/multitask-max-agents.mdc`.
+
+**Debug im Hintergrund (always):** Jeder Parent und jeder Task hält Verify
+durchgehend parallel zur Arbeit — nach JS `node -e 'new Function(...)'` auf
+`src/builder-app.js`, nach Lua `luac5.1 -p`, nach Site/Daten `pipeline/assemble.py`
+wenn UTF-8-Quellen das erlauben. Die Hauptlane nicht auf Verify warten lassen;
+Syntax-/Assemble-/luac-Fehler sofort fixen (keine kaputte IIFE, kein latin-1-Body).
+Details: `.cursor/rules/debug-background.mdc`.
+
 When Multitask / continuous progress is desired: keep **multiple independent background agents** busy on **non-overlapping file lanes**. Do not idle on one agent while other Ascension-parity lanes are free.
 
 Assign one lane per agent; no shared write paths:
@@ -104,3 +115,4 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 - Numbers: measure; don’t invent. Levelrun **and** L60/endgame are first-class; on conflict prefer both / UI modes — ethical calc RE: `.cursor/rules/ascension-calc-re.mdc`
 - After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
 - Product German: correct grammar, **du**, short clear sentences — `.cursor/rules/german-language.mdc`
+- Debug/Verify immer im Hintergrund, parallel zur Arbeit — `.cursor/rules/debug-background.mdc`
