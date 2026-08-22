@@ -267,6 +267,12 @@ Wer eine neue Zahl braucht, sieht zuerst hier nach, welche Seite sie
   selbst.** „This uses Slam modifiers" heißt: Burning Slam profitiert von
   Slam-Talenten. Ob Slam im Build steht, ist egal. Wer auf die
   Basisfähigkeit prüft, meldet falsche Warnungen.
+- **Doppelte Fähigkeiten teilen sich den GCD.** Mehrere Katalogeinträge
+  derselben Fähigkeit und Schulvarianten, die denselben GCD-Slot teilen,
+  sind **eine** GCD — nicht parallel stapelbar. Das gilt für Analyse,
+  Ketten, Methods und Generator. Das ist **nicht** dasselbe wie
+  Talentvererbung (Punkt oben): Talente der Basis vs. gemeinsamer
+  GCD-Slot. Details: `.cursor/rules/ascension-calc-re.mdc`.
 - **Spell Power und Attack Power zählen für Waffenschaden gleich**, im
   Verhältnis 14 : 1 pro Waffen-DPS. Der Waffenschaden im Charakterfenster
   enthält beide bereits — nicht doppelt draufrechnen.
