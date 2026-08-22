@@ -799,7 +799,9 @@ a.dl:hover{opacity:.88}
   white-space:nowrap}
 .gid{margin-left:6px;opacity:.7}
 .wcbox{padding:10px 14px 12px;border-bottom:1px solid var(--rule-soft);
-  background:var(--sunken)}
+  background:var(--sunken);overflow:visible}
+.wcbox .scardgrid{margin-top:6px}
+.wcbox .scard{background:var(--raised)}
 .wcstatus{display:flex;flex-direction:column;gap:5px;margin:2px 0 8px;
   padding:6px 0;border-bottom:1px solid var(--rule-soft)}
 .wcrow{display:grid;grid-template-columns:72px 1fr;gap:8px 10px;
@@ -1612,10 +1614,7 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
         <button class="tab" data-tab="rMethoden" role="tab">Methoden</button>
       </div>
       <div class="tabp on" id="rPaths">
-      <details class="disclose" id="rPathCards">
-        <summary>Die fünf Path-Karten</summary>
-        <div class="more-body">
-<div class="pathref">
+      <div class="pathref">
         <div class="pcard">
           <h3>Path of Strength</h3>
           <span class="mult">Spell Power ×1</span>
@@ -1693,9 +1692,6 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
         </div>
       </div>
 
-              </div>
-      </details>
-
       <div class="tblwrap">
         <table class="stat">
           <thead><tr><th>Was du baust</th><th>Path</th><th>Warum</th></tr></thead>
@@ -1731,11 +1727,8 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           zählt. Weil <strong>14 Spell Power = 1 Waffen-DPS</strong>, gilt derselbe Multiplikator
           für Waffenschaden — der Tooltip ändert sich trotzdem nicht.
         </div>
-  <details class="disclose" id="rPathNote">
-        <summary>Wie die Empfehlung zählt</summary>
-        <div class="more-body"><p class="srcnote">Die Path-Empfehlung zählt, wie viele Einträge Waffenschaden, Magie, beides
-          oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p></div>
-      </details>
+  <p class="srcnote">Die Path-Empfehlung zählt, wie viele Einträge Waffenschaden, Magie, beides
+          oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p>
         </div>
       </details>
     </div>
@@ -1805,17 +1798,11 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           <strong>14 Punkte = +1 Waffen-DPS</strong>. Der Waffentooltip sagt das wörtlich.
           Die Tabelle darunter ist gemessen.
         </div>
-          <details class="disclose" id="rStatsMessung">
-        <summary>Zur Messung</summary>
-        <div class="more-body"><p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
+          <p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
           Gegenstandsstufe 18,00. Rating-pro-Prozent skaliert mit der Stufe — die Verhältnisse
-          (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p></div>
-      </details>
+          (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p>
 
-        <details class="disclose" id="rStatsFolgerung">
-        <summary>Folgerung für deinen Build</summary>
-        <div class="more-body">
-<div class="panel-hd"><h2>FOLGERUNG</h2></div>
+        <div class="panel-hd"><h2>FOLGERUNG</h2></div>
         <div class="flag syn"><b>Bonus Damage ist schulenneutral</b>
           Holy bis Arcane stehen auf demselben Bonus Damage. Kein getrennter Schul-Stat.</div>
         <div class="flag syn"><b>Elementare Waffenvarianten</b>
@@ -1828,8 +1815,6 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
           Wer auf Waffenangriffe baut, tauscht Intellect und Agility. Wer castet, lässt es
           so stehen.</div>
-        </div>
-      </details>
         </div>
       </details>
     </div>
@@ -1880,16 +1865,13 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           Jede Katalogzeile trägt, was im Tooltip als Zahl steht — nicht geschätzt.
           Fehlt ein Spell-Power-Anteil, bleibt die Lücke.
         </div>
-  <details class="disclose" id="rScaleLimit">
-        <summary>Wo die Rechnung aufhört</summary>
-        <div class="more-body"><div class="flag pre"><b>Wo die Rechnung aufhört</b>
+  <div class="flag pre"><b>Wo die Rechnung aufhört</b>
           Die Seite multipliziert Waffenprozente mit deinem echten Waffenschaden,
           sobald du deinen Charakter importiert hast. Sie rechnet <em>nicht</em>
           aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
           sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
           weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
-          Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div></div>
-      </details>
+          Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div>
         </div>
       </details>
     </div>
@@ -1939,15 +1921,10 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       <details class="disclose">
         <summary>Zuordnung und was ausgelesen wird</summary>
         <div class="more-body">
-  <details class="disclose" id="rAddonExtra">
-        <summary>Matching und Grenzen</summary>
-        <div class="more-body">
-<p class="srcnote">Zuordnung Über <code>spellId</code> / <code>itemId</code>, nicht Über den Namen.</p>
+  <p class="srcnote">Zuordnung Über <code>spellId</code> / <code>itemId</code>, nicht Über den Namen.</p>
   <p class="srcnote">Ausgelesen werden Abilities, Talente, Path, Stats, Waffe und Gear. Fehlt
           eine Client-Funktion, fehlt nur diese Zeile. Dubletten und Modifier:
           <a href="synergien.html">Synergiekompendium</a>.</p>
-        </div>
-      </details>
     </div>
 
               </div>
@@ -3988,6 +3965,22 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           "</div></div>");
       });
       o.push("</div>");
+      } else if (!c.carded || !c.carded.length) {
+        o.push('<div class="wepline muted">Im Export stehen nur leere, ' +
+          "blockierte Slots. Stehen bei dir Zauber auf Karten, aktualisiere " +
+          "das Addon und exportiere neu mit <code>/bs</code>.</div>");
+      }
+      if (deadSlots.length && liveSlots.length) {
+        o.push(wrapDetails(
+          '<div class="scardgrid" role="list">' +
+            deadSlots.map(function (s) {
+              return '<div class="scard blocked" role="listitem">' +
+                scardIco() +
+                '<div class="scbody"><span class="scname">Leer</span>' +
+                '<span class="scmeta">blockiert</span></div></div>';
+            }).join("") + "</div>",
+          "Blockierte Slots (" + deadSlots.length + ")"));
+      }
       var nWithSid = c.scard.filter(function (s) {
         return !s.blocked && s.sid;
       }).length;
@@ -4007,16 +4000,16 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
         if (s.sid) onCard[s.sid] = 1;
       });
       var extras = c.carded.filter(function (sid) { return !onCard[sid]; });
-      var hasSlots = !!(c.scard && c.scard.length);
-      // Keine zweite Wand: Slots ohne Namen + dieselbe Liste darunter.
-      if (extras.length && !hasSlots) {
+      // Slots ohne Namen (oder nur blockiert) dürfen CARDED nicht verschlucken.
+      if (extras.length && !nNamed) {
         o.push('<div class="wepline"><b>Auf Karten</b> ' + extras.length + "</div>");
         o.push('<div class="scardgrid scard-spells">');
         extras.forEach(function (sid) {
           var idx = BYSID[sid];
           var nm = idx !== undefined ? CAT[idx][0] : ("Spell #" + sid);
           o.push('<div class="scard">' + scardIco(idx, 32) +
-            '<div class="scbody"><span class="scname">' + esc(nm) + "</span></div></div>");
+            '<div class="scbody"><span class="scname">' + esc(nm) + "</span>" +
+            '<span class="scmeta">#' + sid + "</span></div></div>");
         });
         o.push("</div>");
       } else if (extras.length && nNamed) {
@@ -4658,12 +4651,14 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       }
       var wcHtml = renderWcStatus(c.wc);
       if (wcHtml) o.push(wcHtml);
+      var cardsHtml = skillCardsHtml(c);
+      if (cardsHtml) o.push(cardsHtml);
+      if (c.desire && c.desire.length) o.push(wcIdGridHtml(c.desire, "Desire", "eid"));
+      if (c.undesire && c.undesire.length) {
+        o.push(wcIdGridHtml(c.undesire, "Undesire", "eid"));
+      }
       if (c.startChoice && c.startChoice.length) {
-        o.push('<div class="wepline"><b>Startwahl</b> ' +
-          c.startChoice.slice(0, 8).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.startChoice.length > 8 ? "…" : "") + "</div>");
+        o.push(wcIdGridHtml(c.startChoice, "Startwahl", "eid"));
       }
       if (c.trait && c.trait.length) {
         o.push('<div class="wepline"><b>Traits</b> ' +
@@ -4690,33 +4685,6 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           o.push('<div class="wepline"><b>Sperren</b> ' +
             lockBits.join(", ") + "</div>");
         }
-      }
-      if (c.desire && c.desire.length) {
-        o.push('<div class="wepline"><b>Desire</b> ' +
-          c.desire.slice(0, 10).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.desire.length > 10 ? "…" : "") + "</div>");
-      }
-      if (c.undesire && c.undesire.length) {
-        o.push('<div class="wepline"><b>Undesire</b> ' +
-          c.undesire.slice(0, 8).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.undesire.length > 8 ? "…" : "") + "</div>");
-      }
-      if (c.scardPend !== undefined && c.scardPend > 0) {
-        o.push('<div class="wepline"><b>Karten</b> ' + c.scardPend +
-          " Skill Card" + (c.scardPend === 1 ? "" : "s") +
-          " noch einzulösen</div>");
-      }
-      if (c.scard && c.scard.length) {
-        var nWcFill = c.scard.filter(function (s) { return !s.blocked; }).length;
-        o.push('<div class="wepline"><b>Skill Cards</b> ' + nWcFill +
-          " belegt</div>");
-      } else if (c.carded && c.carded.length) {
-        o.push('<div class="wepline"><b>Skill Cards</b> ' + c.carded.length +
-          " auf Karten</div>");
       }
       o.push("</div>");
     }

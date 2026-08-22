@@ -291,10 +291,7 @@
         <button class="tab" data-tab="rMethoden" role="tab">Methoden</button>
       </div>
       <div class="tabp on" id="rPaths">
-      <details class="disclose" id="rPathCards">
-        <summary>Die fünf Path-Karten</summary>
-        <div class="more-body">
-<div class="pathref">
+      <div class="pathref">
         <div class="pcard">
           <h3>Path of Strength</h3>
           <span class="mult">Spell Power ×1</span>
@@ -372,9 +369,6 @@
         </div>
       </div>
 
-              </div>
-      </details>
-
       <div class="tblwrap">
         <table class="stat">
           <thead><tr><th>Was du baust</th><th>Path</th><th>Warum</th></tr></thead>
@@ -410,11 +404,8 @@
           zählt. Weil <strong>14 Spell Power = 1 Waffen-DPS</strong>, gilt derselbe Multiplikator
           für Waffenschaden — der Tooltip ändert sich trotzdem nicht.
         </div>
-  <details class="disclose" id="rPathNote">
-        <summary>Wie die Empfehlung zählt</summary>
-        <div class="more-body"><p class="srcnote">Die Path-Empfehlung zählt, wie viele Einträge Waffenschaden, Magie, beides
-          oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p></div>
-      </details>
+  <p class="srcnote">Die Path-Empfehlung zählt, wie viele Einträge Waffenschaden, Magie, beides
+          oder Heilung nennen. Ein Klick auf einen anderen Path zeigt den Vergleich.</p>
         </div>
       </details>
     </div>
@@ -484,17 +475,11 @@
           <strong>14 Punkte = +1 Waffen-DPS</strong>. Der Waffentooltip sagt das wörtlich.
           Die Tabelle darunter ist gemessen.
         </div>
-          <details class="disclose" id="rStatsMessung">
-        <summary>Zur Messung</summary>
-        <div class="more-body"><p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
+          <p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
           Gegenstandsstufe 18,00. Rating-pro-Prozent skaliert mit der Stufe — die Verhältnisse
-          (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p></div>
-      </details>
+          (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p>
 
-        <details class="disclose" id="rStatsFolgerung">
-        <summary>Folgerung für deinen Build</summary>
-        <div class="more-body">
-<div class="panel-hd"><h2>FOLGERUNG</h2></div>
+        <div class="panel-hd"><h2>FOLGERUNG</h2></div>
         <div class="flag syn"><b>Bonus Damage ist schulenneutral</b>
           Holy bis Arcane stehen auf demselben Bonus Damage. Kein getrennter Schul-Stat.</div>
         <div class="flag syn"><b>Elementare Waffenvarianten</b>
@@ -507,8 +492,6 @@
           Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
           Wer auf Waffenangriffe baut, tauscht Intellect und Agility. Wer castet, lässt es
           so stehen.</div>
-        </div>
-      </details>
         </div>
       </details>
     </div>
@@ -559,16 +542,13 @@
           Jede Katalogzeile trägt, was im Tooltip als Zahl steht — nicht geschätzt.
           Fehlt ein Spell-Power-Anteil, bleibt die Lücke.
         </div>
-  <details class="disclose" id="rScaleLimit">
-        <summary>Wo die Rechnung aufhört</summary>
-        <div class="more-body"><div class="flag pre"><b>Wo die Rechnung aufhört</b>
+  <div class="flag pre"><b>Wo die Rechnung aufhört</b>
           Die Seite multipliziert Waffenprozente mit deinem echten Waffenschaden,
           sobald du deinen Charakter importiert hast. Sie rechnet <em>nicht</em>
           aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
           sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
           weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
-          Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div></div>
-      </details>
+          Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div>
         </div>
       </details>
     </div>
@@ -618,15 +598,10 @@
       <details class="disclose">
         <summary>Zuordnung und was ausgelesen wird</summary>
         <div class="more-body">
-  <details class="disclose" id="rAddonExtra">
-        <summary>Matching und Grenzen</summary>
-        <div class="more-body">
-<p class="srcnote">Zuordnung Über <code>spellId</code> / <code>itemId</code>, nicht Über den Namen.</p>
+  <p class="srcnote">Zuordnung Über <code>spellId</code> / <code>itemId</code>, nicht Über den Namen.</p>
   <p class="srcnote">Ausgelesen werden Abilities, Talente, Path, Stats, Waffe und Gear. Fehlt
           eine Client-Funktion, fehlt nur diese Zeile. Dubletten und Modifier:
           <a href="synergien.html">Synergiekompendium</a>.</p>
-        </div>
-      </details>
     </div>
 
               </div>

@@ -1951,8 +1951,11 @@
       o.push('<div class="wepline"><b>Skill Cards</b> ' + filled + " belegt" +
         (blocked ? ", " + blocked + " blockiert" : "") +
         (nActive ? ", " + nActive + " aktiv" : "") + "</div>");
+      var liveSlots = c.scard.filter(function (s) { return !s.blocked; });
+      var deadSlots = c.scard.filter(function (s) { return s.blocked; });
+      if (liveSlots.length) {
       o.push('<div class="scardgrid" role="list">');
-      c.scard.forEach(function (s) {
+      liveSlots.forEach(function (s) {
         var parts = scardDeckParts(s.tag);
         var tone = s.q !== undefined ? gearQTone(s.q)
           : (parts.kind === "Golden" ? 3 : null);
@@ -1995,6 +1998,22 @@
           "</div></div>");
       });
       o.push("</div>");
+      } else if (!c.carded || !c.carded.length) {
+        o.push('<div class="wepline muted">Im Export stehen nur leere, ' +
+          "blockierte Slots. Stehen bei dir Zauber auf Karten, aktualisiere " +
+          "das Addon und exportiere neu mit <code>/bs</code>.</div>");
+      }
+      if (deadSlots.length && liveSlots.length) {
+        o.push(wrapDetails(
+          '<div class="scardgrid" role="list">' +
+            deadSlots.map(function (s) {
+              return '<div class="scard blocked" role="listitem">' +
+                scardIco() +
+                '<div class="scbody"><span class="scname">Leer</span>' +
+                '<span class="scmeta">blockiert</span></div></div>';
+            }).join("") + "</div>",
+          "Blockierte Slots (" + deadSlots.length + ")"));
+      }
       var nWithSid = c.scard.filter(function (s) {
         return !s.blocked && s.sid;
       }).length;
@@ -2014,16 +2033,16 @@
         if (s.sid) onCard[s.sid] = 1;
       });
       var extras = c.carded.filter(function (sid) { return !onCard[sid]; });
-      var hasSlots = !!(c.scard && c.scard.length);
-      // Keine zweite Wand: Slots ohne Namen + dieselbe Liste darunter.
-      if (extras.length && !hasSlots) {
+      // Slots ohne Namen (oder nur blockiert) dürfen CARDED nicht verschlucken.
+      if (extras.length && !nNamed) {
         o.push('<div class="wepline"><b>Auf Karten</b> ' + extras.length + "</div>");
         o.push('<div class="scardgrid scard-spells">');
         extras.forEach(function (sid) {
           var idx = BYSID[sid];
           var nm = idx !== undefined ? CAT[idx][0] : ("Spell #" + sid);
           o.push('<div class="scard">' + scardIco(idx, 32) +
-            '<div class="scbody"><span class="scname">' + esc(nm) + "</span></div></div>");
+            '<div class="scbody"><span class="scname">' + esc(nm) + "</span>" +
+            '<span class="scmeta">#' + sid + "</span></div></div>");
         });
         o.push("</div>");
       } else if (extras.length && nNamed) {
@@ -2665,12 +2684,14 @@
       }
       var wcHtml = renderWcStatus(c.wc);
       if (wcHtml) o.push(wcHtml);
+      var cardsHtml = skillCardsHtml(c);
+      if (cardsHtml) o.push(cardsHtml);
+      if (c.desire && c.desire.length) o.push(wcIdGridHtml(c.desire, "Desire", "eid"));
+      if (c.undesire && c.undesire.length) {
+        o.push(wcIdGridHtml(c.undesire, "Undesire", "eid"));
+      }
       if (c.startChoice && c.startChoice.length) {
-        o.push('<div class="wepline"><b>Startwahl</b> ' +
-          c.startChoice.slice(0, 8).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.startChoice.length > 8 ? "…" : "") + "</div>");
+        o.push(wcIdGridHtml(c.startChoice, "Startwahl", "eid"));
       }
       if (c.trait && c.trait.length) {
         o.push('<div class="wepline"><b>Traits</b> ' +
@@ -2697,33 +2718,6 @@
           o.push('<div class="wepline"><b>Sperren</b> ' +
             lockBits.join(", ") + "</div>");
         }
-      }
-      if (c.desire && c.desire.length) {
-        o.push('<div class="wepline"><b>Desire</b> ' +
-          c.desire.slice(0, 10).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.desire.length > 10 ? "…" : "") + "</div>");
-      }
-      if (c.undesire && c.undesire.length) {
-        o.push('<div class="wepline"><b>Undesire</b> ' +
-          c.undesire.slice(0, 8).map(function (eid) {
-            return esc(nameByEid(eid));
-          }).join(", ") +
-          (c.undesire.length > 8 ? "…" : "") + "</div>");
-      }
-      if (c.scardPend !== undefined && c.scardPend > 0) {
-        o.push('<div class="wepline"><b>Karten</b> ' + c.scardPend +
-          " Skill Card" + (c.scardPend === 1 ? "" : "s") +
-          " noch einzulösen</div>");
-      }
-      if (c.scard && c.scard.length) {
-        var nWcFill = c.scard.filter(function (s) { return !s.blocked; }).length;
-        o.push('<div class="wepline"><b>Skill Cards</b> ' + nWcFill +
-          " belegt</div>");
-      } else if (c.carded && c.carded.length) {
-        o.push('<div class="wepline"><b>Skill Cards</b> ' + c.carded.length +
-          " auf Karten</div>");
       }
       o.push("</div>");
     }
