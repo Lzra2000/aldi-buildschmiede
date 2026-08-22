@@ -39,23 +39,84 @@ Das Addon geht **nicht** ins Netz — nur Text im Fenster.
 
 ---
 
+## Paketkarte (Repo-Root)
+
+| Pfad | Rolle |
+|---|---|
+| **`index.html`** | Gebauter Builder (GitHub Pages) — nicht von Hand editieren |
+| **`synergien.html`** | Gebautes Synergie-Nachschlagewerk (Pages) |
+| **`AscBuildschmiede.zip`** | Fertiges Addon-Paket (`AscBuildschmiede/…`) |
+| **`src/`** | Quelltext der Seite (`builder-*.html` / `builder-app.js`, `synergien-source.html`) |
+| **`pipeline/`** | Python-Pipeline → `data/` + `assemble.py` → HTML |
+| **`data/`** | Einbettbare JSON/Sprite/Testexporte |
+| **`addon/`** | Lua-Quelle des Companion-Addons |
+| **`scripts/`** | `build`, `check`, `pipeline-all`, `package-addon`, `sync-addon` (`.sh`/`.ps1`) |
+| **`tests/`** | Export-Parse + Daten-Invarianten (`unittest`; braucht Node) |
+| **`Makefile`** | `make build` / `check` / `test` / `zip` / `pipeline` |
+| **`docs/`** | Projektdoku ([PACKAGE.md](docs/PACKAGE.md)) — **nicht** Pages-Quelle |
+
+Weitere Anker: [AGENTS.md](AGENTS.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [docs/PACKAGE.md](docs/PACKAGE.md) · [addon/README.md](addon/README.md).
+
+### Live-URLs (Pages)
+
+| | URL |
+|---|---|
+| Builder | https://lzra2000.github.io/aldi-buildschmiede/ |
+| Synergien | https://lzra2000.github.io/aldi-buildschmiede/synergien.html |
+| Addon-Zip (raw) | https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip |
+
+GitHub Pages: Branch **`main`**, Ordner **`/`**. Pages baut **nicht** aus `src/` und nicht aus `docs/` — nur die mitgepushten Artefakte.
+
+### Lizenz
+
+Im Repo liegt **keine `LICENSE`-Datei**. Eigenen Code und Mitwirkung bitte vor Weitergabe/Fork klären; Ascension-/Blizzard-Clientdaten bleiben außerhalb dieses Pakets (siehe AGENTS.md).
+
+---
+
 ## English (short)
 
 Leveling tools (10–59) for Ascension Season 10 Wildcard.  
 Live: [Builder](https://lzra2000.github.io/aldi-buildschmiede/) · [Synergies](https://lzra2000.github.io/aldi-buildschmiede/synergien.html) · [Addon zip](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip).  
-In-game `/bs` exports your character for paste-into-site. No invented spell numbers.
+In-game `/bs` exports your character for paste-into-site. No invented spell numbers.  
+Package map: `src/`, `pipeline/`, `data/`, `addon/`, `scripts/`, `tests/`; built root ships `index.html`, `synergien.html`, `AscBuildschmiede.zip`. See [docs/PACKAGE.md](docs/PACKAGE.md). No `LICENSE` file in the repo yet.
 
 ---
 
-## Lokal / Entwickler
+## Lokal bauen & verifizieren
 
 ```bash
-python3 -m http.server          # http://localhost:8000/
-python3 pipeline/assemble.py    # baut index.html + synergien.html neu
+python3 pipeline/assemble.py
+# oder: make build  |  ./scripts/build.sh  |  .\scripts\build.ps1
+
+node -e "new Function(require('fs').readFileSync('src/builder-app.js','utf8'))"
+# oder: make check  |  ./scripts/check.sh  |  .\scripts\check.ps1
+
+python -m unittest discover -s tests -v
+
+./scripts/package-addon.sh          # AscBuildschmiede.zip neu
+# Windows: .\scripts\package-addon.ps1
+
+python3 -m http.server              # http://localhost:8000/
 ```
 
-Quelle: `src/`, Daten: `data/`, Pipeline: `pipeline/`, Addon: `addon/`.  
-Für Pages mitcommitten: `index.html`, `synergien.html`, bei Addon-Änderung `AscBuildschmiede.zip`.  
-Regeln: [AGENTS.md](AGENTS.md) · Mitmachen: [CONTRIBUTING.md](CONTRIBUTING.md).
+| Check | Erwartung |
+|---|---|
+| Assemble | schreibt `index.html` + `synergien.html` |
+| JS / Lua | `scripts/check.*` ohne Fehler (Lua optional, wenn `luac5.1` da) |
+| Tests | `unittest` grün (Node für Export-Harness) |
+| Root-Ships | `index.html`, `synergien.html`, `AscBuildschmiede.zip` vorhanden |
+| Browser | Konsole leer; betroffene Werte **messen** |
 
-GitHub Pages: Branch **`main`**, Ordner **`/`** → https://lzra2000.github.io/aldi-buildschmiede/
+### Tests (stdlib, kein Browser)
+
+```bash
+python tests/test_export_parse.py      # parseExport via Node + data/testexport-*.txt
+python tests/test_data_sanity.py       # Katalog 3071; Wut≤100 / Range≤100 / Cast≤10
+python -m unittest discover -s tests -v
+# optional: python -m pytest tests/ -q
+```
+
+Fixtures: `data/testexport-*.txt`. Keine erfundenen Spell-Zahlen. CI (`.github/workflows/ci.yml`) führt die Suite mit aus.
+
+Für Pages mitcommitten: `index.html`, `synergien.html`, bei Addon-Änderung `AscBuildschmiede.zip`.  
+Pipeline-Übersicht: [docs/PACKAGE.md](docs/PACKAGE.md). Regeln: [AGENTS.md](AGENTS.md) · Mitmachen: [CONTRIBUTING.md](CONTRIBUTING.md).
