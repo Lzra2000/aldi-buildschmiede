@@ -6333,8 +6333,11 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
 
     function rememberStance(info) {
       if (!info.stanceGroup) return;
-      var key = info.variant || info.family;
-      if (!stanceHave[info.stanceGroup]) stanceHave[info.stanceGroup] = key;
+      if (stanceHave[info.stanceGroup]) return;
+      var key = info.variant;
+      if (!key && info.allow.length === 1) key = info.allow[0];
+      if (!key && info.grants) key = info.family;
+      if (key) stanceHave[info.stanceGroup] = key;
     }
 
     function adoptForm(i, forced) {
