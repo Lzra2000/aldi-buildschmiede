@@ -22,7 +22,7 @@ GEAR|MainHand|Ironbark Greatsword|22|3|Two-Handed Swords|49623|3789|0|0|0|0
 ABI|Battle Charge#30001@701;Titanic Mutilate#30002@702;Savage Blade#30003@703;Titanic Strike#30004@704;Thrust#30005@705;Javelin#30006@706;Eclipse Strike#30007@707
 TAL|Survival of the Fittest:1#20004@604;Glyph of Bestial Wrath:1#20005@605;Ward of Light:1#20006@606;Endurance:1#20007@607;Scent of Blood:1#20008@608;Enrage:1#20009@609;Improved Barkskin:1#20010@610;Veteran of the Third War:1#20011@611;Ursine Frenzy:1#20012@612
 COUNT|A:7|T:9
-SCARD|DEFAULT_NORMAL:9101@0:q2:A
+SCARD|DEFAULT_NORMAL:9101@0:q2:A:s30001
 CARDED|30001
 SCARDPEND|0
 === ENDE ===

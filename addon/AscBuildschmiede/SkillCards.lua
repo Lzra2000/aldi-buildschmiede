@@ -18,13 +18,15 @@
 --
 -- Kein Purchase/Claim/Set — nur lesen.
 --
--- Export-Format (FORMAT bleibt 1; Website-Parser bitte ergaenzen):
---   SCARD|TAG:cardId@index;TAG:cardId@index:qN;TAG:cardId@index:qN:A;…
+-- Export-Format (FORMAT bleibt 1; additiv ab 1.5.7):
+--   SCARD|TAG:cardId@index;TAG:cardId@index:qN:A:sSPELLID;…
 --     TAG = DEFAULT_NORMAL|DEFAULT_GOLDEN|STARTER_NORMAL|STARTER_GOLDEN|
 --           LUCKY_NORMAL|LUCKY_GOLDEN|TALENT_NORMAL|TALENT_GOLDEN
 --     index ist 0-basiert (wie GetCardAtIndex)
 --     nur belegte Slots (cardId ~= 0); blockierte leere Slots: TAG:B@index
 --     :qN = GetSkillCardQuality (wenn API greift); :A = IsCardAtIndexActive
+--     :sSPELLID = Spell der Karte (GetCardSpellID / GetSkillCardInfo) —
+--       Website loest Namen ueber Katalog-spellId (nameBySid), nicht ueber cardId
 --   CARDED|spellId;spellId;…
 --     Spell-IDs aus IsCardedSpellID / IsCardedID auf bekannten ABI/TAL + Slot-Spells
 --   SCARDPEND|n                 (GetNumPendingSkillCards; nur wenn API und n>=0)
@@ -157,6 +159,9 @@ function BS.CollectSkillCardSlots()
                     local q = cardQuality(cardId)
                     if q then tok = tok .. ":q" .. Num(q) end
                     if activeAt(def.type, i) then tok = tok .. ":A" end
+                    -- Spell-ID fuer Namensaufloesung auf der Seite (Katalog via sid).
+                    local sid = spellFromCard(cardId)
+                    if sid then tok = tok .. ":s" .. Num(sid) end
                     out[#out + 1] = tok
                 elseif blockedAt(def.type, i) then
                     out[#out + 1] = def.tag .. ":B@" .. Num(i)
@@ -236,6 +241,7 @@ function BS.CollectPendingSkillCardCount()
 end
 
 -- Zeilen fuer den Export (oder leer, wenn API nichts liefert).
+-- Schluessel exakt SCARD / CARDED / SCARDPEND (nicht CARD) — Website-parseExport.
 function BS.SkillCardExportLines()
     local lines = {}
 

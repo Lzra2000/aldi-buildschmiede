@@ -1040,7 +1040,7 @@
           });
           break;
         case "SCARD":
-          // SCARD|TAG:cardId@index;… optional :qN und/oder :A
+          // SCARD|TAG:cardId@index;… optional :qN / :A / :sSPELLID (Deck=tag)
           d.scard = [];
           (parts.join("|") || "").split(";").filter(Boolean).forEach(function (tok) {
             var m = String(tok).match(/^([^:]+):([^@]+)@(\d+)(.*)$/);
@@ -1048,14 +1048,16 @@
             var blocked = m[2] === "B";
             var rest = m[4] || "";
             var qm = rest.match(/:q(\d+)/i);
+            var sm = rest.match(/:s(\d+)/i);
             var entry = {
               tag: m[1],
               cardId: blocked ? 0 : (+m[2] || 0),
               blocked: blocked,
               index: +m[3] || 0,
-              active: /:A(?:$|:)/i.test(rest) || /:A$/i.test(rest)
+              active: /:A(?:$|:)/i.test(rest)
             };
             if (qm) entry.q = +qm[1] || 0;
+            if (sm) entry.sid = +sm[1] || 0;
             d.scard.push(entry);
           });
           break;
@@ -1127,9 +1129,12 @@
           });
           break;
         case "CARDED":
-          d.carded = (parts.join("|") || "").split(";").map(function (x) {
-            return parseInt(x, 10) || 0;
-          }).filter(Boolean);
+        case "CARD":
+          // CARDED|sid;sid — Alias CARD|…; auch :/, als Trenner (OCR/ältere Exporte)
+          d.carded = String(parts.join("|") || "")
+            .split(/[|;,\s]+/)
+            .map(function (x) { return parseInt(x, 10) || 0; })
+            .filter(Boolean);
           break;
         case "DESIRE":
         case "DESIRED":
@@ -1233,6 +1238,10 @@
     CHAR._idMatched = byId;
     CHAR._cardedSet = Object.create(null);
     (CHAR.carded || []).forEach(function (sid) { CHAR._cardedSet[sid] = 1; });
+    // SCARD :sSPELLID — falls CARDED fehlt, trotzdem per Slot als carded werten
+    (CHAR.scard || []).forEach(function (s) {
+      if (s && s.sid) CHAR._cardedSet[s.sid] = 1;
+    });
     CHAR._lockedSet = Object.create(null);
     (CHAR.locked || []).forEach(function (eid) { CHAR._lockedSet[eid] = 1; });
     CHAR._desireSet = Object.create(null);
@@ -1283,6 +1292,19 @@
   function nameBySid(sid) {
     var i = BYSID[sid];
     return i !== undefined ? CAT[i][0] : ("spell " + sid);
+  }
+  // SCARD-Tag DEFAULT_NORMAL → { deck: "Standard", kind: "Normal" }
+  function scardDeckParts(tag) {
+    var t = String(tag || "").toUpperCase().split("_");
+    var decks = {
+      DEFAULT: "Standard", STARTER: "Starter",
+      LUCKY: "Glück", TALENT: "Talent"
+    };
+    var kinds = { NORMAL: "Normal", GOLDEN: "Golden" };
+    return {
+      deck: decks[t[0]] || (t[0] || "Karte"),
+      kind: kinds[t[1]] || (t[1] || "")
+    };
   }
 
   // ---------- Charakterkarte ----------
@@ -1431,28 +1453,146 @@
   }
 
   // Essence: Remaining (A/T) vs Spent (AS/TS); AX = erwartet fuer Level.
+  // Levelrun und L60: gleiche Anzeige — freier Rest und Soll-Stand klar getrennt.
   function renderEssenceBar(c) {
     function row(label, rem, spent, expect) {
       rem = rem === undefined ? null : +rem || 0;
       spent = spent === undefined ? null : +spent || 0;
       expect = expect === undefined ? null : +expect || 0;
+      // undefined → null über den Ternary oben; 0 bleibt 0.
+      if (arguments[1] === undefined) rem = null;
+      if (arguments[2] === undefined) spent = null;
+      if (arguments[3] === undefined) expect = null;
       if (rem === null && spent === null && expect === null) return "";
-      var total = (rem || 0) + (spent || 0);
-      var pctSpent = total > 0 ? Math.round(100 * (spent || 0) / total) : 0;
+      var r = rem === null ? 0 : rem;
+      var sp = spent === null ? 0 : spent;
+      var total = r + sp;
+      var pctSpent = total > 0 ? Math.round(100 * sp / total) : 0;
       var bits = [];
-      if (spent !== null) bits.push("ausgegeben " + spent);
-      if (rem !== null) bits.push("frei " + rem);
-      if (expect !== null) bits.push("erwartet " + expect);
+      var tip = [];
+      if (spent !== null) {
+        bits.push('<span class="esschip"><i>ausgegeben</i> ' + sp + "</span>");
+        tip.push("ausgegeben " + sp);
+      }
+      if (rem !== null) {
+        bits.push('<span class="esschip' + (r > 0 ? " free" : "") +
+          '"><i>frei</i> ' + r + "</span>");
+        tip.push("frei " + r);
+      }
+      if (expect !== null) {
+        var gap = expect - total;
+        var exCls = "esschip";
+        var exNote = "";
+        if (total > 0 && gap === 0) {
+          exCls += " ok";
+          exNote = " · passt";
+        } else if (gap > 0) {
+          exCls += " soft";
+          exNote = " · noch " + gap;
+        } else if (gap < 0) {
+          exCls += " soft";
+          exNote = " · +" + (-gap);
+        }
+        bits.push('<span class="' + exCls + '"><i>Soll Stufe</i> ' +
+          expect + esc(exNote) + "</span>");
+        tip.push("Soll für Stufe " + expect +
+          (gap > 0 ? " (noch " + gap + ")" :
+            gap < 0 ? " (+" + (-gap) + " über Soll)" : " — passt"));
+      }
+      if (total > 0 && spent !== null && rem !== null) tip.push("Summe " + total);
       return '<div class="essrow"><span class="esslab">' + esc(label) +
-        "</span><span class=\"essbar\" title=\"" + esc(bits.join(" · ")) +
+        "</span><span class=\"essbar\" title=\"" + esc(tip.join(" · ")) +
         '"><i class="spent" style="width:' + pctSpent + '%"></i></span>' +
-        '<span class="essnum">' + bits.join(" · ") +
-        (total ? " · Σ " + total : "") + "</span></div>";
+        '<span class="essnum">' + bits.join("") + "</span></div>";
     }
     var html = row("AE", c.essA, c.essASpent, c.essAExpect) +
       row("TE", c.essT, c.essTSpent, c.essTExpect);
     if (!html) return "";
-    return '<div class="essbox"><div class="geartitle">ESSENCE</div>' + html + "</div>";
+    var lvlHint = "";
+    if (c.level) {
+      lvlHint = c.level >= 60
+        ? '<div class="esshint">Stufe 60 — freier Rest ist Endgame-Budget, ' +
+          "nicht Level-Nachzug.</div>"
+        : '<div class="esshint">Stufe ' + c.level +
+          " — Soll folgt dem Addon für deine aktuelle Stufe.</div>";
+    }
+    return '<div class="essbox"><div class="geartitle">Essence</div>' +
+      html + lvlHint + "</div>";
+  }
+
+  // Wildcard-Status: spielerrelevante Zeilen, kein CanRoll/RPhase-Dump.
+  function renderWcStatus(wc) {
+    if (!wc || !Object.keys(wc).length) return "";
+    var rows = [];
+    function add(lab, val) {
+      if (!val) return;
+      rows.push('<div class="wcrow"><span class="wck">' + esc(lab) +
+        '</span><span class="wcv">' + val + "</span></div>");
+    }
+    var status = [];
+    if (wc.CanRoll !== undefined) {
+      status.push(wc.CanRoll
+        ? '<span class="wcchip ok">Roll möglich</span>'
+        : '<span class="wcchip">kein Roll offen</span>');
+    }
+    if (wc.Starting) {
+      status.push('<span class="wcchip soft">Startwahl offen</span>');
+    }
+    if (wc.WillStart) {
+      status.push('<span class="wcchip soft">Start steht an</span>');
+    }
+    if (wc.WillFirst) {
+      status.push('<span class="wcchip soft">Erster Roll steht an</span>');
+    }
+    if (wc.AwaitTalent) {
+      status.push('<span class="wcchip soft">Talent-Upgrade ausstehend</span>');
+    }
+    var phase = wc.RRPhase && String(wc.RRPhase);
+    if (phase && /roll/i.test(phase) && !/idle/i.test(phase)) {
+      status.push('<span class="wcchip ok">Rapid Roll läuft</span>');
+    }
+    if (status.length) add("Status", status.join(" "));
+
+    var rapid = [];
+    if (wc.CanRapid !== undefined) {
+      rapid.push(wc.CanRapid
+        ? "Rapid Roll bereit"
+        : "Rapid Roll nicht bereit");
+    }
+    if (wc.MaxRapid !== undefined && wc.MaxRapid > 0) {
+      rapid.push("Max. " + wc.MaxRapid + " pro Zug");
+    }
+    function bpLine(label, bp) {
+      if (!bp || typeof bp !== "object") return "";
+      if (!(bp.cur || bp.req || bp.next)) return "";
+      var t = label + " " + (bp.cur || 0) + " / " + (bp.req || 0);
+      if (bp.next) t += " · nächster Bonus +" + bp.next;
+      return t;
+    }
+    var abi = bpLine("Fähigkeiten", wc.RRAbi);
+    var tal = bpLine("Talente", wc.RRTal);
+    if (abi) rapid.push(abi);
+    if (tal) rapid.push(tal);
+    if (rapid.length) add("Rapid", esc(rapid.join(" · ")));
+
+    var buy = [];
+    if (wc.RepurchAbi !== undefined || wc.RepurchTal !== undefined) {
+      if (wc.RepurchAbi !== undefined) {
+        buy.push((wc.RepurchAbi || 0) + " Fähigkeiten");
+      }
+      if (wc.RepurchTal !== undefined) {
+        buy.push((wc.RepurchTal || 0) + " Talente");
+      }
+      if (wc.CanRepurch !== undefined) {
+        buy.push(wc.CanRepurch ? "Nachkauf möglich" : "Nachkauf gesperrt");
+      }
+      add("Nachkauf", esc(buy.join(" · ")));
+    } else if (wc.CanRepurch !== undefined) {
+      add("Nachkauf", esc(wc.CanRepurch ? "möglich" : "gesperrt"));
+    }
+
+    if (!rows.length) return "";
+    return '<div class="wcstatus">' + rows.join("") + "</div>";
   }
 
   // ---------- Waffen-Evidence (WEAPON-Import + D.wpn aus Item-DBCs) ----------
@@ -1690,19 +1830,21 @@
     if (c.pathInfo && (c.pathInfo.spellId || c.pathInfo.name)) {
       var piSid = c.pathInfo.spellId || 0;
       var piIdx = piSid ? BYSID[piSid] : undefined;
-      o.push('<div class="wepline"><b>Path-Info</b> ' +
+      var piTip = [];
+      if (piSid) piTip.push("spellId " + piSid);
+      if (c.pathEntry) piTip.push("entry " + c.pathEntry);
+      o.push('<div class="wepline"' +
+        (piTip.length ? ' title="' + esc(piTip.join(" · ")) + '"' : "") +
+        '><b>Path</b> ' +
         (piIdx !== undefined
           ? '<span class="icon" style="display:inline-block;vertical-align:-6px;width:20px;height:20px;' +
             iconStyle(piIdx, 20) + '"></span> '
           : "") +
         esc(c.pathInfo.name || nameBySid(piSid) || "?") +
-        (piSid ? ' <span class="gid">#' + piSid + "</span>" : "") +
-        (c.pathEntry ? ' <span class="gid">entry ' + c.pathEntry + "</span>" : "") +
         "</div>");
     } else if (c.pathEntry) {
-      o.push('<div class="wepline"><b>Path-Entry</b> ' +
-        esc(nameByEid(c.pathEntry)) +
-        ' <span class="gid">#' + c.pathEntry + "</span></div>");
+      o.push('<div class="wepline" title="entry ' + c.pathEntry + '"><b>Path</b> ' +
+        esc(nameByEid(c.pathEntry)) + "</div>");
     }
     if (c.suggest && c.suggest.length) {
       o.push('<div class="wepline"><b>Path-Vorschlag</b> ' +
@@ -1721,15 +1863,16 @@
       if (c.invest.AE !== undefined) inv.push("AE " + c.invest.AE);
       if (c.invest.TE !== undefined) inv.push("TE " + c.invest.TE);
       if (c.invest.CP !== undefined) inv.push("CP " + c.invest.CP);
-      if (inv.length) meta.push("Invest " + inv.join(", "));
+      if (inv.length) meta.push("Investition " + inv.join(" · "));
     }
     if (c.investTabs && c.investTabs.length) {
-      meta.push("Tabs " + c.investTabs.slice(0, 6).map(function (t) {
+      meta.push("Talent-Tabs " + c.investTabs.slice(0, 6).map(function (t) {
         return t.cls + "/" + t.spec + ":" + t.n;
       }).join(", ") + (c.investTabs.length > 6 ? "…" : ""));
     }
     if (c.locked && c.locked.length) {
-      meta.push(c.locked.length + " Lock" + (c.locked.length === 1 ? "" : "s"));
+      meta.push(c.locked.length + " Sperre" +
+        (c.locked.length === 1 ? "" : "n"));
     }
     if (c.mast && c.mast.length) {
       meta.push(c.mast.length + " Mastery");
@@ -1738,7 +1881,8 @@
       meta.push(c.scardPend + " Karten ausstehend");
     }
     if (meta.length) {
-      o.push('<div class="wepline"><b>Export</b> ' + meta.join(" · ") + "</div>");
+      o.push('<div class="wepline meta"><b>Export</b> ' +
+        meta.join(" · ") + "</div>");
     }
 
     // Wildcard / Skill Cards / Desire — wenn MODE, SCARD oder Desire-Keys stehen
@@ -1751,48 +1895,14 @@
         (c.startChoice && c.startChoice.length) ||
         (c.wc && Object.keys(c.wc).length) ||
         (c.scardPend !== undefined && c.scardPend > 0)) {
-      o.push('<div class="wcbox"><div class="geartitle">WILDCARD</div>');
+      o.push('<div class="wcbox"><div class="geartitle">Wildcard</div>');
       if (ml) {
         o.push('<div class="wepline"><b>Modus</b> ' + esc(ml) +
           (isDraftChar(c) ? ' <span class="gid">Draft</span>' : "") +
           "</div>");
       }
-      if (c.wc && Object.keys(c.wc).length) {
-        var wcBits = [];
-        var wcKeys = ["CanRoll", "Starting", "WillStart", "WillFirst",
-          "MaxRapid", "CanRapid", "AwaitTalent",
-          "RRPhase", "RRStop", "RRLearned", "RRDesired", "RRCanStart",
-          "RRAbi", "RRTal", "RepurchAbi", "RepurchTal", "CanRepurch"];
-        function wcFmt(k, v) {
-          if (v && typeof v === "object" && v.raw !== undefined) {
-            return k + " " + v.cur + "/" + v.req +
-              (v.next ? "→" + v.next : "");
-          }
-          if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
-              (v === 0 || v === 1) && k.indexOf("RR") !== 0 &&
-              k !== "MaxRapid" && k !== "RepurchAbi" && k !== "RepurchTal" &&
-              k !== "RRLearned") {
-            if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
-                k === "CanRoll" || k === "Starting" || k === "WillStart" ||
-                k === "WillFirst" || k === "CanRapid" || k === "AwaitTalent") {
-              return k + (v ? " ja" : " nein");
-            }
-          }
-          return k + " " + v;
-        }
-        wcKeys.forEach(function (k) {
-          if (c.wc[k] === undefined) return;
-          wcBits.push(wcFmt(k, c.wc[k]));
-        });
-        Object.keys(c.wc).forEach(function (k) {
-          if (wcKeys.indexOf(k) >= 0) return;
-          wcBits.push(wcFmt(k, c.wc[k]));
-        });
-        if (wcBits.length) {
-          o.push('<div class="wepline"><b>WC</b> ' + esc(wcBits.join(" · ")) +
-            "</div>");
-        }
-      }
+      var wcHtml = renderWcStatus(c.wc);
+      if (wcHtml) o.push(wcHtml);
       if (c.startChoice && c.startChoice.length) {
         o.push('<div class="wepline"><b>Startwahl</b> ' +
           c.startChoice.slice(0, 8).map(function (eid) {
@@ -1836,41 +1946,83 @@
           (c.undesire.length > 8 ? "…" : "") + "</div>");
       }
       if (c.scardPend !== undefined && c.scardPend > 0) {
-        o.push('<div class="wepline"><b>Ausstehend</b> ' + c.scardPend +
-          " Skill Card" + (c.scardPend === 1 ? "" : "s") + "</div>");
+        o.push('<div class="wepline"><b>Karten</b> ' + c.scardPend +
+          " Skill Card" + (c.scardPend === 1 ? "" : "s") +
+          " noch einzulösen</div>");
       }
+      var nNamed = 0;
       if (c.scard && c.scard.length) {
         var filled = c.scard.filter(function (s) { return !s.blocked; }).length;
         var blocked = c.scard.length - filled;
         var nActive = c.scard.filter(function (s) { return s.active; }).length;
+        nNamed = c.scard.filter(function (s) { return s.sid; }).length;
         o.push('<div class="wepline"><b>Skill Cards</b> ' + filled + " belegt" +
           (blocked ? ", " + blocked + " blockiert" : "") +
           (nActive ? ", " + nActive + " aktiv" : "") + "</div>");
         o.push('<div class="scardgrid">');
         c.scard.forEach(function (s) {
-          var tone = s.q !== undefined ? gearQTone(s.q) : null;
+          var parts = scardDeckParts(s.tag);
+          var tone = s.q !== undefined ? gearQTone(s.q)
+            : (parts.kind === "Golden" ? 3 : null);
           var cls = "scard" + (s.blocked ? " blocked" : "") +
             (s.active ? " active" : "");
+          var metaBits = [];
+          if (parts.deck) metaBits.push(parts.deck);
+          if (parts.kind) metaBits.push(parts.kind);
+          if (s.active) metaBits.push("aktiv");
+          if (s.blocked) metaBits.push("blockiert");
+          var sid = s.sid || 0;
+          var catIdx = sid ? BYSID[sid] : undefined;
+          var title, icoHtml;
+          if (s.blocked) {
+            title = "Leer";
+            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+          } else if (sid && catIdx !== undefined) {
+            title = CAT[catIdx][0];
+            icoHtml = '<span class="icon scico" style="width:28px;height:28px;' +
+              iconStyle(catIdx, 28) + '"></span>';
+          } else if (sid) {
+            title = "Spell #" + sid;
+            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+            metaBits.push("Karte #" + s.cardId);
+          } else {
+            title = "Karte #" + s.cardId;
+            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+          }
+          var tip = [parts.deck, parts.kind,
+            s.cardId ? "card #" + s.cardId : "",
+            sid ? "spell #" + sid : ""].filter(Boolean).join(" · ");
           o.push('<div class="' + cls + '"' +
             (tone !== null
               ? ' style="border-left:3px solid var(--q' + tone + ')"'
-              : "") + ">" +
-            '<span class="sctag">' + esc(s.tag.replace(/_/g, " ")) +
-            " @" + s.index +
-            (s.active ? " · aktiv" : "") + "</span>" +
-            (s.blocked
-              ? '<span class="scid">blockiert</span>'
-              : '<span class="scid">#' + s.cardId +
-                (s.q !== undefined ? " q" + s.q : "") + "</span>") +
-            "</div>");
+              : "") +
+            (tip ? ' title="' + esc(tip) + '"' : "") + ">" +
+            icoHtml +
+            '<div class="scbody"><span class="scname">' + esc(title) + "</span>" +
+            '<span class="scmeta">' + esc(metaBits.join(" · ")) +
+            "</span></div></div>");
         });
         o.push("</div>");
+        if (!nNamed && filled) {
+          o.push('<div class="wepline muted">Kartennamen brauchst du Addon 1.5.7+ ' +
+            "(neu exportieren).</div>");
+        }
       }
       if (c.carded && c.carded.length) {
-        var names = c.carded.map(function (sid) { return nameBySid(sid); });
-        o.push('<div class="wepline"><b>Auf Karten</b> ' +
-          names.slice(0, 12).map(esc).join(", ") +
-          (names.length > 12 ? "…" : "") + "</div>");
+        var onCard = Object.create(null);
+        (c.scard || []).forEach(function (s) {
+          if (s.sid) onCard[s.sid] = 1;
+        });
+        var extras = c.carded.filter(function (sid) { return !onCard[sid]; });
+        // Ohne :sSPELLID: CARDED als Namensliste. Mit :s: nur Rest zeigen.
+        var showList = nNamed ? extras : c.carded;
+        if (showList && showList.length) {
+          var names = showList.map(function (sid) { return nameBySid(sid); });
+          o.push('<div class="wepline"><b>' +
+            (nNamed ? "Weitere auf Karten" : "Auf Karten") + "</b> " +
+            names.slice(0, 12).map(esc).join(", ") +
+            (names.length > 12 ? "…" : "") + "</div>");
+        }
       }
       o.push("</div>");
     }
@@ -1974,10 +2126,17 @@
     if (c.ilvl && c.level && ILB) {
       var ib = ilvlBandAt(c.level);
       var verd = bandVerdict(c.ilvl, ib && ib.ilvl, "ilvl");
-      note = '<div class="ilvlnote"><b>Levelrun-ilvl</b> Import ' +
-        c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
-        bandLabel(verd, ib && ib.ilvl, "ilvl") +
-        ". Band aus ItemStat (Skalierungsitems) — Anhalt, kein Raid-Ziel.</div>";
+      if (isEndgameLevel(c.level)) {
+        note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> Import ' +
+          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+          bandLabel(verd, ib && ib.ilvl, "ilvl") +
+          ". ItemStat-Bänder enden bei 59 — Vergleich nur Anhalt, kein Raid-BiS.</div>";
+      } else {
+        note = '<div class="ilvlnote"><b>Levelrun-ilvl</b> Import ' +
+          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+          bandLabel(verd, ib && ib.ilvl, "ilvl") +
+          ". Band aus ItemStat — Anhalt für den Levelrun.</div>";
+      }
     } else if (c.ilvl && !ILB) {
       note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> ' +
         c.ilvl.toFixed(1) +
@@ -1986,9 +2145,21 @@
     box.innerHTML = note + renderGearPaperdoll(c.gear);
   }
 
+  // Stufe ≥ 60: Endgame-Ton. ItemStat-Bänder decken nur 10–59.
+  function isEndgameLevel(level) {
+    return level != null && +level >= 60;
+  }
+  function fmtStatPct(n) {
+    return String(Number(n).toFixed(2)).replace(".", ",");
+  }
+  // Melee-Hit-Caps aus dem Charakterfenster (kein erfundener Wert).
+  var HIT_CAP_BOSS = 8;
+  var HIT_CAP_PVP = 5;
+
   function charIssues(ids) {
     if (!CHAR) return [];
     var c = CHAR, s = c.stats, out = [];
+    var endgame = isEndgameLevel(c.level);
     var p = profile(ids);
     var best = scorePaths(p)[0];
     var have = PATHBY[normPath(c.path)];
@@ -2004,7 +2175,9 @@
       if (c.essT > 0) bits.push(c.essT + " Talent Essence");
       push("krit", "Du hast noch " + bits.join(" und ") + " übrig",
         " Das ist Schaden, den du geschenkt bekommst, sobald du sie ausgibst. " +
-        "Nichts an deinem Build ist wichtiger als das.");
+        (endgame
+          ? "Auch auf Stufe 60: freie Essence vor Feinschliff am Gear."
+          : "Nichts an deinem Build ist wichtiger als das."));
     }
     if (c.essASpent !== undefined || c.essTSpent !== undefined) {
       push("ok", "Essence ausgegeben: AE " + (c.essASpent || 0) +
@@ -2206,12 +2379,40 @@
         "gleichzeitig nebeneinander.");
     }
 
-    // 6. Hit - direkt aus dem Client-Tooltip
-    if (s && s.HITRATING !== undefined && s.HITRATING === 0 && (p.w + p.phys) > 0) {
-      push("fix", "0 Hit Rating",
-        " Dein Charakterfenster sagt: 8 % Trefferchance brauchst du, um gegen " +
-        "einen Raidboss nie zu verfehlen, 5 % gegen Spieler. Bei 0 Rating " +
-        "verpufft ein Teil deiner Angriffe komplett.");
+    // 6. Hit - direkt aus dem Client-Tooltip (kein erfundener Spell-Hit-Cap)
+    if (s && (p.w + p.phys) > 0) {
+      if (s.HITPCT !== undefined) {
+        var hitPct = +s.HITPCT;
+        var hitGap = HIT_CAP_BOSS - hitPct;
+        var capNote = " Charakterfenster: " + HIT_CAP_BOSS +
+          " % gegen Raidboss, " + HIT_CAP_PVP + " % PVP.";
+        if (hitPct < HIT_CAP_BOSS) {
+          var hitBody = " Import " + fmtStatPct(hitPct) + " %";
+          if (s.HITRATING !== undefined) {
+            hitBody += " (Rating " + Math.round(s.HITRATING) + ")";
+          }
+          hitBody += ", fehlen " + fmtStatPct(hitGap) + " % zum Raidboss-Cap." + capNote;
+          push(endgame ? "krit" : "fix", "Melee-Hit unter Raidboss-Cap", hitBody);
+        } else {
+          push("ok", "Melee-Hit am Raidboss-Cap",
+            " Import " + fmtStatPct(hitPct) + " %" +
+            (s.HITRATING !== undefined
+              ? " (Rating " + Math.round(s.HITRATING) + ")."
+              : ".") + capNote);
+        }
+      } else if (s.HITRATING !== undefined && s.HITRATING === 0) {
+        push(endgame ? "krit" : "fix", "0 Hit Rating",
+          " Dein Charakterfenster sagt: " + HIT_CAP_BOSS +
+          " % Trefferchance brauchst du, um gegen einen Raidboss nie zu verfehlen, " +
+          HIT_CAP_PVP + " % gegen Spieler. Bei 0 Rating verpufft ein Teil deiner " +
+          "Angriffe komplett.");
+      }
+    }
+    if (s && p.m > 0 && s.SHITPCT !== undefined) {
+      push("info", "Spell Hit gemessen",
+        " Import " + fmtStatPct(+s.SHITPCT) +
+        " % — kein Spell-Hit-Cap in den Daten; nur der gemessene Wert aus dem " +
+        "Charakterfenster.");
     }
 
     // 7. Leere Slots
@@ -2295,12 +2496,17 @@
       var Lband = ilvlBandAt(c.level);
       if (c.ilvl > 0 && Lband && Lband.ilvl) {
         var iv = bandVerdict(c.ilvl, Lband.ilvl, "ilvl");
-        if (iv === "low") {
+        if (endgame) {
+          push("info", "Gegenstandsstufe auf L60",
+            " Import " + c.ilvl.toFixed(1) +
+            " — ItemStat-Bänder decken nur Stufe 10–59 ab; Median " +
+            Lband.ilvl.p50 + " ist nur Anhalt, kein Raid-BiS. Path, Essence, " +
+            "Budget und Hit zählen mehr.");
+        } else if (iv === "low") {
           push("warn", "Gegenstandsstufe unter dem Stufenband",
             " Import " + c.ilvl.toFixed(1) + " bei Stufe " + c.level +
             " (Median " + Lband.ilvl.p50 +
-            "). Für den Levelrun lohnt sich frisches Gear aus Quests/Dungeons — " +
-            "kein L60-Raid-Ziel.");
+            "). Für den Levelrun lohnt sich frisches Gear aus Quests/Dungeons.");
         } else if (iv === "ok" || iv === "high") {
           push("ok", "Gegenstandsstufe passt zur Stufe",
             " " + c.ilvl.toFixed(1) + " ilvl · ItemStat-Median " +
@@ -2310,7 +2516,7 @@
       var mhIss = (c.weapons || []).filter(function (w) {
         return w.slot === "MH";
       })[0];
-      if (mhIss) {
+      if (!endgame && mhIss) {
         var midIss = weaponMidDamage(mhIss);
         var keyIss = weaponBandKey(mhIss);
         var wbIss = keyIss && Lband && Lband[keyIss];
@@ -2331,6 +2537,13 @@
           push("info", "Kein Waffen-Stufenband",
             " Für Stufe " + c.level + " fehlt das ItemStat-" +
             keyIss + "-Band — Import-DPS bleibt die Quelle.");
+        }
+      } else if (endgame && mhIss) {
+        var midEnd = weaponMidDamage(mhIss);
+        if (midEnd != null) {
+          push("info", "Hauptwaffe auf L60",
+            " Import Mid " + midEnd.toFixed(0) +
+            " — kein L60-ItemStat-Band; nur der gemessene Wert.");
         }
       }
     } else if (c.ilvl > 0 && !ILB) {
@@ -2454,14 +2667,22 @@
       hd.textContent = "—"; hd.className = "cnt";
       box.innerHTML = '<div class="empty">Importiere deinen Charakter mit ' +
         "<code>/bs</code>, dann steht hier, was kritisch ist und was du " +
-        "verbessern kannst.</div>";
+        "verbessern kannst — Path, Essence, Budget, Skill Cards und Hit " +
+        "für Levelrun und L60.</div>";
       return;
     }
     var krit = list.filter(function (h) { return h.indexOf("issue krit") > 0; }).length;
     var fix = list.filter(function (h) { return h.indexOf("issue fix") > 0; }).length;
     hd.textContent = krit + " kritisch · " + fix + " verbesserbar";
     hd.className = "cnt " + (krit ? "over" : fix ? "ok" : "full");
-    box.innerHTML = list.join("");
+    var lead = '<div class="qhint">' +
+      (isEndgameLevel(CHAR.level)
+        ? "Befund für Endgame: Path, Essence, Budget und Hit wiegen schwerer " +
+          "als ItemStat-Bänder (nur 10–59)."
+        : "Befund für den Levelrun: Path, Essence, Budget und Skill Cards aus " +
+          "deinem Import.") +
+      "</div>";
+    box.innerHTML = lead + list.join("");
   }
 
   // ---------- Bedienung ----------
@@ -3460,7 +3681,25 @@
         (P && P.k === "dua" ? "; auf Duality zusätzlich Spell-Crit" : "");
       case "Str": return "Attack Power und Parry";
       case "Heal": return n.heal + " heilende Einträge";
-      case "Hit": return "Waffenangriffe können verfehlen — 8 % gegen Bosse";
+      case "Hit": {
+        var hitWhy = "Waffenangriffe können verfehlen";
+        if (CHAR && CHAR.stats && CHAR.stats.HITPCT !== undefined) {
+          var hp = +CHAR.stats.HITPCT;
+          if (hp < HIT_CAP_BOSS) {
+            hitWhy += " — Import " + fmtStatPct(hp) + " %, Raidboss-Cap " +
+              HIT_CAP_BOSS + " % (Charakterfenster)";
+          } else {
+            hitWhy += " — Import " + fmtStatPct(hp) + " % am Raidboss-Cap";
+          }
+        } else {
+          hitWhy += " — " + HIT_CAP_BOSS + " % gegen Bosse (Charakterfenster)";
+        }
+        if (n.spell && CHAR && CHAR.stats && CHAR.stats.SHITPCT !== undefined) {
+          hitWhy += "; Spell Hit " + fmtStatPct(+CHAR.stats.SHITPCT) +
+            " % gemessen (kein Cap in den Daten)";
+        }
+        return hitWhy;
+      }
       case "Sta": return "Überleben, kein Schaden";
       default: return "";
     }
@@ -3543,9 +3782,15 @@
         '<span class="sp">' + x.pct + "</span>" +
         '<span class="swhy">' + esc(statReason(x.k, r.n, r.path)) + "</span></div>");
     });
-    o.push('<div class="qhint">Die Prozentzahl ist relativ zum wichtigsten ' +
-      "Stat, keine Schadenszunahme. Sie sagt dir, was du bei gleichem " +
-      "Itemplatz bevorzugen solltest.</div>");
+    var statFooter = "Die Prozentzahl ist relativ zum wichtigsten Stat, keine " +
+      "Schadenszunahme. Sie sagt dir, was du bei gleichem Itemplatz " +
+      "bevorzugen solltest.";
+    if (CHAR && CHAR.stats && CHAR.stats.HITPCT !== undefined) {
+      statFooter += " Melee-Hit-Cap " + HIT_CAP_BOSS +
+        " % Raidboss stammt aus dem Charakterfenster" +
+        (isEndgameLevel(CHAR.level) ? " — auf L60 besonders relevant" : "") + ".";
+    }
+    o.push('<div class="qhint">' + statFooter + "</div>");
     box.innerHTML = o.join("");
   }
 

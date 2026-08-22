@@ -82,6 +82,19 @@ class TestExportParse(unittest.TestCase):
         self.assertEqual(d["countT"], 9)
         self.assertEqual(len(d["abi"]), 10)
         self.assertEqual(len(d["tal"]), 9)
+        # SCARD: deck/tag, cardId, q, active, sid (Namen via Katalog)
+        sc = d["scard"]
+        self.assertEqual(len(sc), 3)
+        self.assertEqual(sc[0]["tag"], "DEFAULT_NORMAL")
+        self.assertEqual(sc[0]["cardId"], 9001)
+        self.assertEqual(sc[0]["q"], 3)
+        self.assertTrue(sc[0]["active"])
+        self.assertEqual(sc[0]["sid"], 10001)
+        self.assertEqual(sc[1]["sid"], 10002)
+        self.assertFalse(sc[1].get("active"))
+        self.assertTrue(sc[2]["blocked"])
+        self.assertEqual(d["carded"], [10001, 10002])
+        self.assertEqual(d["scardPend"], 1)
 
     def test_fremd_pathentry_mode_wc_counts(self):
         d = _node_parse("testexport-fremd.txt")

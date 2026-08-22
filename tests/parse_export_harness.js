@@ -64,6 +64,11 @@ function selfCheck() {
         if (d.countA !== 10 || d.countT !== 9) return "COUNT";
         if (!d.abi || d.abi.length !== 10) return "ABI len";
         if (!d.tal || d.tal.length !== 9) return "TAL len";
+        if (!d.scard || d.scard.length !== 3) return "SCARD len";
+        if (!d.scard[0].active || d.scard[0].sid !== 10001) return "SCARD sid/A";
+        if (d.scard[1].sid !== 10002 || d.scard[1].q !== 2) return "SCARD q/sid";
+        if (!d.scard[2].blocked) return "SCARD blocked";
+        if (!d.carded || d.carded[0] !== 10001) return "CARDED";
         return null;
       }
     },
