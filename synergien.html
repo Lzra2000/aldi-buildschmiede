@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Synergiekompendium für Project Ascension Season 10 Wildcard: Dubletten, Modifier-Vererbung, Trigger-Ketten und Budgetregeln für Levelrun und Endgame (10–60).">
+<meta name="description" content="Synergiekompendium für Project Ascension Season 10 Wildcard: Vererbung, gleicher GCD, Trigger-Ketten, Procs und Budgetregeln für Levelrun und Endgame (10–60).">
 <title>Wildcard Synergiekompendium</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,64 +13,70 @@
   BUILDSCHMIEDE TOKEN BLOCK — share with builder-head.html
   Own forge-slate chrome (CSS only). No Ascension/WoW BLP frame kits.
   Dark = default. Light = parchment reading mode.
+  Calm palette: one guild-brass accent, muted quality, soft good/ember.
   --ground --raised --sunken  stone panel stack
-  --ink --ink-soft --ink-faint  text
+  --ink --ink-soft --ink-faint --ink-dim  text
   --rule --rule-soft --edge  metal lines
-  --accent --accent-ink --accent-soft  guild gold (#C9A227 family)
+  --accent --accent-ink --accent-soft  guild brass (#B8963A family)
   --ember --ember-soft  Wildcard heat (= --warn)
   --good --good-soft  live / ok
-  --q0…--q4  WoW quality (Normal→Legendary) — data colors, not UI art
+  --q0…--q4  WoW quality (Normal→Legendary) — data colors, muted, not neon
   --atm-a --atm-b  forge washes
-  School hues (--fire…--physical) are Synergien-only.
+  --quiet --quiet-focus  secondary blocks until hover/focus
+  School hues (--fire…--physical) are Synergien-only and stay muted.
 */
 :root{
   --ground:#D8D2C4; --raised:#EDE6D6; --sunken:#C9C1B0;
-  --ink:#1A1510; --ink-soft:#3F362C; --ink-faint:#5C5244;
+  --ink:#1A1510; --ink-soft:#3F362C; --ink-faint:#5C5244; --ink-dim:#756C5E;
   --rule:#8A7E68; --rule-soft:#B0A48E;
-  --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E8D9A8;
-  --ember:#B84A12; --ember-soft:#F0DCC8;
+  --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E4DCC4;
+  --ember:#8A4A28; --ember-soft:#E6DED4;
   --warn:var(--ember); --warn-soft:var(--ember-soft);
-  --good:#2D6B3A; --good-soft:#D4E8D0;
-  --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
-  --fire:#C24A18; --frost:#0070DD; --shadow:#A335EE;
-  --nature:#2D6B3A; --holy:#C9A227; --arcane:#A335EE; --physical:#7A6E5C;
-  --atm-a:rgba(139,105,20,.12); --atm-b:rgba(184,74,18,.06);
-  --edge:rgba(26,21,16,.12);
-  --panel-glow:rgba(139,105,20,.08);
-  --stone:#2A241C; --gold:#C9A227; --gold-hi:#E8C547;
+  --good:#2F5340; --good-soft:#D6DED6;
+  --info:#5A564C; --info-soft:#E2DCD4;
+  --q0:#7A7468; --q1:#3D6A32; --q2:#2E5278; --q3:#5A3D72; --q4:#8A5418;
+  --fire:#8A4A28; --frost:#2E5278; --shadow:#5A3D72;
+  --nature:#2F5340; --holy:#8B6914; --arcane:#5A3D72; --physical:#6A6258;
+  --atm-a:rgba(139,105,20,.05); --atm-b:rgba(138,74,40,.02);
+  --edge:rgba(26,21,16,.10);
+  --panel-glow:rgba(139,105,20,.03);
+  --stone:#2A241C; --gold:#8B6914; --gold-hi:#8B6914;
   --dur-view:.22s; --dur-chip:.15s; --ease-out:cubic-bezier(.2,.7,.2,1);
+  --quiet:.78; --quiet-focus:1;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886;
+  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
   --rule:#3A3428; --rule-soft:#2A241C;
-  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
-  --ember:#FF8000; --ember-soft:#2A1608;
+  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
+  --ember:#C48A58; --ember-soft:#1C140E;
   --warn:var(--ember); --warn-soft:var(--ember-soft);
-  --good:#1EFF00; --good-soft:#0A2010;
-  --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
-  --fire:#FF8000; --frost:#0070DD; --shadow:#A335EE;
-  --nature:#1EFF00; --holy:#E8C547; --arcane:#A335EE; --physical:#8A8070;
-  --atm-a:rgba(201,162,39,.10); --atm-b:rgba(255,128,0,.06);
-  --edge:rgba(0,0,0,.45);
-  --panel-glow:rgba(201,162,39,.06);
-  --stone:#1A1612; --gold:#C9A227; --gold-hi:#E8C547;
+  --good:#7A9A78; --good-soft:#101610;
+  --info:#A39886; --info-soft:#141210;
+  --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
+  --fire:#C48A58; --frost:#6A8AA8; --shadow:#8A7A98;
+  --nature:#7A9A78; --holy:#C9A227; --arcane:#8A7A98; --physical:#8A8070;
+  --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
+  --edge:rgba(0,0,0,.40);
+  --panel-glow:rgba(201,162,39,.03);
+  --stone:#1A1612; --gold:#C9A227; --gold-hi:#C9A227;
 }}
 :root[data-theme="dark"]{
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886;
+  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
   --rule:#3A3428; --rule-soft:#2A241C;
-  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
-  --ember:#FF8000; --ember-soft:#2A1608;
+  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
+  --ember:#C48A58; --ember-soft:#1C140E;
   --warn:var(--ember); --warn-soft:var(--ember-soft);
-  --good:#1EFF00; --good-soft:#0A2010;
-  --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
-  --fire:#FF8000; --frost:#0070DD; --shadow:#A335EE;
-  --nature:#1EFF00; --holy:#E8C547; --arcane:#A335EE; --physical:#8A8070;
-  --atm-a:rgba(201,162,39,.10); --atm-b:rgba(255,128,0,.06);
-  --edge:rgba(0,0,0,.45);
-  --panel-glow:rgba(201,162,39,.06);
-  --stone:#1A1612; --gold:#C9A227; --gold-hi:#E8C547;
+  --good:#7A9A78; --good-soft:#101610;
+  --info:#A39886; --info-soft:#141210;
+  --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
+  --fire:#C48A58; --frost:#6A8AA8; --shadow:#8A7A98;
+  --nature:#7A9A78; --holy:#C9A227; --arcane:#8A7A98; --physical:#8A8070;
+  --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
+  --edge:rgba(0,0,0,.40);
+  --panel-glow:rgba(201,162,39,.03);
+  --stone:#1A1612; --gold:#C9A227; --gold-hi:#C9A227;
 }
 
 *{box-sizing:border-box}
@@ -99,34 +105,24 @@ code,.mono,.lvl,.qual,th,.tag{font-family:"JetBrains Mono",ui-monospace,monospac
 code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);padding:1px 5px}
 
 .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(12px,2.4vw,28px)}
-.layout{display:grid;grid-template-columns:1fr;gap:40px;padding:8px 0 0}
-@media(min-width:1000px){.layout{grid-template-columns:210px minmax(0,1fr)}}
 
-.topbar{position:sticky;top:0;z-index:50;
-  background:linear-gradient(180deg,var(--raised),var(--sunken));
+.topbar{position:sticky;top:0;z-index:50;background:var(--raised);
   border-bottom:1px solid var(--rule)}
-.topbar::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
-  background:linear-gradient(90deg,var(--gold),transparent 55%);opacity:.55;pointer-events:none}
-.topbar::after{content:"";display:block;height:3px;
-  background:linear-gradient(90deg,var(--gold-hi) 0%,var(--ember) 22%,var(--gold) 40%,transparent 70%)}
+.topbar::after{content:"";display:block;height:2px;
+  background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 28%,transparent 62%)}
 .tbin{max-width:1180px;margin:0 auto;padding:0 clamp(12px,2.4vw,28px);
   display:flex;align-items:center;gap:clamp(12px,2vw,28px);flex-wrap:wrap;
   min-height:68px;position:relative}
 .brand{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;
   text-decoration:none;color:inherit}
-.brand:hover .btext b{color:var(--gold-hi)}
-.bmark{
-  width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;
-  background:linear-gradient(145deg,var(--gold-hi),var(--accent) 55%,var(--ember));
-  color:var(--accent-ink);font-family:"Archivo Black",sans-serif;
-  font-size:13px;letter-spacing:.02em;border:1px solid var(--gold);
-  box-shadow:0 0 0 1px var(--stone),inset 0 1px 0 rgba(255,255,255,.25);
-  position:relative;overflow:hidden;
-  clip-path:polygon(8% 0,100% 0,100% 92%,92% 100%,0 100%,0 8%)}
-.bmark-txt{position:relative;z-index:1;text-shadow:0 1px 1px rgba(0,0,0,.35);font-size:12px}
+.brand:hover .btext b{color:var(--accent)}
+.bmark{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);font-family:"Archivo Black",sans-serif;
+  font-size:14px;letter-spacing:.02em}
+.bmark-txt{position:relative;z-index:1}
 .btext{display:flex;flex-direction:column;line-height:1.1;min-width:0}
 .btext .bguild{font-style:normal;font-family:"JetBrains Mono",monospace;font-size:10px;
-  letter-spacing:.05em;color:var(--gold);margin-bottom:2px}
+  letter-spacing:.05em;color:var(--accent);margin-bottom:2px}
 .btext b{font-family:"Archivo Black",Impact,sans-serif;font-size:clamp(17px,2.4vw,20px);
   font-weight:400;letter-spacing:-.02em;transition:color var(--dur-chip) var(--ease-out)}
 .btext i{font-style:normal;font-family:"JetBrains Mono",monospace;font-size:9.5px;
@@ -138,9 +134,8 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   font-weight:700;color:var(--ink-soft);text-decoration:none;white-space:nowrap;
   transition:color var(--dur-chip),border-color var(--dur-chip)}
 .prodnav a:hover{color:var(--ink)}
-.prodnav a.on{color:var(--gold-hi);border-bottom-color:var(--gold);
-  background:linear-gradient(180deg,transparent 40%,var(--accent-soft))}
-.prodnav a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.prodnav a.on{color:var(--accent);border-bottom-color:var(--accent)}
+.prodnav a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 
 .startrow{border-bottom:1px solid var(--rule-soft);background:var(--accent-soft)}
 .startin{max-width:1180px;margin:0 auto;padding:10px clamp(12px,2.4vw,28px);
@@ -153,80 +148,128 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   color:var(--accent);text-decoration:none;border:1px solid var(--accent);
   background:var(--raised);padding:6px 11px;white-space:nowrap}
 .startin a:hover{background:var(--accent);color:var(--accent-ink)}
-.startin a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.startin a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 
-.mast{border-bottom:1px solid var(--rule);padding:clamp(28px,5vw,48px) 0 26px;position:relative}
-.mast::after{content:"";display:block;height:3px;margin-top:24px;
-  background:linear-gradient(90deg,var(--gold-hi) 0%,var(--ember) 28%,var(--gold) 48%,transparent 78%)}
-.kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.08em;
-  color:var(--gold);margin:0 0 14px}
-.mast h1{font-size:clamp(32px,6.5vw,56px);letter-spacing:-.02em;color:var(--gold-hi)}
-.dek{max-width:62ch;margin:16px 0 0;font-size:clamp(16px,2vw,19px);color:var(--ink-soft);line-height:1.5}
+.mast{border-bottom:1px solid var(--rule);padding:clamp(18px,3vw,28px) 0 18px;position:relative}
+.mast::after{content:"";display:block;height:2px;margin-top:18px;
+  background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 28%,transparent 62%)}
+.kicker{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
+  color:var(--accent);margin:0 0 8px}
+.mast h1{font-size:clamp(26px,4.2vw,36px);letter-spacing:-.02em;color:var(--ink)}
+.dek{max-width:48ch;margin:10px 0 0;font-size:16px;color:var(--ink-soft);line-height:1.45}
+
+.find{margin:18px 0 0;display:flex;flex-direction:column;gap:8px}
+.find-row{display:flex;gap:8px;align-items:center}
+.find input[type=search]{
+  flex:1;min-width:0;background:var(--raised);color:var(--ink);
+  border:1px solid var(--rule);padding:11px 13px;font-size:15px;border-radius:0;
+  font-family:"Source Serif 4",Georgia,serif}
+.find input[type=search]:focus{outline:2px solid var(--gold,var(--accent));outline-offset:2px;border-color:var(--accent)}
+.find-status{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);
+  min-height:1.2em;margin:0}
+
+.topics-nav{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0;align-items:center}
+.topics-nav a{
+  font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  color:var(--ink-soft);text-decoration:none;border:1px solid var(--rule);
+  background:var(--raised);padding:6px 10px;white-space:nowrap}
+.topics-nav a:hover{border-color:var(--accent);color:var(--accent)}
+.topics-nav a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.topics-nav a b{font-weight:700;color:var(--accent);margin-left:5px;
+  font-variant-numeric:tabular-nums}
+
+@keyframes jumpflash{
+  0%{box-shadow:0 0 0 1px var(--accent),0 0 0 6px var(--accent-soft)}
+  100%{box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}}
+.jumpflash{animation:jumpflash 1.2s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .jumpflash{animation:none;outline:2px solid var(--accent);outline-offset:2px}}
+
+.topics{display:flex;flex-direction:column;gap:8px;padding:16px 0 28px}
+.topic{background:var(--raised);border:1px solid var(--rule);scroll-margin-top:86px;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+.topic.off{display:none}
+.topic>summary{
+  list-style:none;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
+  padding:12px 14px;font-family:"Archivo Black",Impact,sans-serif;font-size:17px;
+  user-select:none}
+.topic>summary::-webkit-details-marker{display:none}
+.topic>summary .num{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--accent);
+  letter-spacing:.08em}
+.topic>summary .hint{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:400;
+  color:var(--ink-faint);margin-left:auto;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.topic>summary .hint a{
+  color:var(--ink-faint);text-decoration:none;border:1px solid var(--rule);
+  background:var(--sunken);padding:2px 7px;font-weight:400}
+.topic>summary .hint a:hover{border-color:var(--accent);color:var(--accent)}
+.topic>summary .hint a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.topic>summary::after{content:"+";margin-left:8px;font-family:"JetBrains Mono",monospace;
+  font-size:16px;color:var(--ink-faint)}
+.topic[open]>summary{border-bottom:1px solid var(--rule-soft)}
+.topic[open]>summary::after{content:"−"}
+.topic-body{padding:4px 16px 22px}
+.topic-body>h2{display:none}
+.q-empty{padding:28px 8px 8px;color:var(--ink-faint);text-align:center;margin:0}
+.q-empty[hidden]{display:none}
+.closer{background:var(--raised);border:1px solid var(--rule);padding:16px 18px;margin-top:8px;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);scroll-margin-top:86px}
+.closer h2{font-size:20px;margin:0 0 8px}
+.closer p{margin:0;max-width:58ch}
+.closer .cta{margin-top:12px}
 
 .limits{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:26px 0}
 .limit{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 2px 0 var(--edge),0 0 0 1px var(--panel-glow),inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
   padding:14px 16px;position:relative}
+a.limit{color:inherit;text-decoration:none;display:block;cursor:pointer;
+  scroll-margin-top:86px}
+a.limit:hover{border-color:var(--accent)}
+a.limit:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 .limit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,var(--gold-hi),var(--ember))}
+  background:var(--accent);opacity:.45}
 .limit .n{font-family:"Archivo Black",sans-serif;font-size:32px;line-height:1;display:block;
-  font-variant-numeric:tabular-nums;color:var(--gold-hi)}
+  font-variant-numeric:tabular-nums;color:var(--accent)}
 .limit .l{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
   color:var(--ink-faint);margin-top:6px;display:block}
 
-.toc{align-self:start}
-@media(min-width:1000px){.toc{position:sticky;top:86px}}
-.toc-box{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 2px 0 var(--edge),0 0 0 1px var(--panel-glow),inset 0 1px 0 rgba(255,255,255,.04);
-  padding:12px 14px 14px;position:relative}
-.toc-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,var(--gold-hi),var(--ember));pointer-events:none}
-.toc-hd{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
-  color:var(--gold);font-weight:700;margin:0 0 8px 8px}
-.toc ol{list-style:none;margin:0;padding:0 0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px}
-@media(min-width:1000px){.toc ol{display:block}}
-.toc a{display:block;padding:6px 0;font-family:"JetBrains Mono",monospace;font-size:12px;
-  color:var(--ink-soft);text-decoration:none;border-bottom:1px solid transparent;
-  transition:color var(--dur-chip),border-color var(--dur-chip)}
-.toc a:hover,.toc a:focus-visible{color:var(--gold-hi);border-bottom-color:var(--gold)}
-
-section{padding:52px 0;border-bottom:1px solid var(--rule-soft)}
-section:last-of-type{border-bottom:none}
-h2{font-size:clamp(24px,3.4vw,36px);letter-spacing:-.01em}
-h2 .num{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--gold);
+h2{font-size:clamp(22px,3vw,30px);letter-spacing:-.01em}
+h2 .num{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--accent);
   display:block;margin-bottom:10px;letter-spacing:.1em;
-  border-left:3px solid var(--gold);padding-left:10px;
-  background:linear-gradient(90deg,var(--accent-soft),transparent)}
-h3{font-size:19px;margin:34px 0 12px;color:var(--gold-hi)}
+  border-left:3px solid var(--accent);padding-left:10px}
+h3{font-size:19px;margin:34px 0 12px;color:var(--ink)}
 p{max-width:66ch}
-section > p:first-of-type{margin-top:18px}
-.lede{font-size:19px;color:var(--ink-soft)}
+section > p:first-of-type,.topic-body > .lede{margin-top:16px}
+.lede{font-size:18px;color:var(--ink-soft)}
 
 .schools{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin:26px 0 0}
 .school{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 1px 0 var(--edge),inset 4px 0 0 var(--c);padding:12px 14px}
+  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--c);padding:12px 14px;
+  scroll-margin-top:86px}
+a.school{color:inherit;text-decoration:none;display:block;cursor:pointer}
+a.school:hover{border-color:var(--c)}
+a.school:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 .school .name{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;color:var(--c);display:block}
-.school .count{font-family:"Archivo Black",sans-serif;font-size:26px;line-height:1.2;display:block;color:var(--gold-hi)}
+.school .count{font-family:"Archivo Black",sans-serif;font-size:26px;line-height:1.2;display:block;color:var(--ink)}
 .school .eg{font-size:14px;color:var(--ink-faint);display:block}
 
 .chain{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 2px 0 var(--edge),0 0 0 1px var(--panel-glow);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
   padding:14px 16px 14px 18px;margin:14px 0;position:relative}
 .chain::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,var(--gold-hi),var(--ember))}
+  background:var(--accent);opacity:.45}
 .chain-flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .node{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
   background:var(--sunken);border:1px solid var(--rule);padding:5px 10px}
-.node.src{border-color:var(--gold);color:var(--gold-hi);background:var(--accent-soft)}
+.node.src{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .arrow{color:var(--ink-faint);font-size:14px}
 .chain p{margin:0;font-size:15px;color:var(--ink-soft);max-width:none}
 
 .tbl-wrap{overflow-x:auto;margin:20px 0;background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 2px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
 table{border-collapse:collapse;width:100%;min-width:560px;background:transparent}
 th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule-soft);font-size:14px}
-th{background:linear-gradient(180deg,var(--sunken),transparent);font-size:11px;letter-spacing:.08em;
-  color:var(--gold);font-weight:700;position:sticky;top:0;border-bottom:1px solid var(--rule)}
+th{background:var(--sunken);font-size:11px;letter-spacing:.08em;
+  color:var(--accent);font-weight:700;position:sticky;top:0;border-bottom:1px solid var(--rule)}
 td{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
 td.txt{font-family:"Source Serif 4",serif;color:var(--ink-soft)}
 tr:last-child td{border-bottom:none}
@@ -235,9 +278,9 @@ tr:last-child td{border-bottom:none}
 .q-Legendary{color:var(--q4)} .q-Epic{color:var(--q3)}
 .q-Rare{color:var(--q2)} .q-Normal{color:var(--q0)} .q-Uncommon{color:var(--q1)}
 
-.note{position:relative;background:var(--accent-soft);border:1px solid var(--gold);
+.note{position:relative;background:var(--accent-soft);border:1px solid var(--accent);
   padding:16px 20px 16px 22px;margin:24px 0;
-  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--gold)}
+  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--accent)}
 .note.warn{background:var(--warn-soft);border-color:var(--ember);
   box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--ember)}
 .note.good{background:var(--good-soft);border-color:var(--good);
@@ -245,43 +288,43 @@ tr:last-child td{border-bottom:none}
 .note p{margin:0;max-width:none}
 .note p+p{margin-top:10px}
 .note .hd{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
-  margin:0 0 7px;font-weight:700;color:var(--gold)}
+  margin:0 0 7px;font-weight:700;color:var(--accent)}
 .note.warn .hd{color:var(--ember)}
 .note.good .hd{color:var(--good)}
 a.cta{
   display:inline-block;color:var(--accent-ink);text-decoration:none;margin-top:14px;
   font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
-  padding:10px 16px;border:1px solid var(--gold);background:var(--accent);
-  box-shadow:inset 0 0 0 1px var(--gold);transition:filter var(--dur-chip)}
-a.cta:hover{filter:brightness(1.08);color:var(--accent-ink)}
-a.cta:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  padding:10px 16px;border:1px solid var(--accent);background:var(--accent);
+  transition:filter var(--dur-chip)}
+a.cta:hover{filter:brightness(1.06);color:var(--accent-ink)}
+a.cta:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:3px}
 
 .cols{display:grid;grid-template-columns:1fr;gap:26px;margin-top:24px}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
 .col{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 2px 0 var(--edge),0 0 0 1px var(--panel-glow),inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
   padding:14px 16px;position:relative}
 .col::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,var(--gold-hi),var(--ember))}
-.col h3{margin-top:0;color:var(--gold-hi)}
+  background:var(--accent);opacity:.45}
+.col h3{margin-top:0;color:var(--ink)}
 .col ul{list-style:none;margin:0;padding:0}
 .col li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;
   border-bottom:1px solid var(--rule-soft);font-size:14px}
 .col li .nm{font-family:"JetBrains Mono",monospace}
 .col li .meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-faint);white-space:nowrap}
 .grp{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
-  color:var(--gold);margin:18px 0 6px}
+  color:var(--accent);margin:18px 0 6px}
 .grp:first-child{margin-top:0}
 
 footer{padding:40px 0 64px;color:var(--ink-faint);font-size:14px;line-height:1.6;
   border-top:1px solid var(--rule);margin-top:8px}
 footer p{max-width:70ch}
-a{color:var(--gold)}
-:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 .skip{position:absolute;left:12px;top:0;z-index:200;transform:translateY(-120%);
   background:var(--accent);color:var(--accent-ink);padding:10px 14px;
   font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
-  text-decoration:none;border:1px solid var(--gold);transition:transform .15s}
+  text-decoration:none;border:1px solid var(--gold,var(--accent));transition:transform .15s}
 .skip:focus,.skip:focus-visible{transform:translateY(12px);outline-offset:3px}
 @media(max-width:560px){
   .tbin{min-height:0;padding-top:10px;padding-bottom:10px;gap:10px}
@@ -290,9 +333,160 @@ a{color:var(--gold)}
   .prodnav{width:100%;margin-left:0}
   .prodnav a{flex:1;text-align:center;padding:12px 8px}
 }
+.rules{display:grid;grid-template-columns:1fr;gap:12px;margin:22px 0 0}
+@media(min-width:760px){.rules{grid-template-columns:1fr 1fr}}
+.rule{background:var(--raised);border:1px solid var(--rule);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
+  padding:14px 16px 14px 18px;position:relative}
+.rule::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);opacity:.45}
+.rule h3{margin:0 0 8px;font-size:16px}
+.rule p{margin:0;font-size:15px;color:var(--ink-soft);max-width:none}
+.rule .k{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
+  color:var(--accent);display:block;margin-bottom:6px}
+
+.look{background:var(--raised);border:1px solid var(--rule);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
+  padding:16px 16px 18px;margin:20px 0 0;position:relative}
+.look::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);opacity:.45}
+.look label{display:block;font-family:"JetBrains Mono",monospace;font-size:11px;
+  letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 8px}
+.synin{width:100%;max-width:42rem;padding:10px 12px;font:16px/1.4 "Source Serif 4",serif;
+  color:var(--ink);background:var(--sunken);border:1px solid var(--rule)}
+.synin:focus{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+.filters button{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  padding:6px 10px;border:1px solid var(--rule);background:var(--sunken);
+  color:var(--ink-soft);cursor:pointer}
+.filters button.on,.filters button[aria-pressed="true"]{
+  border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.filters button:hover{border-color:var(--accent);color:var(--accent)}
+.filters button:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.school-filters{margin-top:8px}
+.lookstat{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);
+  margin:10px 0 0}
+.look,.hits{scroll-margin-top:86px}
+.hits{display:grid;gap:12px;margin-top:16px}
+.hit{background:var(--sunken);border:1px solid var(--rule);padding:12px 14px}
+.hit h3{margin:0 0 6px;font-size:17px;color:var(--ink)}
+.hit .meta{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tagpill{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  padding:2px 7px;border:1px solid var(--rule);color:var(--ink-soft)}
+.tagpill.erb{border-color:var(--accent);color:var(--accent)}
+.tagpill.gcd{border-color:var(--ember);color:var(--ember)}
+.tagpill.cd{border-color:var(--frost);color:var(--frost)}
+.tagpill.proc{border-color:var(--good);color:var(--good)}
+.tagpill.gate{border-color:var(--shadow);color:var(--shadow)}
+.tagpill.kette{border-color:var(--holy);color:var(--holy)}
+.hit dl{margin:8px 0 0;display:grid;gap:6px}
+.hit dt{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;
+  color:var(--accent);margin:0}
+.hit dd{margin:2px 0 0;font-size:14px;color:var(--ink-soft)}
+.hit .nm{font-family:"JetBrains Mono",monospace}
+.empty{color:var(--ink-faint);font-size:15px;margin:14px 0 0}
+
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* --- Dichte / progressive disclosure (forge-slate, shared with builder) --- */
+.startrow{
+  background:color-mix(in srgb,var(--sunken) 42%,transparent);
+  border-bottom-color:var(--rule-soft)}
+@supports not (background:color-mix(in srgb,white 50%,black)){
+  .startrow{background:var(--sunken)}}
+.startin .shd{color:var(--ink-dim);letter-spacing:.03em}
+.startin p{font-size:13px;color:var(--ink-soft)}
+.startin a{
+  border-color:var(--rule);color:var(--ink-soft);background:transparent;
+  font-weight:600;padding:5px 10px}
+.startin a:hover,.startin a:focus-visible{
+  background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.chain,.col,.limit{box-shadow:0 1px 0 var(--edge)}
+.quiet{opacity:var(--quiet);transition:opacity var(--dur-chip) var(--ease-out)}
+.quiet:hover,.quiet:focus-within{opacity:var(--quiet-focus)}
+.dump{background:transparent}
+
+/* details.more = JS wrapDetails + static HTML. Same look as details.disclose. */
+details.more,details.disclose{
+  border:1px solid var(--rule-soft);background:var(--sunken)}
+details.more>summary,details.disclose>summary{
+  list-style:none;cursor:pointer;user-select:none;
+  font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  color:var(--accent);padding:8px 12px}
+details.more>summary::-webkit-details-marker,
+details.disclose>summary::-webkit-details-marker{display:none}
+details.more>summary::after,details.disclose>summary::after{content:" +";color:var(--ink-faint);font-weight:400}
+details.more[open]>summary::after,details.disclose[open]>summary::after{content:" \2212"}
+details.more:not([open]),details.disclose:not([open]){opacity:var(--quiet)}
+details.more[open],details.more:focus-within,
+details.disclose[open],details.disclose:focus-within{opacity:var(--quiet-focus)}
+details.more .more-body{padding:0 12px 10px;font-size:13px;color:var(--ink-soft);line-height:1.5}
+details.more .more-body>:first-child{margin-top:0}
+details.more .more-body>:last-child{margin-bottom:0}
+details.more .more-body .headline{border-left:0;padding:10px 0;background:transparent}
+details.more .more-body .empty,details.more .more-body .empty-keep{
+  padding:0;text-align:left;color:var(--ink-soft)}
+details.more .more-body .flag{border:0;padding:8px 0}
+details.more .more-body .srcnote{padding:8px 0}
+
+.viewline{margin:0;padding:8px 14px 4px;font-size:13px;color:var(--ink-soft);line-height:1.45}
+.viewline a{color:var(--accent);font-weight:700;text-decoration:none}
+.viewline a:hover{border-bottom:1px solid var(--accent)}
+.viewline code{font-size:11.5px;background:var(--sunken);border:1px solid var(--rule);padding:1px 5px}
+
+.startin details.more,.startin details.disclose{
+  flex:1 1 240px;min-width:0;border:0;background:transparent;opacity:1}
+.startin details.more>summary,.startin details.disclose>summary{
+  padding:0;font-size:11px;letter-spacing:.04em}
+.startin details.more .more-body{padding:8px 0 0;max-width:62ch;color:var(--ink-soft);font-size:13px}
+
+footer details.more,footer details.disclose{border:0;background:transparent;margin-top:10px;opacity:1}
+footer details.more>summary,footer details.disclose>summary{padding:0;color:var(--ink-faint);font-weight:700}
+footer details.more .more-body{padding:8px 0 0;color:var(--ink-faint);font-size:13px}
+
+.more-host:not([open])+.more-target>.qhint:first-child,
+.more-host:not([open])+.more-target .ilvlnote{display:none}
+.more-host:not([open])+.more-target>.empty{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;text-align:left;padding:12px 16px}
+
+@media (prefers-contrast:more){
+  .chain,.col,.limit,.quiet,details.disclose{opacity:1}
+}
+
+/* Sister tip — mirrors Builder .tut* (compact, one accent) */
+.tut{border-bottom:1px solid var(--rule-soft);background:var(--sunken)}
+.tut-panel,.tut-dismissed{max-width:1180px;margin:0 auto;
+  padding:10px clamp(12px,2.4vw,28px)}
+.tut-dismissed{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.tut-dismissed[hidden],.tut-panel[hidden]{display:none !important}
+.tut-reopen{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  color:var(--accent);background:var(--raised);border:1px solid var(--accent);
+  padding:6px 12px;cursor:pointer}
+.tut-reopen:hover,.tut-reopen:focus-visible{background:var(--accent);color:var(--accent-ink)}
+.tut-dismissed-hint{font-size:13px;color:var(--ink-faint);flex:1 1 180px}
+.tut-top{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.tut-kicker{margin:0;font-family:"JetBrains Mono",monospace;font-size:11px;
+  font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.tut-x{margin-left:auto;background:transparent;border:0;color:var(--ink-faint);
+  font-size:20px;line-height:1;cursor:pointer;padding:0 4px}
+.tut-x:hover{color:var(--ink)}
+.tut-body{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink-soft);
+  max-width:62ch}
+.tut-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tut-btn{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  padding:6px 11px;border:1px solid var(--rule);background:var(--raised);
+  color:var(--ink-soft);cursor:pointer;text-decoration:none;display:inline-block}
+.tut-btn:hover{border-color:var(--accent);color:var(--ink)}
+a.tut-btn.primary,button.tut-btn.primary{border-color:var(--accent);color:var(--accent)}
+a.tut-btn.primary:hover,button.tut-btn.primary:hover{
+  background:var(--accent);color:var(--accent-ink)}
+.tut-btn:focus-visible,.tut-reopen:focus-visible,.tut-x:focus-visible{
+  outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 </style>
 </head>
 <body>
@@ -315,57 +509,73 @@ a{color:var(--gold)}
   </div>
 </header>
 
-<aside class="startrow" aria-label="Erste Schritte">
-  <div class="startin">
-    <p class="shd">Erste Schritte</p>
-    <p>Regeln hier lesen, dann in der Buildschmiede bauen: Addon → <code>/bs</code> → Werkzeuge einfügen.
-      Import ordnet per <code>spellId</code> / <code>itemId</code> zu.</p>
-    <div class="slinks">
-      <a href="index.html">Buildschmiede</a>
-      <a href="index.html#t=vTools">Import</a>
-      <a href="index.html#t=rAddon">Addon</a>
+<aside class="tut tut-bar" id="synTip" aria-label="Hinweis zur Buildschmiede">
+  <div class="tut-dismissed" id="synTipDismissed" hidden>
+    <button type="button" class="tut-reopen" id="synTipReopen">Tutorial</button>
+    <span class="tut-dismissed-hint">Kurzanleitung in der Buildschmiede</span>
+    <div class="tut-actions">
+      <a class="tut-btn" href="index.html">Buildschmiede</a>
+      <a class="tut-btn" href="index.html#t=vTools">Import</a>
+    </div>
+  </div>
+  <div class="tut-panel" id="synTipPanel">
+    <div class="tut-top">
+      <p class="tut-kicker">Hinweis</p>
+      <button type="button" class="tut-x" id="synTipClose" title="Hinweis schließen" aria-label="Hinweis schließen">×</button>
+    </div>
+    <p class="tut-body">Vererbung und gleicher GCD stehen hier. Das Tutorial in der Buildschmiede erklärt Addon, Import und Befund — für Levelrun und Endgame.</p>
+    <div class="tut-actions">
+      <a class="tut-btn primary" href="index.html#tut=1">Tutorial in der Buildschmiede</a>
+      <a class="tut-btn" href="index.html#t=vTools">Import</a>
+      <a class="tut-btn" href="index.html#t=rAddon">Addon</a>
+      <button type="button" class="tut-btn" id="synTipHide">Nicht mehr zeigen</button>
     </div>
   </div>
 </aside>
 
 <main class="wrap" id="main" tabindex="-1">
   <header class="mast">
-    <p class="kicker">Project Ascension · Season 10 Wildcard</p>
-    <h1>Wildcard Synergiekompendium</h1>
-    <p class="dek">Der Katalog hat 3.071 Einträge. Mitnehmen darfst du 30 Abilities und
-      25 Talente. Diese Seite zeigt, welche Kombinationen diese 55 Plätze verdienen —
-      und welche nur so aussehen.</p>
+    <p class="kicker">Season 10 Wildcard · Level 10–60</p>
+    <h1>Synergien</h1>
+    <p class="dek">Vererbung, gleicher GCD, geteilte Cooldowns, Trigger und Procs —
+      nur wo die eingebetteten Daten sie belegen. Keine erfundenen Koeffizienten.</p>
+    <form class="find" id="findForm" role="search" action="#" onsubmit="return false">
+      <div class="find-row">
+        <input type="search" id="qSyn" name="q" placeholder="Thema oder Katalognamen — z. B. Slam, Kick, Windfury …" autocomplete="off" aria-label="Themen und Katalognamen durchsuchen" aria-controls="topics">
+      </div>
+      <p class="find-status" id="qStatus" role="status" aria-live="polite"></p>
+      <nav class="topics-nav" aria-label="Themen">
+        <a href="#budget" data-jump="budget" title="Zum Budget">Budget <b>30/25</b></a>
+        <a href="#schulen" data-jump="schulen" title="Zu den Schulen">Schulen <b>6</b></a>
+        <a href="#regeln" data-jump="regeln" title="Zu den vier Synergietypen">Regeln</a>
+        <a href="#dubletten" data-jump="dubletten" title="Zu den Dubletten">Dubletten <b>60</b></a>
+        <a href="#modifier" data-jump="modifier" title="Zur Modifier-Vererbung">Modifier <b>316</b></a>
+        <a href="#gates" data-jump="gates" title="Zu den Sperren">Sperren <b>76</b></a>
+        <a href="#ketten" data-jump="ketten" title="Zu den Trigger-Ketten">Ketten <b>1.897</b></a>
+        <a href="#procs" data-jump="procs" title="Zu den Procs">Procs <b>239</b></a>
+        <a href="#nachschlagen" data-jump="nachschlagen" title="Zum Nachschlagen">Nachschlagen</a>
+        <a href="#schaden" data-jump="schaden" title="Zur Schadens-Skalierung">Schaden</a>
+        <a href="#heilung" data-jump="heilung" title="Zur Heilungs-Skalierung">Heilung</a>
+        <a href="#beispiel" data-jump="beispiel" title="Zum Shuriken-Beispiel">Beispiel</a>
+        <a href="index.html">Buildschmiede</a>
+      </nav>
+    </form>
   </header>
 
-  <div class="layout">
-    <nav class="toc" aria-labelledby="toc-hd">
-      <div class="toc-box">
-        <p class="toc-hd" id="toc-hd">Inhalt</p>
-        <ol>
-          <li><a href="#budget">01 · Das Budget</a></li>
-          <li><a href="#schulen">02 · Die sechs Schulen</a></li>
-          <li><a href="#dubletten">03 · Dubletten-Fallen</a></li>
-          <li><a href="#modifier">04 · Modifier-Vererbung</a></li>
-          <li><a href="#gates">05 · Harte Sperren</a></li>
-          <li><a href="#ketten">06 · Trigger-Ketten</a></li>
-          <li><a href="#schaden">07 · Schadens-Skalierung</a></li>
-          <li><a href="#heilung">08 · Heilungs-Skalierung</a></li>
-          <li><a href="#beispiel">09 · Beispiel: Shuriken</a></li>
-          <li><a href="#builder">→ Buildschmiede</a></li>
-        </ol>
-      </div>
-    </nav>
+  <p class="q-empty" id="qEmpty" hidden>Kein Treffer. Versuch einen anderen Begriff — oder öffne ein Thema oben.</p>
 
-    <div class="content">
-      <section id="budget">
-        <h2><span class="num">01</span>Das Budget ist die eigentliche Mechanik</h2>
+  <div class="topics" id="topics">
+      <details class="topic" id="budget" data-keys="budget plätze abilities talente katalog 30 25 3071 dubletten waisen skalierung verdrängung">
+        <summary><span class="num">01</span> Das Budget <span class="hint"><a href="#beispiel" data-jump="beispiel" title="Zum geprüften 30+25-Beispiel">30 Abilities</a><a href="#beispiel" data-jump="beispiel" title="Zum geprüften 30+25-Beispiel">25 Talente</a></span></summary>
+        <div class="topic-body">
+        <h2>Das Budget ist die eigentliche Mechanik</h2>
         <p class="lede">Jede Entscheidung in diesem System ist eine Verdrängungsentscheidung.
           Nicht „ist das gut?“, sondern „ist das besser als das, was dafür rausfliegt?“</p>
         <div class="limits" role="list" aria-label="Budgetgrenzen">
-          <div class="limit" role="listitem"><span class="n">30</span><span class="l">Abilities</span></div>
-          <div class="limit" role="listitem"><span class="n">25</span><span class="l">Talente</span></div>
-          <div class="limit" role="listitem"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
-          <div class="limit" role="listitem"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
+          <a class="limit" role="listitem" href="#beispiel" data-jump="beispiel" title="Zum Build mit 30 Abilities"><span class="n">30</span><span class="l">Abilities</span></a>
+          <a class="limit" role="listitem" href="#beispiel" data-jump="beispiel" title="Zum Build mit 25 Talenten"><span class="n">25</span><span class="l">Talente</span></a>
+          <a class="limit" role="listitem" href="#nachschlagen" data-jump="nachschlagen" title="Katalog nachschlagen"><span class="n">3.071</span><span class="l">Katalog gesamt</span></a>
+          <a class="limit" role="listitem" href="#budget" data-jump="budget" title="Beim Budget bleiben"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></a>
         </div>
         <p>Der Katalog enthält 1.321 Spells und 1.750 Talente. Du nimmst 30 und 25 mit. Alles,
           was du an Redundanz mitschleppst — zwei Fähigkeiten, die dasselbe tun, ein Talent ohne
@@ -380,33 +590,83 @@ a{color:var(--gold)}
             <strong>3. Gestreute Skalierung.</strong> Boni auf fünf verschiedene Schulen
             addieren sich nicht — sie verdünnen sich.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="schulen">
-        <h2><span class="num">02</span>Die sechs Schulen</h2>
+      <details class="topic" id="schulen" data-keys="schulen firestrike froststrike shadowstrike stormstrike holystrike spellstrike fire frost shadow nature holy arcane charred rime sunder voltaic bite">
+        <summary><span class="num">02</span> Die sechs Schulen <span class="hint"><a href="#modifier" data-jump="modifier" title="Zur Modifier-Vererbung">316 uses-X</a><a href="#dubletten" data-jump="dubletten" title="Zu den GCD-Gruppen">60 GCD-Gruppen</a></span></summary>
+        <div class="topic-body">
+        <h2>Die sechs Schulen</h2>
         <p class="lede">Ascension hat die meisten Grundfähigkeiten in sechs Schadensschulen
           gespiegelt. Das ist keine Deko — es ist der Hebel, mit dem du deinen gesamten Schaden
           auf einen Typ bündelst.</p>
         <div class="schools">
-          <div class="school" style="--c:var(--fire)"><span class="name">Firestrike</span>
-            <span class="count">43</span><span class="eg">z. B. Charred Bite</span></div>
-          <div class="school" style="--c:var(--frost)"><span class="name">Froststrike</span>
-            <span class="count">40</span><span class="eg">z. B. Rime Strike</span></div>
-          <div class="school" style="--c:var(--shadow)"><span class="name">Shadowstrike</span>
-            <span class="count">40</span><span class="eg">z. B. Sunder Soul</span></div>
-          <div class="school" style="--c:var(--nature)"><span class="name">Stormstrike</span>
-            <span class="count">66</span><span class="eg">z. B. Voltaic Bite</span></div>
-          <div class="school" style="--c:var(--holy)"><span class="name">Holystrike</span>
-            <span class="count">40</span><span class="eg">z. B. Holy Shot</span></div>
-          <div class="school" style="--c:var(--arcane)"><span class="name">Spellstrike</span>
-            <span class="count">40</span><span class="eg">z. B. Aether Strike</span></div>
+          <a class="school" id="school-firestrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Charred Bite" data-f="alle" style="--c:var(--fire)" title="Firestrike nachschlagen — z. B. Charred Bite"><span class="name">Firestrike</span>
+            <span class="count">43</span><span class="eg">z. B. Charred Bite</span></a>
+          <a class="school" id="school-froststrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Rime Strike" data-f="alle" style="--c:var(--frost)" title="Froststrike nachschlagen — z. B. Rime Strike"><span class="name">Froststrike</span>
+            <span class="count">40</span><span class="eg">z. B. Rime Strike</span></a>
+          <a class="school" id="school-shadowstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Sunder Soul" data-f="alle" style="--c:var(--shadow)" title="Shadowstrike nachschlagen — z. B. Sunder Soul"><span class="name">Shadowstrike</span>
+            <span class="count">40</span><span class="eg">z. B. Sunder Soul</span></a>
+          <a class="school" id="school-stormstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Voltaic Bite" data-f="alle" style="--c:var(--nature)" title="Stormstrike nachschlagen — z. B. Voltaic Bite"><span class="name">Stormstrike</span>
+            <span class="count">67</span><span class="eg">z. B. Voltaic Bite</span></a>
+          <a class="school" id="school-holystrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Holy Shot" data-f="alle" style="--c:var(--holy)" title="Holystrike nachschlagen — z. B. Holy Shot"><span class="name">Holystrike</span>
+            <span class="count">40</span><span class="eg">z. B. Holy Shot</span></a>
+          <a class="school" id="school-spellstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Aether Strike" data-f="alle" style="--c:var(--arcane)" title="Spellstrike nachschlagen — z. B. Aether Strike"><span class="name">Spellstrike</span>
+            <span class="count">40</span><span class="eg">z. B. Aether Strike</span></a>
         </div>
-        <p style="margin-top:24px"><strong>417 Vererbungspaare</strong> und <strong>49 vollständige Dublettengruppen</strong> stecken im Katalog — Schul-Varianten von rund 30 Grundfähigkeiten. <strong>Stormstrike ist mit 66 Erwähnungen die am dichtesten
-          ausgebaute Schule</strong> — wer dort bündelt, findet am meisten Anschlussmaterial.</p>
-      </section>
+        <p style="margin-top:24px"><strong>316 Einträge</strong> tragen
+          <code>This uses X modifiers</code>. Dazu kommen
+          <strong>60 Dublettengruppen</strong> mit 234 Mitgliedern — Schulvarianten
+          mit gemeinsamem GCD. <strong>Stormstrike ist mit 67 Erwähnungen die am
+          dichtesten ausgebaute Schule</strong> — wer dort bündelt, findet am meisten
+          Anschlussmaterial.</p>
+        </div>
+      </details>
 
-      <section id="dubletten">
-        <h2><span class="num">03</span>Dubletten-Fallen</h2>
+      <details class="topic" id="regeln" data-keys="regeln vererbung gcd cooldown trigger proc uses modifiers talent basis dublette kette auslöser">
+        <summary><span class="num">03</span> Vier Synergietypen <span class="hint">nicht vermischen</span></summary>
+        <div class="topic-body">
+        <h2>Vier Synergietypen — nicht vermischen</h2>
+        <p class="lede">Dieselbe Fähigkeit kann in mehreren Listen stehen. Die Regeln
+          meinen aber vier verschiedene Dinge. Wenn du sie vermischst, zählst du
+          Schaden doppelt oder wirfst ein lebendiges Talent als Waise raus.</p>
+        <div class="rules">
+          <article class="rule">
+            <span class="k">01 · Vererbung</span>
+            <h3>Talente der Basis, nicht die Basis selbst</h3>
+            <p><code>This uses Slam modifiers</code> heißt: Burning Slam erbt jedes
+              Talent, das Slam verbessert. Ob Slam selbst im Build steht, ist egal.
+              Quelle: <code>usesbase</code> und <code>basemods</code>.</p>
+          </article>
+          <article class="rule">
+            <span class="k">02 · Gleicher GCD</span>
+            <h3>Eine Taste, sechs Schulen</h3>
+            <p>Schulvarianten derselben Fähigkeit teilen sich <strong>einen</strong>
+              globalen Takt. Burning Slam und Frozen Slam sind nicht zwei parallele
+              Drücke. 60 Gruppen, 234 Einträge — das ist <code>relations.dupGroup</code>.</p>
+          </article>
+          <article class="rule">
+            <span class="k">03 · Geteilter Cooldown</span>
+            <h3>Dieselbe Abklingzeit, anderer Knopf</h3>
+            <p>Kick und Counterspell liegen auf einem Ability-Cooldown, nicht auf
+              dem Slam-GCD. Zehn Gruppen in <code>cdgroups</code>. Eine zweite
+              Fähigkeit aus derselben Gruppe bringt keine extra Uptime.</p>
+          </article>
+          <article class="rule">
+            <span class="k">04 · Trigger und Proc</span>
+            <h3>Auslöser, Nutznießer, Chance</h3>
+            <p>Ein Talent <em>nennt</em> Fähigkeiten (<code>relations.refs</code>) —
+              das ist die Kette. Eine Proc-Chance steht nur, wenn der Tooltip oder
+              die DBC (Werte 1–99) sie liefert. Kein Prozent raten.</p>
+          </article>
+        </div>
+        </div>
+      </details>
+
+      <details class="topic" id="dubletten" data-keys="dubletten gcd slam burning frozen storm brilliant arcane shadow flurry shield glaive zandalari armor schule fan of knives">
+        <summary><span class="num">04</span> Dubletten-Fallen <span class="hint"><a href="#dubletten" data-jump="dubletten" title="Bei den Dubletten bleiben">60 Gruppen</a><a href="#regeln" data-jump="regeln" title="Zur Regel Gleicher GCD">gleicher GCD</a></span></summary>
+        <div class="topic-body">
+        <h2>Dubletten-Fallen</h2>
         <p class="lede">Diese Gruppen füllen dieselbe Rolle — nimm genau eine pro Gruppe.
           Sie sind aber nicht austauschbar: die Schule entscheidet, ob Armor
           den Schaden schluckt und welche Talente darauf einzahlen.</p>
@@ -433,9 +693,9 @@ a{color:var(--gold)}
             (14 Punkte = 1 Waffen-DPS). Eine Waffenattacke, die als Element zählt, zieht
             also vollen Nutzen aus Spell Power <em>und</em> umgeht die Rüstung. Die
             <a href="index.html">Buildschmiede</a> rechnet das pro Fähigkeit vor.</p>
-          <p>In <b>Levelrun</b> (10–59) und <b>Endgame</b> (Stufe 60) nutzt die
+          <p>In <b>Levelrun</b> (10–60) und <b>Endgame</b> (Stufe 60) nutzt die
             Auswertung Path, Essence, Budget und Hit aus dem Import. ItemStat-
-            Stufenbänder decken 10–59 ab — Anhalt aus der DBC, kein Raid-BiS und
+            Stufenbänder decken 10–60 ab — Anhalt aus der DBC, kein Raid-BiS und
             kein erfundenes Spell-SP/AP. Rahmen unter Auswertung wählbar.</p>
         </div>
 
@@ -444,12 +704,12 @@ a{color:var(--gold)}
           <table>
             <thead><tr><th>Fähigkeit</th><th>Schule</th><th>Effekt laut Tooltip</th></tr></thead>
             <tbody>
-              <tr><td>Arcane Slam</td><td>Spellstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
-              <tr><td>Shadow Slam</td><td>Shadowstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
-              <tr><td>Burning Slam</td><td>Firestrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
-              <tr><td>Frozen Slam</td><td>Froststrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
-              <tr><td>Storm Slam</td><td>Stormstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
-              <tr><td>Brilliant Slam</td><td>Holystrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Arcane Slam</td><td>Spellstrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
+              <tr><td>Shadow Slam</td><td>Shadowstrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
+              <tr><td>Burning Slam</td><td>Firestrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
+              <tr><td>Frozen Slam</td><td>Froststrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
+              <tr><td>Storm Slam</td><td>Stormstrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
+              <tr><td>Brilliant Slam</td><td>Holystrike</td><td class="txt">65 % Waffenschaden + 6</td></tr>
             </tbody>
           </table>
         </div>
@@ -476,28 +736,37 @@ a{color:var(--gold)}
             nehmen erhöht deinen Schaden um exakt null — der zweite ist nur ein anderer Knopf für
             dieselbe Abklingzeit.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="modifier">
-        <h2><span class="num">04</span>Modifier-Vererbung</h2>
+      <details class="topic" id="modifier" data-keys="modifier vererbung uses modifiers swipe sinister revenge lava lash slam aimed steady kill mongoose rake mangle">
+        <summary><span class="num">05</span> Modifier-Vererbung <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="erb" title="Vererbung nachschlagen">316 Phrasen</a><span>110 Basen</span></span></summary>
+        <div class="topic-body">
+        <h2>Modifier-Vererbung</h2>
         <p class="lede">Der Satz <code>This uses X modifiers</code> ist die wichtigste Zeile im
-          ganzen Katalog. Er heißt: diese Fähigkeit erbt jedes Talent, das X verbessert.</p>
-        <p>Damit kannst du ein Talent einmal nehmen und es auf mehrere Fähigkeiten wirken lassen —
-          oder umgekehrt eine exotische Fähigkeit nehmen, die von deinem bestehenden Talentbaum
-          bereits versorgt wird, ohne einen einzigen zusätzlichen Talentplatz.</p>
+          ganzen Katalog. Er heißt: diese Fähigkeit erbt jedes Talent, das X verbessert —
+          nicht die Basisfähigkeit selbst.</p>
+        <p>316 Katalogtexte tragen die Phrase. 318 Einträge sind einer Basis zugeordnet
+          (Relations-Feld oder aufgelöster Text). Die Basis muss <em>nicht</em> im Build
+          stehen. Unaufgelöst bleibt nur „uses Claw modifiers“ — im Katalog gibt es
+          keine Ability namens Claw, also keine Zuordnung.</p>
         <h3>Die ergiebigsten Basis-Fähigkeiten</h3>
+        <p>Gemessen: Varianten aus <code>usesbase</code> / Relations, Talente aus
+          <code>basemods</code> (namentliche Treffer, keine erfundenen Prozent).</p>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Basis</th><th>Varianten</th><th>Bedeutung</th></tr></thead>
+            <thead><tr><th>Basis</th><th>Varianten</th><th>Talente</th><th>Bedeutung</th></tr></thead>
             <tbody>
-              <tr><td>Swipe</td><td>12</td><td class="txt">Breitester Vererbungsbaum im Katalog</td></tr>
-              <tr><td>Eviscerate</td><td>9</td><td class="txt">Finisher-Skalierung greift überall</td></tr>
-              <tr><td>Sinister Strike</td><td>9</td><td class="txt">Combopunkt-Aufbau</td></tr>
-              <tr><td>Revenge</td><td>8</td><td class="txt">Tank-Kern</td></tr>
-              <tr><td>Lava Lash</td><td>8</td><td class="txt">Waffen-Imbue-Synergie</td></tr>
-              <tr><td>Slam</td><td>8</td><td class="txt">Nahkampf-Grundschlag</td></tr>
-              <tr><td>Bloodthirst</td><td>7</td><td class="txt">Selbstheilung gekoppelt</td></tr>
-              <tr><td>Aimed Shot · Steady Shot · Kill Shot</td><td>je 7</td><td class="txt">Distanz-Kern</td></tr>
+              <tr><td>Swipe (Cat)</td><td>12</td><td>6</td><td class="txt">Cat- und Bear-Schulvarianten</td></tr>
+              <tr><td>Sinister Strike</td><td>9</td><td>18</td><td class="txt">Combopunkt-Aufbau inkl. Schulschläge</td></tr>
+              <tr><td>Slam</td><td>8</td><td>30</td><td class="txt">Nahkampf-Grundschlag, breitester Talentbaum</td></tr>
+              <tr><td>Lava Lash</td><td>8</td><td>12</td><td class="txt">Imbue-Synergie (Ice/Rime/Lightning/…)</td></tr>
+              <tr><td>Revenge</td><td>8</td><td>6</td><td class="txt">Tank-Kern</td></tr>
+              <tr><td>Aimed Shot</td><td>7</td><td>18</td><td class="txt">Distanz-Kern</td></tr>
+              <tr><td>Steady Shot</td><td>7</td><td>17</td><td class="txt">Distanz-Kern</td></tr>
+              <tr><td>Kill Shot</td><td>7</td><td>10</td><td class="txt">Execute-Fenster Fernkampf</td></tr>
+              <tr><td>Rake</td><td>7</td><td>10</td><td class="txt">Bleed-Familie</td></tr>
+              <tr><td>Mongoose Bite</td><td>6</td><td>22</td><td class="txt">Viele Schulbisse, viele Talente</td></tr>
             </tbody>
           </table>
         </div>
@@ -505,12 +774,17 @@ a{color:var(--gold)}
           <p class="hd">So nutzt du das</p>
           <p>Suche zuerst die <em>Basis</em>, um die du bauen willst, und nimm dann deren Talente.
             Jede Variante, die „uses &lt;Basis&gt; modifiers“ trägt, kommt danach gratis dazu — du
-            zahlst nur den Ability-Platz, nicht nochmal Talente.</p>
+            zahlst nur den Ability-Platz, nicht nochmal Talente. Eviscerate hat im aktuellen
+            Katalog nur eine Variante (Panache), Bloodthirst nur Felblade — ältere Zählungen
+            mit 9 bzw. 7 Varianten stimmen nicht mehr.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="gates">
-        <h2><span class="num">05</span>Harte Sperren</h2>
+      <details class="topic" id="gates" data-keys="sperren gates path healing waffe dolch item duelist rang eclipse agility cooldown kick pummel shock tonic backstab">
+        <summary><span class="num">06</span> Harte Sperren <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="gate" title="Sperren nachschlagen">76 Einträge</a></span></summary>
+        <div class="topic-body">
+        <h2>Harte Sperren</h2>
         <p class="lede">76 Einträge im Katalog funktionieren nur, wenn eine Bedingung außerhalb
           deiner 55 Plätze erfüllt ist. Steht sie nicht, passiert schlicht nichts — ohne
           Fehlermeldung, ohne Hinweis im Spiel.</p>
@@ -528,14 +802,17 @@ a{color:var(--gold)}
                 <strong>Eclipse Rang 1</strong></td></tr>
               <tr><td>Stat</td><td>4</td><td class="txt">Careful Aim braucht
                 <strong>Primärstat Agility</strong></td></tr>
+              <tr><td>Sonst</td><td>10</td><td class="txt">Neun Runen brauchen die
+                <strong>Runenschmiede</strong>; Beast Mastery hängt an Tame-Beast-Fähigkeiten</td></tr>
             </tbody>
           </table>
         </div>
         <div class="note warn">
           <p class="hd">Path of Healing ist die größte einzelne Sperre</p>
           <p>37 Fähigkeiten und Talente hängen daran. Wer sie einplant, ohne den Path zu haben,
-            verliert bis zu 37 potenzielle Plätze an tote Einträge. Umgekehrt: wer den Path hat,
-            öffnet ein Sortiment, das anderen komplett verschlossen bleibt.</p>
+            verliert bis zu 37 potenzielle Plätze an tote Einträge. Der Path rechnet außerdem
+            Spell Power in Healing Power um. Umgekehrt: wer den Path hat, öffnet ein Sortiment,
+            das anderen komplett verschlossen bleibt.</p>
         </div>
 
         <h3>Geteilte Abklingzeiten</h3>
@@ -550,10 +827,13 @@ a{color:var(--gold)}
                 Counterspell · Wind Shear · Mind Freeze · Silencing Shot · Silence in the Library</td></tr>
               <tr><td>Tonics</td><td>6</td><td class="txt">Witch-Hunter-Tränke, u. a. Dark Tonic
                 und Vampiric Tonic</td></tr>
-              <tr><td>Shaman Shocks</td><td>4</td><td class="txt">Earth Shock · Flame Shock ·
-                Frost Shock · Frostflame Shock</td></tr>
-              <tr><td>Seismic</td><td>2</td><td class="txt">Seismic-Zauber untereinander</td></tr>
-              <tr><td>Glaive</td><td>2</td><td class="txt">Glaive Toss · Zandalari Glaive</td></tr>
+              <tr><td>Schamanen-Schocks</td><td>3</td><td class="txt">Earth Shock · Flame Shock ·
+                Frostflame Shock</td></tr>
+              <tr><td>Andere Schocks</td><td>1</td><td class="txt">Frost Shock — eigene
+                <code>cdgroups</code>-Zeile, Tooltip teilt trotzdem den Schock-CD</td></tr>
+              <tr><td>Seismic</td><td>2</td><td class="txt">Seismic Wave · Seismic Tremor</td></tr>
+              <tr><td>Glaive</td><td>1</td><td class="txt">Nur Zandalari Glaive steht in der
+                Gruppe; Glaive Toss ist der benannte Partner im Tooltip</td></tr>
             </tbody>
           </table>
         </div>
@@ -563,46 +843,52 @@ a{color:var(--gold)}
             mitnimmt, weil „einer ist magisch, einer physisch“, verschenkt einen Platz vollständig.
             Nimm genau einen — den, dessen Ressource du ohnehin führst.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="ketten">
-        <h2><span class="num">06</span>Trigger-Ketten</h2>
-        <p class="lede">Der zweite Synergietyp: Fähigkeit A gewährt einen Buff, der Fähigkeit B
-          verstärkt. Diese Ketten sind der Grund, warum manche Builds überproportional
-          skalieren — und warum ein fehlendes Glied den Rest wertlos macht.</p>
-        <p>Der Katalog enthält <strong>755 solcher Ketten</strong> — 403 mit eindeutig benannter Quelle, weitere 352 in unschärferer Formulierung.
-          Bemerkenswert daran: fast alle sind <em>Klassenbrücken</em>. Sie verbinden Fähigkeiten,
-          die im normalen WoW nie zusammen auf einer Leiste lägen — und genau darin liegt der
-          Sinn des klassenlosen Systems.</p>
+      <details class="topic" id="ketten" data-keys="ketten trigger lava freeze knight eclipse draconic toxic gloaming titan fury shuriken sinister bloodthirst refs">
+        <summary><span class="num">07</span> Trigger-Ketten <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="kette" title="Ketten nachschlagen">1.897 Einträge</a><span>3.572 Verweise</span></span></summary>
+        <div class="topic-body">
+        <h2>Trigger-Ketten</h2>
+        <p class="lede">Fähigkeit A gewährt einen Buff, der Fähigkeit B verstärkt.
+          Im Graph stehen nur Kanten, die <code>relations.refs</code> aus dem
+          Katalogtext gezogen hat — keine erfundenen Verbindungen.</p>
+        <p><strong>1.897 Einträge</strong> nennen mindestens eine andere Katalogfähigkeit
+          (3.572 Verweise). Fast alle starken Talente sind Klassenbrücken: sie verbinden
+          Fähigkeiten, die im normalen WoW nie zusammen auf einer Leiste lägen.</p>
 
         <div class="chain">
           <div class="chain-flow"><span class="node src">Lava Lash</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Solid Ice</span><span class="arrow" aria-hidden="true">→</span>
-            <span class="node">Ice Lance · Frostbolt · Deep Freeze</span></div>
+            <span class="node">Ice Lance · Cone of Cold · Frostbolt · Deep Freeze</span></div>
           <p><strong>Lava Freeze</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 20 —
-            Schamanen-Nahkampf befeuert Magier-Frostzauber. +8 % Schaden.</p>
+            Lava Lash gewährt Solid Ice: +8 % Schaden auf die genannten Frostzauber,
+            stapelt 2×, 15 Sek. (Tooltip).</p>
         </div>
         <div class="chain">
-          <div class="chain-flow"><span class="node src">Sinister Strike</span><span class="arrow" aria-hidden="true">→</span>
+          <div class="chain-flow"><span class="node src">Sinister Strike · Slam · Whirlwind</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Knight of the Eclipse</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Wrath · Starfire · Starsurge</span></div>
           <p><strong>Knight of the Eclipse</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 10 —
-            Schurken-Combopunkte verkürzen Druiden-Zauberzeiten.</p>
+            Nächster der drei Druidenzauber: −50 % Cast, +15 % Schaden, stapelt 2×
+            (Tooltip). Relations nennen zusätzlich Eclipse.</p>
         </div>
         <div class="chain">
           <div class="chain-flow"><span class="node src">Bloodthirst + Execute</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Draconic Slam</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Slam</span></div>
           <p><strong>Draconic Slam</strong> <span class="qual q-Epic">Epic</span> · Lvl 30 —
-            Nächster Slam wird sofort gewirkt und trifft 40 % härter. Verwandelt Slam vom
-            Lückenfüller zum Auszahlungsknopf.</p>
+            Nächster Slam wird sofort gewirkt und trifft 50 % härter (Tooltip).
+            Verwandelt Slam vom Lückenfüller zum Auszahlungsknopf.</p>
         </div>
         <div class="chain">
           <div class="chain-flow"><span class="node src">Instant Poison</span><span class="arrow" aria-hidden="true">→</span>
             <span class="node">Toxic Strikes</span><span class="arrow" aria-hidden="true">→</span>
-            <span class="node">Slam · Overpower · …</span></div>
+            <span class="node">Slam · Overpower · Mortal Strike</span></div>
           <p><strong>Toxic Strikes</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 24 —
-            Schurkengift befeuert Krieger-Nahkampf. Krits gewähren zusätzlich Hydra's Fang.</p>
+            Instant Poison gewährt Stacks; Slam, Overpower und Mortal Strike
+            verbrauchen sie für +10 % Schaden je Stack. Krits gewähren Hydra's Fang
+            (Tooltip). Relations listen Overpower und Mortal Strike.</p>
         </div>
         <div class="chain">
           <div class="chain-flow"><span class="node src">Shadow Dance</span><span class="arrow" aria-hidden="true">→</span>
@@ -629,10 +915,70 @@ a{color:var(--gold)}
             ohnehin in deiner Rotation stehen. Ketten sind kein Grund, eine Fähigkeit
             aufzunehmen; sie sind eine Belohnung dafür, dass sie schon da ist.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="schaden">
-        <h2><span class="num">07</span>Was deinen Schaden hochskaliert</h2>
+      <details class="topic" id="procs" data-keys="proc chance windfury envenom scent of blood stormcloak tooltip dbc 1-99">
+        <summary><span class="num">08</span> Procs <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="proc" title="Procs nachschlagen">239 Tooltip</a><span>46 DBC</span></span></summary>
+        <div class="topic-body">
+        <h2>Procs — nur belegte Chancen</h2>
+        <p class="lede">Eine Proc-Zahl erscheint hier nur, wenn der Tooltip sie nennt
+          oder die DBC einen Wert zwischen 1 und 99 liefert. 101 in der DBC heißt
+          „immer“ und zählt nicht als Chance.</p>
+        <p>Im Katalog: <strong>239 Einträge mit Tooltip-Proc</strong>, dazu
+          <strong>46 nur aus der DBC</strong> (1–99, Tooltip schweigt). Der Tooltip
+          hat Vorrang — wie in der Buildschmiede.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Eintrag</th><th>Chance</th><th>Quelle</th></tr></thead>
+            <tbody>
+              <tr><td>Windfury Weapon</td><td>20 %</td><td class="txt">Tooltip</td></tr>
+              <tr><td>Earthliving Weapon</td><td>20 %</td><td class="txt">Tooltip</td></tr>
+              <tr><td>Envenom</td><td>15 %</td><td class="txt">Tooltip</td></tr>
+              <tr><td>Scent of Blood</td><td>15 %</td><td class="txt">Tooltip</td></tr>
+              <tr><td>Stormcloak</td><td>25 %</td><td class="txt">Tooltip</td></tr>
+              <tr><td>I'm a Fan of Knives</td><td>35 %</td><td class="txt">Tooltip — Shuriken / Deadly Throw</td></tr>
+              <tr><td>Ward of Light</td><td>15 %</td><td class="txt">DBC (Tooltip ohne Zahl)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <p class="hd">Proc ist nicht dieselbe Kette</p>
+          <p>Lava Freeze hat <em>keine</em> Proc-Chance — der Auslöser ist
+            „Schaden mit Lava Lash“. Eine Chance ohne Auslöser in den Daten
+            bleibt eine Chance, kein erfundener Trigger.</p>
+        </div>
+        </div>
+      </details>
+
+      <details class="topic" id="nachschlagen" open data-keys="nachschlagen suche slam lava lash kick windfury name katalog vererbung proc kette sperre">
+        <summary><span class="num">09</span> Nachschlagen <span class="hint">Namen aus den Payloads</span></summary>
+        <div class="topic-body">
+        <h2>Nachschlagen</h2>
+        <p class="lede">Tippe einen Katalognamen. Die Karte zeigt Vererbung,
+          Schulvarianten (gleicher GCD), Trigger, Proc, Sperre und geteilten
+          Cooldown — nur Felder, die in den eingebetteten Listen stehen.</p>
+        <div class="look">
+          <label for="qHit">Name im Katalog</label>
+          <input class="synin" type="search" id="qHit" name="hit" placeholder="z. B. Slam, Lava Lash, Kick, Windfury Weapon" autocomplete="off" aria-controls="hitList">
+          <div class="filters" role="group" aria-label="Filter">
+            <button type="button" data-f="alle" aria-pressed="true">Alle</button>
+            <button type="button" data-f="erb">Vererbung</button>
+            <button type="button" data-f="gcd">Gleicher GCD</button>
+            <button type="button" data-f="kette">Ketten</button>
+            <button type="button" data-f="proc">Procs</button>
+            <button type="button" data-f="gate">Sperren</button>
+          </div>
+          <p class="lookstat" id="hitStat"></p>
+          <div class="hits" id="hitList"></div>
+        </div>
+        </div>
+      </details>
+
+      <details class="topic" id="schaden" data-keys="schaden skalierung krit fatal vanguard biting drain eruption flame on born tethered kings glaive kunai">
+        <summary><span class="num">10</span> Schadens-Skalierung <span class="hint">vier Ebenen</span></summary>
+        <div class="topic-body">
+        <h2>Was deinen Schaden hochskaliert</h2>
         <p class="lede">Skalierung wirkt multiplikativ, wenn sie auf <em>dieselbe</em> Fähigkeit
           trifft, und verwässert, wenn sie sich über viele verteilt.</p>
         <h3>Die vier Skalierungsebenen</h3>
@@ -662,13 +1008,13 @@ a{color:var(--gold)}
             <thead><tr><th>Talent</th><th>Qual.</th><th>Lvl</th><th>Wirkung</th></tr></thead>
             <tbody>
               <tr><td>Fatal Vanguard</td><td><span class="qual q-Epic">Epic</span></td><td>24</td>
-                <td class="txt">+25 % Krit-Chance <em>und</em> Krit-Schaden auf Execute</td></tr>
+                <td class="txt">+35 % Krit-Chance <em>und</em> Krit-Schaden auf Execute (Tooltip)</td></tr>
               <tr><td>Biting Drain</td><td><span class="qual q-Epic">Epic</span></td><td>10</td>
                 <td class="txt">+35 % Krit-Schaden auf Drain Life / Drain Soul</td></tr>
               <tr><td>Eruption</td><td><span class="qual q-Legendary">Legendary</span></td><td>20</td>
                 <td class="txt">Lava Lash → +15 % Krit auf nächsten Pyroblast</td></tr>
               <tr><td>Flame On!</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
-                <td class="txt">Feuerzauber stapeln Krit-Chance</td></tr>
+                <td class="txt">Fireball, Scorch, Flamestrike, Pyroblast → +33 % Krit auf nächsten Fire Blast oder Meteor, 3 Stacks (Tooltip)</td></tr>
               <tr><td>Flame Born</td><td><span class="qual q-Epic">Epic</span></td><td>36</td>
                 <td class="txt">Krits von Corruption / Unstable Affliction stapeln weiter</td></tr>
               <tr><td>Tethered Power</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
@@ -683,10 +1029,13 @@ a{color:var(--gold)}
             am häufigsten drückst</strong> — bei einem Combopunkt-Build ist das der Aufbau, nicht
             der Finisher.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="heilung">
-        <h2><span class="num">08</span>Was deine Heilung hochskaliert</h2>
+      <details class="topic" id="heilung" data-keys="heilung blood presence devour death strike siphon carnage sever blood arrow lebensraub">
+        <summary><span class="num">11</span> Heilungs-Skalierung <span class="hint">am Schaden gekoppelt</span></summary>
+        <div class="topic-body">
+        <h2>Was deine Heilung hochskaliert</h2>
         <p class="lede">Im Wildcard-System kommt Heilung selten aus reinen Heilzaubern — meist
           hängt sie am Schaden.</p>
         <p>Im Katalog stehen <strong>27 Fähigkeiten, die dich beim Schadenmachen heilen</strong>,
@@ -700,7 +1049,7 @@ a{color:var(--gold)}
             <thead><tr><th>Fähigkeit</th><th>Qual.</th><th>Lvl</th><th>Kopplung</th></tr></thead>
             <tbody>
               <tr><td>Blood Presence</td><td><span class="qual q-Rare">Rare</span></td><td>1</td>
-                <td class="txt">+2 % Schaden und heilt 1 % des angerichteten Schadens — dauerhaft</td></tr>
+                <td class="txt">+2 % Schaden und heilt 2 % des angerichteten Schadens (max. 5 % Leben je Treffer) — dauerhaft</td></tr>
               <tr><td>Devour Mind</td><td><span class="qual q-Rare">Rare</span></td><td>20</td>
                 <td class="txt">Krankheit heilt dich um 15 % ihres Schadens</td></tr>
               <tr><td>Blood Arrow</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
@@ -724,15 +1073,18 @@ a{color:var(--gold)}
 
         <div class="note warn">
           <p class="hd">Noch eine Dublettengruppe</p>
-          <p><strong>Death Strike · Flame Siphon · Frost Siphon · Storm Siphon</strong> sind
-            derselbe Angriff in verschiedenen Schulen — alle „heilt dich um 5 % deines
-            Maximallebens je Krankheit“. Nimm den, dessen Schule zu deinem restlichen Schaden
-            passt, und lass die anderen drei liegen.</p>
+          <p><strong>Death Strike</strong> und die Siphon-Schulvarianten
+            (Flame · Frost · Storm · Shadow · Holy · Aether) sind dieselbe Rolle
+            in verschiedenen Schulen — Dublettengruppe 1. Nimm den, dessen Schule
+            zu deinem restlichen Schaden passt.</p>
         </div>
-      </section>
+        </div>
+      </details>
 
-      <section id="beispiel">
-        <h2><span class="num">09</span>Durchgerechnet: der Shuriken-Build</h2>
+      <details class="topic" id="beispiel" data-keys="shuriken beispiel kunai deadly throw glaive fan of knives shadow dance piercing shots sprint">
+        <summary><span class="num">12</span> Beispiel: Shuriken <span class="hint"><a href="#budget" data-jump="budget" title="Zum Budget 30 + 25">30 + 25 geprüft</a></span></summary>
+        <div class="topic-body">
+        <h2>Durchgerechnet: der Shuriken-Build</h2>
         <p class="lede">Ein vollständiger Build, der die vier Regeln oben anwendet: eine Schule,
           keine Dubletten, jede Voraussetzung erfüllt, Skalierung gebündelt.
           Alle 55 Einträge gegen den Katalog geprüft.</p>
@@ -836,42 +1188,363 @@ a{color:var(--gold)}
             benutzt wird. <strong>Physics in Practice</strong> skaliert mit dem Tempobonus deines
             <em>aktiven</em> Sprint; ohne laufenden Sprint ist das Talent wirkungslos.</p>
         </div>
-      </section>
+      </details>
 
-      <section id="builder">
-        <h2><span class="num">→</span>Selbst bauen</h2>
-        <p class="lede">Alles auf dieser Seite steckt auch in der Buildschmiede — dort aber
-          interaktiv: Katalog durchsuchen, Plätze zählen lassen, und bei jeder Auswahl sofort
-          sehen, was zusammenspielt und was ins Leere läuft.</p>
-        <div class="note good">
-          <p class="hd">Import aus dem Spiel</p>
-          <p>Die Buildschmiede übernimmt den <code>/bs</code>-Export und ordnet
-            Fähigkeiten sowie Talente per <code>spellId</code> zu, Ausrüstung per
-            <code>itemId</code> — nicht über den Anzeigenamen. Umbenennungen und
-            Sprachvarianten bleiben folgenlos, solange die IDs stimmen.</p>
-        </div>
-        <div class="note">
-          <p class="hd">Buildschmiede der Gilde Aldi Ehrfürchtig</p>
-          <p>Alle 3.071 Einträge mit Original-Icons, Warnungen bei Dubletten, fehlenden
-            Voraussetzungen, geteilten Cooldowns und ungenutzter Skalierung. Fertige Builds
-            lassen sich per Link teilen — der komplette Build steckt in der URL.
-            Paths, Stats und das Companion-Addon stehen unter
-            <a href="index.html#t=vWissen">Wissen</a>.</p>
-          <a class="cta" href="index.html">Zur Buildschmiede →</a>
-        </div>
+      <section class="closer" id="builder">
+        <h2>Weiter in der Buildschmiede</h2>
+        <p>Katalog durchsuchen, Plätze zählen, Import aus dem Spiel. Was hier steht, gilt dort live — Zuordnung per <code>spellId</code> und <code>itemId</code>.</p>
+        <a class="cta" href="index.html">Zur Buildschmiede</a>
       </section>
+  </div>
 
       <footer>
-        <p>Datenbasis: Katalog des Season-10-Builders (3.071 Einträge, generiert am 27.07.2026),
-          gegengeprüft am Client-Spelltable mit 209.334 Einträgen. Alle genannten Fähigkeiten und
-          Talente wurden maschinell gegen den Katalog verifiziert.</p>
-        <p style="margin-top:12px"><strong>Was diese Seite nicht kann:</strong> Zahlen vergleichen.
-          Der Katalog liefert Tooltip-Texte, keine Schadensformeln. Dass Synergien ineinandergreifen,
-          ist belegt; dass ein Build stärker ist als ein anderer, ist es nicht — das entscheidet die
-          Übungspuppe.</p>
-        <p style="margin-top:12px"><a href="index.html">← Zurück zur Buildschmiede</a>
+        <p>Datenbasis: Katalog (3.071), <code>relations</code>, <code>usesbase</code>,
+          <code>basemods</code>, <code>cdgroups</code>, Tooltip-Skalierung und
+          Spell.dbc-Mechanik. Synergien sind belegt; welcher Build stärker ist,
+          entscheidet die Übungspuppe — keine erfundenen SP/AP-Koeffizienten.</p>
+        <p style="margin-top:12px"><a href="index.html">Zurück zur Buildschmiede</a>
+          · <a href="index.html#tut=1">Tutorial in der Buildschmiede</a>
           · <a href="index.html#t=vWissen">Wissen in der Buildschmiede</a></p>
       </footer>
-    </main>
-  </div>
-</div>
+</main>
+<script>
+(function(){
+  var q = document.getElementById("qSyn");
+  var status = document.getElementById("qStatus");
+  var empty = document.getElementById("qEmpty");
+  var topics = [].slice.call(document.querySelectorAll(".topic"));
+  if (!q || !topics.length) return;
+
+  function fold(s){
+    return String(s || "").toLowerCase()
+      .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+  }
+  var cache = topics.map(function(el){
+    return {el: el, text: fold((el.getAttribute("data-keys") || "") + " " + el.textContent)};
+  });
+
+  function reduceMotion(){
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function synGo(id, opts){
+    opts = opts || {};
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (q && !opts.keepQuery){
+      q.value = "";
+      status.textContent = "";
+      empty.hidden = true;
+      topics.forEach(function(t){
+        t.classList.remove("off");
+        t.hidden = false;
+        t.open = false;
+      });
+    }
+    var node = el;
+    while (node && node !== document.body){
+      if (node.tagName === "DETAILS"){
+        node.open = true;
+        node.classList.remove("off");
+        node.hidden = false;
+      }
+      node = node.parentElement;
+    }
+    if (window.synSetHit && (opts.q || opts.f)){
+      window.synSetHit(opts.q || "", opts.f || "");
+    }
+    var focus = el;
+    requestAnimationFrame(function(){
+      focus.scrollIntoView({
+        behavior: reduceMotion() ? "auto" : "smooth",
+        block: "start"
+      });
+      focus.classList.remove("jumpflash");
+      void focus.offsetWidth;
+      focus.classList.add("jumpflash");
+      window.setTimeout(function(){ focus.classList.remove("jumpflash"); }, 1400);
+      if (focus.tabIndex < 0) focus.setAttribute("tabindex", "-1");
+      try { focus.focus({ preventScroll: true }); } catch (err) { /* */ }
+    });
+  }
+  window.synGo = synGo;
+
+  function openHash(){
+    var id = (location.hash || "").replace(/^#/, "");
+    if (id) synGo(id, { keepQuery: !!(q.value || "").trim() });
+  }
+
+  function apply(){
+    var raw = (q.value || "").trim();
+    var n = fold(raw);
+    var hits = 0;
+    cache.forEach(function(item){
+      var show = !n || item.text.indexOf(n) !== -1;
+      item.el.classList.toggle("off", !show);
+      item.el.hidden = !show;
+      if (n) item.el.open = show;
+      else item.el.open = false;
+      if (show && n) hits++;
+    });
+    if (n){
+      status.textContent = hits === 0 ? "Kein Treffer" : (hits === 1 ? "1 Thema" : hits + " Themen");
+      empty.hidden = hits > 0;
+    } else {
+      status.textContent = "";
+      empty.hidden = true;
+      openHash();
+    }
+  }
+
+  document.addEventListener("click", function(e){
+    var t = e.target.closest("[data-jump]");
+    if (!t) return;
+    var id = t.getAttribute("data-jump");
+    if (!id) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (history.replaceState) history.replaceState(null, "", "#" + id);
+    synGo(id, {
+      q: t.getAttribute("data-q") || "",
+      f: t.getAttribute("data-f") || ""
+    });
+  }, true);
+
+  q.addEventListener("input", apply);
+  q.addEventListener("search", apply);
+  window.addEventListener("hashchange", function(){
+    if (!(q.value || "").trim()){
+      topics.forEach(function(el){ el.open = false; });
+    }
+    openHash();
+  });
+  apply();
+  openHash();
+})();
+</script>
+<script type="application/json" id="syn-data">{"v":1,"nCat":3071,"nAbi":1321,"nTal":1750,"nUses":316,"nInherit":318,"nDupG":60,"nDupM":234,"nGate":76,"nRefE":3572,"nRefN":1897,"nProcTip":239,"nProcDbc":46,"schools":{"Firestrike":43,"Froststrike":40,"Shadowstrike":40,"Stormstrike":67,"Holystrike":40,"Spellstrike":40},"nm":{"0":"Voltaic Bite","1":"Conduit","5":"Thunder Hide","8":"Enrage","10":"Enslave Demon","11":"Charge","13":"Bear Form","22":"Carnage Rend","25":"Ward of Light","27":"Scent of Blood","28":"Mangle","30":"Bloodrage","34":"Ursine Frenzy","38":"Tainted Swipe","39":"Malediction","40":"Berserk","43":"Voltaic Companion","48":"Crackling Thunder","49":"Primal Fury","57":"Duskfang Bite","59":"Spellfang Bite","60":"Potion Toss","62":"Eldritch Wrath","64":"Battle Charge","65":"Tree of Wrath","66":"Living Lightning","67":"Cauterizing Fire","68":"Frozen Light","69":"Icy Penance","70":"Circle of Life","71":"Lava Sweep","72":"Astral Storm","73":"Sunburst","74":"Titanic Mutilate","75":"Dragon Roar","79":"Water Nova","80":"Seal of Fervor","83":"Savage Blade","84":"Frostflame Shock","89":"Ice Lash","90":"Titanic Strike","92":"Stormhammer","95":"Slice and Ice","97":"Dark Transfusion","99":"Thrust","101":"Cat-a-clysm","102":"Devil's Ignition","103":"Charred Bite","104":"Explosive Charges","105":"Eclipse Strike","106":"Solar Strike","109":"Astral Flare","110":"Astral Plasma","111":"Lightning Blade","112":"Thunder Slam","114":"Unchained Blink","115":"Compound Shot","119":"Venomous Fury","120":"Puncture","122":"Goldrinn's Fury","123":"Shadow Missiles","124":"Razzashi Talon","126":"Fel Cleave","127":"Felblade","129":"Ground Slam","130":"Upheaval","131":"Prayer of Preservation","132":"Align","133":"Time-bind","134":"Synchronize","135":"Blind Revenge","136":"Plague Swarm","137":"Pistol Shot","139":"Arctis","140":"Blood Arrow","141":"Shadow Shot","143":"Blooming Shot","144":"Medicinal Sting","145":"Beacon of Shadow","147":"Blurred Blade","148":"Panache","150":"Fury of the Eagle","154":"Drakhacrisp","156":"Seal of Arcane Wrath","162":"Eclipse Blast","163":"Zandalari Glaive","165":"Chosen of Elune","167":"Glacial Burst","168":"Grove Shot","172":"Call Fungarians","173":"Mass Slow","176":"Ice Age","177":"Mass Hysteria","183":"Thief of Fate","188":"Atal'ai Totem","189":"Rotting Breath","191":"Faerie Blink","192":"Nightmare Roots","198":"Flameburst","199":"Twilight Shock","202":"Wave of Despair","203":"Deconstruct","208":"Controlled Blast","209":"Sunder Soul","212":"Into Darkness","213":"Frozen Mind","214":"Demonic Mind","215":"Light of Justice","217":"Poison Bomb","218":"Glacial Spike","224":"Warbreaker","225":"Shadow Waste Bolt","228":"Screams of the Past","233":"Winterfall Firebreath","236":"Shadowfall","237":"Frostfall","238":"Firefall","239":"Arcanist's Explosion","241":"Temporal Rift","248":"Oil Dipped Arrow","250":"Divine Dash","253":"Shadow Word: Gore","254":"Shredding Shot","255":"Stone Shard","258":"Dark Domination","259":"Poison Nova","260":"Ebbing Tides Totem","265":"Exorcist's Slash","266":"Quick Draw","267":"Curse of the Swamp Witch","270":"Jadefire Corruption","271":"Vampiric Bite","273":"Lunar Aspiration","276":"Hydra's Venom","277":"Knifestorm","278":"Silence in the Library","280":"Zulian Guardian","281":"Light of the Guardian","282":"Localized Storm","284":"Divine Infusion","285":"Shadow Smash","286":"Scorched Earth","288":"Black Widow Strike","289":"Raging Lunge","296":"Payback","297":"Phalanx Thrust","299":"Loa's Assault","300":"Dark Apotheosis","304":"Backstab","306":"Shield Bash","307":"Heroic Strike","308":"Frostbolt","310":"Cone of Cold","311":"Frost Nova","316":"Fireball","317":"Mend Pet","318":"Renew","319":"Corruption","320":"Lightning Shield","321":"Healing Wave","322":"Entangling Roots","323":"Immolate","325":"Lightning Bolt","327":"Chain Lightning","342":"Shadow Word: Pain","343":"Prayer of Healing","347":"Holy Light","350":"Shadow Bolt","352":"Drain Life","357":"Garrote","359":"Tranquility","362":"Faerie Fire","363":"Rend","364":"Rejuvenation","367":"Cleave","368":"Hammer of Justice","370":"Exorcism","371":"Pick Pocket","373":"Curse of Agony","379":"Chain Heal","383":"Drain Soul","389":"Arcane Explosion","393":"Slam","395":"Mongoose Bite","398":"Fire Nova","400":"Whirlwind","404":"Recklessness","406":"Sinister Strike","407":"Kick","409":"Stealth","411":"Rake","412":"Cheap Shot","415":"Vanish","417":"Rupture","418":"Hellfire","419":"Blink","421":"Serpent Sting","422":"Resurrection","423":"Ancestral Spirit","424":"Greater Heal","429":"Eviscerate","430":"Flamestrike","431":"Fire Blast","432":"Counterspell","436":"Multi-Shot","439":"Holy Wrath","443":"Fire Elemental Totem","445":"Starfire","447":"Scorch","448":"Raptor Strike","449":"Wing Clip","453":"Arcane Shot","455":"Intervene","459":"Arcane Missiles","461":"Healing Touch","462":"Bash","464":"Tiger's Fury","465":"Shred","468":"Execute","472":"Searing Pain","474":"Rain of Fire","475":"Fear","478":"Thunder Clap","480":"Soul Fire","481":"Track Humanoids (Cat Form)","482":"Pummel","483":"Revenge","485":"Ravage","487":"Maul","489":"Redemption","490":"Overpower","491":"Lesser Healing Wave","492":"Earth Shock","493":"Flame Shock","494":"Frost Shock","495":"Mind Blast","496":"Psychic Scream","501":"Ambush","502":"Moonfire","503":"Regrowth","510":"Immolation Trap","511":"Explosive Trap","513":"Holy Fire","515":"Nature's Grasp","516":"Faerie Fire (Feral)","517":"Hurricane","518":"Berserker Rage","521":"Deterrence","522":"Flash of Light","525":"Track Humanoids","528":"Intercept","534":"Shield Slam","537":"Deadly Throw","538":"Seed of Corruption","540":"Incinerate","544":"Arcane Blast","545":"Ice Lance","550":"Shadow Word: Death","552":"Envenom","554":"Lacerate","555":"Lifebloom","558":"Kill Command","565":"Frostfire Bolt","569":"Revive","571":"Dismantle","572":"Fan of Knives","575":"Kill Shot","576":"Shield of Righteousness","581":"Steady Shot","584":"Wind Shear","586":"Swipe (Cat)","596":"Auto shot","597":"Devastate","598":"Crusader Strike","599":"Lava Lash","610":"Meteor","615":"Ironfur","616":"Gloomblade","619":"Sundering","620":"Void Eruption","621":"Nature Ward","622":"Rune of Swordshattering","623":"Rune of Lichbane","624":"Rune of Cinderglacier","625":"Rune of Spellshattering","626":"Rune of Razorice","627":"Rune of the Fallen Crusader","628":"Rune of the Stoneskin Gargoyle","629":"Rune of the Nerubian Carapace","631":"Avatar","632":"Water Elemental Totem","633":"Air Elemental Totem","637":"Hammer of Wrath","638":"Shadowflame","641":"Lava Burst","642":"Dominate Undead","647":"Icy Touch","650":"Blood Strike","653":"Mind Freeze","654":"Grave Coil","656":"Frost Presence","662":"Icebound Fortitude","663":"Obliterate","665":"Death Strike","667":"Rune Strike","672":"Colossus Smash","677":"Tame Dragonkin","687":"Hand of Gul'dan","690":"Mass Entanglement","693":"Mana-forged Barrier","697":"Frenzy Shot","698":"Arcane Ward","699":"Raging Blow","701":"Halo","704":"Air Ascendance","709":"Crimson Tempest","710":"Shuriken Toss","712":"Elemental Blast","713":"Starsurge","714":"Tether Elemental","715":"Siegebreaker","716":"Arcane Orb","717":"Glaive Toss","719":"Hypnosis","722":"Fire Ward","725":"Frost Ward","729":"Windfury Weapon","735":"Shadow Resistance Aura","736":"Frost Resistance Aura","737":"Fire Resistance Aura","743":"Earthliving Weapon","757":"Searing Totem","762":"Stoneclaw Totem","767":"Fire Resistance Totem","772":"Nature Resistance Totem","780":"Seal of Righteousness","781":"Seal of Vengeance","786":"Shadow Ward","788":"Divine Missiles","790":"Divine Barrage","794":"Aether Strike","795":"Void Strike","796":"Cinder Strike","797":"Rime Strike","798":"Volt Strike","799":"Frost Shot","800":"Holy Shot","801":"Flare Shot","802":"Locust Shot","803":"Arcane Slam","804":"Shadow Slam","805":"Burning Slam","806":"Frozen Slam","807":"Storm Slam","808":"Manareaver","809":"Dawnreaver","810":"Duskreaver","811":"Frostreaver","812":"Obliterating Ice","813":"Obliterating Void","814":"Obliterating Fire","815":"Obliterating Storm","816":"Ray of Frost","817":"Flamereaver","818":"Stormreaver","819":"Rime Lash","820":"Lightning Lash","821":"Obliterating Aether","822":"Obliterating Light","823":"Dawn Strike","824":"Brilliant Slam","825":"Mystic Shot","832":"Seal of Ebon Vengeance","833":"Manaripper","838":"Boltripper","839":"Aether Rake","840":"Dusk Rake","841":"Dawn Rake","842":"Flame Rake","843":"Frost Rake","844":"Storm Rake","845":"Aethershred","846":"Duskshred","847":"Lightshred","848":"Flameshred","849":"Snowshred","850":"Stormshred","851":"Mystic Maul","852":"Dusk Maul","853":"Light Maul","854":"Flame Maul","855":"Frost Maul","856":"Storm Maul","857":"Wyrm Bite","858":"Ghoul Bite","859":"Dragonhawk Bite","860":"Salamander Bite","861":"Wendigo Bite","862":"Thunderlizard Bite","863":"Mystic Talon","864":"Shadow Talon","865":"Light Talon","866":"Flame Talon","867":"Frost Talon","868":"Storm Talon","869":"Arcane Bullet","870":"Voidbound Shot","871":"Lightbound Shot","872":"Flamebound Shot","873":"Frostbound Shot","874":"Stormbound Shot","875":"Arcane Finish","877":"Holy Finish","878":"Blazing Finish","879":"Freezing Finish","880":"Shocking Finish","883":"Dawn Rupture","884":"Cinder Rupture","887":"Mana Lash","888":"Void Lash","889":"Light Lash","890":"Arcane Slash","891":"Shadow Slash","892":"Holy Slash","893":"Fire Slash","894":"Frost Slash","895":"Lightning Slash","896":"Spellbound Cleave","897":"Voidbound Cleave","898":"Lightbound Cleave","899":"Flamebound Cleave","900":"Frostbound Cleave","901":"Stormbound Cleave","902":"Aether Smash","903":"Umbral Smash","904":"Dawn Smash","905":"Lava Smash","906":"Glacial Smash","907":"Tempest Smash","908":"Light Breaker","909":"Flare Breaker","910":"Rime Breaker","911":"Storm Breaker","912":"Manachaser","913":"Voidchaser","914":"Dawnchaser","915":"Flamechaser","916":"Frostchaser","917":"Stormchaser","918":"Whirling Aether","919":"Whirling Shadows","920":"Whirling Light","921":"Whirling Flames","922":"Whirling Ice","923":"Whirling Storm","924":"Rune of Spellbreaking","931":"Envenomed Weapons","935":"Forbidden Ritual","937":"Time Out!","940":"Stormcloak","950":"Judgement of The Three Hammers","952":"Shadowcrawl","986":"Flaming Riposte","987":"Frozen Riposte","988":"Thundering Riposte","989":"Shadowed Riposte","990":"Dawning Riposte","991":"Mystic Riposte","992":"Blazing Multi-Shot","993":"Glacial Multi-Shot","994":"Storm Multi-Shot","995":"Void Multi-Shot","996":"Righteous Multi-Shot","997":"Magic Multi-Shot","998":"Flamesinger Shot","999":"Icesinger Shot","1000":"Boltsinger Shot","1001":"Shadesinger Shot","1002":"Dawnsinger Shot","1003":"Aethersinger Shot","1004":"Flame Revenge","1005":"Rime Revenge","1006":"Storm Revenge","1007":"Dusk Revenge","1008":"Dawn Revenge","1009":"Aether Revenge","1010":"Blazing Shield Slam","1011":"Glacial Shield Slam","1012":"Tempest Shield Slam","1013":"Umbral Shield Slam","1014":"Mystic Shield Slam","1015":"Flame Counter","1016":"Frost Counter","1017":"Storm Counter","1018":"Shadow Counter","1019":"Dawn Counter","1020":"Aether Counter","1021":"Fire Swipe (Cat)","1022":"Fire Swipe (Bear)","1023":"Frost Swipe (Cat)","1024":"Frost Swipe (Bear)","1025":"Storm Swipe (Cat)","1026":"Storm Swipe (Bear)","1027":"Shadow Swipe (Cat)","1028":"Shadow Swipe (Bear)","1029":"Light Swipe (Cat)","1030":"Light Swipe (Bear)","1031":"Arcane Swipe (Cat)","1032":"Arcane Swipe (Bear)","1033":"Flurry of Fire","1034":"Flurry of Ice","1035":"Flurry of Lightning","1036":"Flurry of Shadow","1037":"Flurry of Light","1038":"Flurry of Magic","1039":"Burning Execution","1040":"Frozen Execution","1041":"Storming Execution","1043":"Righteous Execution","1044":"Arcane Execution","1045":"Blazing Bloodstrike","1046":"Freezing Bloodstrike","1047":"Thundering Bloodstrike","1048":"Shadowy Bloodstrike","1049":"Brilliant Bloodstrike","1050":"Mystic Bloodstrike","1051":"Flame Siphon","1052":"Frost Siphon","1053":"Storm Siphon","1054":"Shadow Siphon","1055":"Holy Siphon","1056":"Aether Siphon","1057":"Flame Sever","1058":"Cold Sever","1059":"Storm Sever","1060":"Shadow Sever","1061":"Dawn Sever","1062":"Aether Sever","1063":"Blades of Flame","1064":"Blades of Frost","1065":"Blades of Lightning","1066":"Blades of Shadow","1067":"Blades of Light","1068":"Blades of Magic","1069":"Flamewave","1070":"Frostwave","1071":"Thunderwave","1072":"Voidwave","1073":"Lightwave","1074":"Spellwave","1075":"Flame Spike","1076":"Ices Spike","1077":"Volt Spike","1079":"Dawn Spike","1080":"Mana Spike","1081":"Flare Spree","1082":"Frost Spree","1083":"Storm Spree","1084":"Void Spree","1085":"Dawn Spree","1086":"Aether Spree","1087":"Flamepierce","1088":"Icepierce","1089":"Stormpierce","1090":"Shadowpierce","1091":"Dawnpierce","1092":"Aetherpierce","1093":"Mass Grave","1099":"Moonwell","1107":"Roaring Pyre","1108":"Arrow of the Goddess","1113":"March of the Dead","1114":"Lich Form","1121":"Phoenix Egg","1126":"Sacred Grove","1136":"Glacial Rune","1141":"Seismic Wave","1151":"Gavel of Wrath","1171":"Seismic Tremor","1177":"My Greatest Invention!","1184":"Sun Down","1193":"Starcall","1195":"Witchblood Tonic","1196":"Vampiric Tonic","1198":"Pyro Tonic","1199":"Holy Water Tonic","1200":"Surging Tonic","1201":"Dark Tonic","1202":"Pyroblast","1203":"Blast Wave","1206":"Ice Barrier","1211":"Mortal Strike","1213":"Concussion Blow","1216":"Bloodthirst","1218":"Blade Flurry","1219":"Cold Blood","1220":"Preparation","1221":"Riposte","1222":"Ghostly Strike","1228":"Mind Flay","1231":"Elemental Mastery","1235":"Hemorrhage","1236":"Insect Swarm","1237":"Moonkin Form","1238":"Feral Charge","1242":"Stormstrike","1243":"Shadowburn","1244":"Conflagrate","1246":"Curse of Exhaustion","1248":"Fel Domination","1250":"Counterattack","1251":"Black Arrow","1253":"Aimed Shot","1255":"Bestial Wrath","1258":"Divine Favor","1261":"Holy Shock","1264":"Unstable Affliction","1266":"Shamanistic Rage","1269":"Mutilate","1270":"Slow","1271":"Dragon's Breath","1273":"Divine Illumination","1275":"Pain Suppression","1276":"Vampiric Touch","1277":"Force of Nature","1279":"Silencing Shot","1281":"Circle of Healing","1282":"Arcane Barrage","1283":"Living Bomb","1284":"Deep Freeze","1285":"Bladestorm","1289":"Shockwave","1292":"Chaos Bolt","1293":"Penance","1296":"Wild Growth","1298":"Starfall","1300":"Thunderstorm","1301":"Feral Spirit","1302":"Riptide","1303":"Hunger For Blood","1304":"Killing Spree","1305":"Shadow Dance","1307":"Chimera Shot","1308":"Beast Mastery","1309":"Explosive Shot","1310":"Divine Storm","1312":"Hammer of the Righteous","1316":"Death Wish","1320":"Heart Strike","1321":"Dancing Rune Weapon","1322":"Frost Strike","1324":"Deathchill","1327":"Howling Blast","1330":"Bone Shield","1334":"Scourge Strike","1337":"Seal of Command","1340":"Aether Mangle","1341":"Dusk Mangle","1342":"Dawn Mangle","1343":"Flame Mangle","1344":"Frost Mangle","1345":"Storm Mangle","1349":"Plague Bearer","1350":"Infecting Strikes","1355":"Infinite Burn","1358":"Treant Cultivation","1361":"Dominant Word: Shield","1364":"Atonement","1365":"Prophetic Focus","1368":"Victorious Charge","1369":"Crushing Charge","1370":"Battle Fervor","1371":"Crushing Impact","1374":"Zany Zealot","1375":"Crazy Cultist","1376":"Deranged Druid","1377":"Eccentric Elementalist","1380":"Pyroclasmic Ignition","1381":"Flashpoint","1383":"Lightning Rod","1384":"Cleansing Flames of the Apostate","1386":"Cryotherapist","1389":"Spirit Frost","1390":"Maledictive Assault","1391":"Nightmare Mauling","1392":"Divine Circle","1393":"Light of Life","1394":"Pyrolysis","1395":"Decimation by Pyro","1397":"Eruption","1398":"Doomhammer's Fury","1399":"Astral Realm","1401":"Thunder Swarm","1402":"Druidic Storm","1406":"Spellstorm","1407":"Locust Resurgence","1408":"Locust Ranger","1409":"Built up Thirst","1410":"Whirl of Rage","1411":"Tidecaller's Boon","1412":"Tidecaller's Blessing","1414":"Draconic Slam","1415":"Dragon Warrior","1416":"Draconic Might","1422":"Hydromancer","1423":"Conductor","1424":"Explosive Retribution","1425":"Templar of Flame","1428":"Blink and you'll miss it!","1431":"Lunar Frenzy","1432":"Blessed by the Elune","1435":"Nature's Fervor","1437":"Deadly Bite","1438":"Sharpened Blade","1439":"Deadly Instinct","1440":"Flame On!","1441":"Ice Barrage","1442":"Frostflame Shock!","1443":"Shadow Visions","1444":"Natural Energy","1446":"Booming Thunder","1447":"Molten Earth","1448":"Mending Tide","1450":"Endless Agonizer","1454":"Gloaming Embrace","1458":"Battle Fatigue","1459":"Divine Guidance","1460":"Divine Judgement","1461":"Wacky Wizardry","1462":"Whispers of the Old Gods","1463":"Madness of the Old Gods","1464":"Holy Radiance","1465":"Renewed Through Absolution","1466":"Radiant Renewal","1467":"Blessing of the Divines","1468":"Stormbringer","1469":"Electrified Grasp","1472":"Righteous Zealot","1473":"Frost Lich","1474":"Holy Ascension","1476":"Blademaster","1478":"Heavyweight","1479":"Overflow","1480":"Flowing","1481":"Overflowing Cultivation","1482":"Overflowing Grace","1483":"Healing Seeds","1484":"Pure Shadow","1487":"Crimson Defense","1488":"Lava Freeze","1490":"Southpaw Strike","1491":"Wrathful Strikes","1494":"Titan's Fury","1496":"Double-clawed","1498":"Feral Savagery","1499":"Rapid Bloodthirst","1500":"Traumatic Wounds","1501":"Savage Synergy","1503":"Twilight Paragon","1504":"Demolisher","1505":"Ready to Demolish!","1506":"Blood and Guts","1507":"Remorseless Execution","1508":"Holy Spirit","1509":"Favour of the Spirit","1510":"Spirited Penance","1511":"Hammer of Storms","1512":"Stormborn","1513":"Encroaching Storm","1514":"Frozen Blade","1515":"Howl of Winter","1516":"Cold Dark Thoughts","1519":"Trauma Care","1520":"Dark Surgeon","1521":"Hippocratic Oath","1522":"Spartan Smash","1523":"Phalanx Strike","1524":"Druid of the Flame","1525":"Devil's Claws","1527":"Venomous Wound","1528":"Blood Bane","1529":"Sanguine Strikes","1530":"Toxic Strikes","1531":"Blood Venom","1533":"Exploding Storm","1534":"Fire Watch","1535":"Knight of the Eclipse","1536":"Arcane Gunslinger","1537":"Arcane Reloading","1538":"Shot Weaving","1539":"Arcane Shelling","1540":"Burst of Flames","1541":"Midnight Flames","1542":"Elemental Assassin","1543":"Elemental Daggers","1545":"Wind Rager","1546":"Rising Winds","1547":"Disciple of the Tides","1548":"Natural Penance","1551":"Astral Fusion","1552":"Eclipse Bomber","1553":"Thunder Stomp","1555":"Agile Coordination","1556":"Crimson Claws","1557":"Double Team","1561":"Unchained","1562":"Double Down","1564":"Compound Power","1566":"One With The Light","1567":"Empowered Light","1568":"Hot Hands","1569":"Prophet of Wrath","1570":"Divine Prophet","1572":"Master of Shadows","1573":"Dark Intent","1574":"Frozen Chaos","1576":"Goldrinn's Guile","1577":"Lycan Claws","1578":"Arugal's Tainted Arcanum","1579":"Teachings of Arugal","1581":"Bathe in Blood","1583":"Onslaught","1584":"Raging Onslaught","1585":"Gurubashi Tactics","1586":"Harvest Essence","1587":"Necromancer's Touch","1588":"Master's Meatshield","1590":"Biting Drain","1591":"Clad in Frost","1593":"Fel Core","1597":"Violent Combo","1600":"Borrowing Time","1602":"Edge of Fury","1605":"Demonic Persistence","1608":"Shadow Born","1609":"Flame Born","1610":"Pyroclasmic Shadows","1611":"Elemental Lord","1613":"Primordial Aftershocks","1615":"Defias Tactics","1616":"Swashbuckling Duelist","1617":"Defias Gunslinger","1618":"Arcane Thunder","1619":"Thunder Seer","1620":"Dark Arrows","1622":"Grove Ranger","1623":"Grove Ranger's Agility","1624":"Vampire Lord","1625":"En Garde!","1626":"Electrical Discharge","1627":"Soul Void","1628":"Gul'dan's Chosen","1629":"Inevitable Decimation","1630":"Bloody Business","1631":"Leader of the Elements","1632":"Elemental Fusion","1633":"Cataclysmic Sundering","1634":"Destructive Bargain","1635":"Pack Enhancement","1636":"Unseen Assassin","1637":"Toss and Throw","1640":"Lich's Calling","1641":"Master of Kunai","1642":"Stalker of the Frozen Wastes","1643":"Tundra Tracker","1644":"Icecrown Double-Tap","1646":"Inner Hunt","1647":"Magical Ammunition","1650":"Barrage Overload","1651":"Battle Glaive","1652":"Pack Leader","1653":"Thousand Cuts","1654":"Stormforged Edge","1655":"Critical Serration","1656":"I'm a Fan of Knives","1659":"Flourishing Tranquility","1660":"Renewing Light","1662":"Inevitable Vengeance","1663":"All that is Right","1664":"Twin Fangs","1665":"Talonshrike","1666":"Molten Ammo","1667":"Agonizing Coil","1668":"Divine Reset","1669":"Goremaw's Bite","1670":"Lava Surge","1671":"Voidblade","1672":"Viscera","1673":"Fatal Vanguard","1674":"Big Flaming Grimfire","1675":"Volcanic Shamanism","1676":"Elemental Burst","1677":"Flame Nova","1678":"Vampiric Death","1679":"Fire Arsenal","1681":"Stellar Amplification","1682":"Natural Selection","1683":"Charged Ice","1685":"Thunderburst","1686":"Rune-etched Bullets","1687":"Thunderlord","1688":"Boundless Salvation","1689":"Reaping Gallows","1690":"Maelstrom","1691":"Wildclaw","1692":"Brilliance of Faith","1693":"Judgement of Mercy","1695":"Say Your Prayers","1696":"Solar Fury","1704":"By Fire Be Purged","1705":"Skull Crusher","1706":"Duck Hunting","1708":"Boomer","1709":"Flamekeeper","1710":"Trisolaris","1711":"Bear Attack","1712":"Pack Alpha","1713":"Overload Mastery","1714":"Cloudburst","1717":"TIMBERRR","1718":"Soulbender","1719":"Dark Reclamation","1720":"Sniper","1721":"Shooting Stars","1722":"Corrupted Blade","1726":"Inducing Trauma","1728":"New Moon","1729":"Waning Moon","1730":"Perforation","1732":"Everlasting Fire","1733":"Cleanse In Flames","1735":"Swashbuckler: Matched Blows","1736":"Swashbuckler: Flurry of Blows","1741":"Down For The Count","1742":"Arcane Infusion","1744":"Cursed Arrows","1745":"Fleeting Shadow","1746":"Shaken","1748":"Shapeshifter's Aim","1752":"Echoed Incinerate","1755":"Quick Burn","1758":"Arcane Motes","1759":"Faerie Swarm","1761":"Razor-sharp Claws","1763":"War Mage","1764":"Swashbuckler: Shocktrooper","1766":"Mystic Companion","1767":"Smoldering Companion","1768":"Glacial Companion","1769":"Adumbral Companion","1774":"Group Think","1777":"Roots of The Forest","1783":"Desperation","1786":"Arcane Synergy","1787":"Lunar Synergy","1790":"Thundering Blow","1797":"On the Hunt","1799":"Indomitable","1802":"Soul Restoration","1804":"Repartee","1806":"Judge, Jury, Executioner","1807":"Seismic Shockwave","1810":"Mortal Wounds","1811":"Blood Rain","1813":"Lunar Spirits","1814":"Lunar Explosion","1815":"Arcane Charge","1816":"Hammerdin","1817":"Elune's Fury","1819":"Providing for Nature","1820":"Shadow Core","1821":"Mind Core","1822":"Savagery","1823":"Wild Wrath","1824":"Fire Fire Fireball","1827":"Corrupting Shadows","1828":"Dusk Till Dawn","1829":"Massacre","1830":"Mass Killing Spree","1834":"Transcendental Embrace","1835":"Scorched Ground","1837":"Unstoppable Force","1839":"Grasping Curse","1840":"Expunge","1842":"Impeccable Timing","1843":"Fire Walk With Me","1844":"Combusting Shots","1845":"Lightning Discharge","1849":"Freezing Strike","1853":"Thunder and Lightning","1854":"Charged Thunder","1856":"Enraging Finale","1861":"Exsanguinate","1865":"Demonic Burst","1868":"Whirling Bladestorm","1870":"Battering Ram","1871":"Alembic","1873":"Blaze Ward","1874":"Primal Frenzy","1875":"Deadly Aim","1877":"Sinister Flurry","1878":"A Quick Death","1881":"In For the Kill","1882":"Darting Shadows","1883":"Blood Drinker","1884":"Fired Up","1890":"Faith Rekindled","1895":"Wild Aggression","1896":"Deadly Combo","1898":"Punisher","1902":"Growing Corruption","1908":"Bloodletting","1909":"Bright Lights","1910":"Master of Arms","1911":"Covering Crown","1913":"Guerilla Tactics","1914":"Waking Nightmare","1915":"Tides of Battle","1916":"Inescapable Roots","1918":"Psychic Influence","1919":"In Sword We Trust","1921":"Infused Shot","1922":"Cobra Combo","1923":"Pyroshot","1924":"Poison Bomb Combo","1925":"Elemental Anomaly","1926":"Sinister Transfusion","1928":"Howling Blood","1930":"Bloody Maelstrom","1931":"Wind Slam","1932":"Trick Shots","1933":"Repentant Reconciliation","1936":"Jab Cross","1938":"Shadow Strikes","1939":"Rush of Blood","1942":"Centered","1943":"Insatiable","1945":"Here Comes The Big One","1947":"Sword and Thunder","1948":"Fetch Me Their Bones!","1950":"Shieldsmasher","1951":"Quick on Your Feet","1952":"Mongoose Fury","1953":"Raptor's Fury","1955":"Fiery Bash","1961":"Absolute Hellfire","1962":"Shield of the Emperor","1963":"Inferno","1964":"Arcane Arrows","1965":"Doppelganger","1966":"Ragefire Cleave","1968":"Stormgarde","1970":"Ready for Mayhem","1971":"Blood Hunting","1972":"Explosive Entrance","1974":"Swashbuckler: Bloodsail","1979":"Charged Tides","1980":"Symbiotic Serendipity","1983":"Dreadnaught","1984":"Adrenaline Junkie","1985":"Energized Judgement","1986":"Elemental Energy","1987":"Raging Momentum","1988":"Heavy Arms","1989":"Spot Weakness","1990":"Second Sunrise","1991":"Melting Core","1993":"Ursoc's Rage","1994":"Searing Rage","1995":"Blade Vortex","1997":"Methodical Approach","1999":"Echoing Power","2000":"Battlemage","2002":"Shield Finesse","2003":"Clarity of the Mind","2005":"Imposing Combo","2006":"Exploit Weakness","2007":"Prayers of the Penitent","2008":"Jadefire Affliction","2009":"Growing Earth","2011":"Thundarian’s Fury","2014":"Shrouded in Shrapnel","2015":"Synergetic Light","2016":"Raincaller","2019":"Hydra's Sting","2020":"Blades of Blood","2021":"Arugal's Blink","2023":"Corrupted Shiv","2024":"Momentum","2025":"Dark Justicar","2027":"Tesla Coil Collar","2028":"Ambush Predator","2029":"Tidewaters","2030":"Ethereal Echostrike","2031":"Photosynthesis","2033":"Primal Reflexes","2042":"Righteous Verdict","2044":"Burning Soul","2045":"Molten Shields","2046":"Improved Scorch","2047":"Improved Fireball","2050":"Impact","2051":"World in Flames","2052":"Critical Mass","2054":"Fire Power","2056":"Frostbite","2058":"Ice Floes","2060":"Improved Cone of Cold","2061":"Permafrost","2064":"Winter's Chill","2065":"Frost Warding","2068":"Arcane Concentration","2071":"Spell Impact","2075":"Sword Specialization","2076":"Improved Heroic Strike","2078":"Improved Charge","2079":"Improved Rend","2080":"Tactical Mastery","2083":"Improved Overpower","2085":"Weapon Mastery","2086":"Two-Handed Weapon Specialization","2089":"Improved Thunder Clap","2091":"Incite","2092":"Puncture","2093":"Improved Revenge","2094":"Gag Order","2103":"Improved Cleave","2108":"Deflection","2109":"Improved Sinister Strike","2111":"Improved Kick","2113":"Improved Sprint","2115":"Hack and Slash","2117":"Initiative","2118":"Setup","2119":"Elusiveness","2120":"Opportunity","2127":"Remorseless Attacks","2128":"Ruthlessness","2130":"Improved Eviscerate","2131":"Puncturing Wounds","2135":"Seal Fate","2138":"Unbreakable Will","2148":"Holy Focus","2150":"Searing Light","2151":"Spiritual Healing","2152":"Improved Renew","2153":"Improved Healing","2156":"Healing Prayers","2158":"Shadow Weaving","2159":"Darkness","2161":"Spirit Tap","2162":"Shadow Affinity","2163":"Improved Mind Blast","2164":"Improved Shadow Word: Pain","2166":"Improved Psychic Scream","2167":"Call of Flame","2168":"Call of Thunder","2169":"Concussion","2170":"Convection","2172":"Rising Flames","2173":"Elemental Focus","2176":"Improved Water Shield","2181":"Purification","2183":"Tidal Mastery","2186":"Flurry","2188":"Improved Shields","2192":"Thundering Strikes","2199":"Vile Poisons","2201":"Lightning Mastery","2202":"Arctic Reach","2203":"Starlight Wrath","2204":"Improved Moonfire","2205":"Nature's Reach","2206":"Brambles","2207":"Moonglow","2208":"Celestial Focus","2209":"Nature's Grace","2210":"Moonfury","2211":"Vengeance","2214":"Ferocity","2216":"Feral Instinct","2217":"Shredding Attacks","2218":"Predatory Strikes","2219":"Savage Fury","2228":"Omen of Clarity","2229":"Gift of Nature","2232":"Subtlety","2235":"Shadow Reach","2236":"Cataclysm","2237":"Bane","2238":"Improved Shadow Bolt","2245":"Aftermath","2248":"Pyroclasm","2250":"Nightfall","2251":"Improved Corruption","2252":"Soul Siphon","2256":"Grim Reach","2257":"Siphon Life","2261":"Aggression","2263":"Incineration","2280":"Molten Core","2283":"Trap Mastery","2284":"Lock and Load","2287":"Savage Retaliation","2288":"Killer Instinct","2293":"Improved Arcane Shot","2294":"Barrage","2295":"Improved Stings","2297":"Concussive Barrage","2299":"Improved Aspect of the Monkey","2300":"Improved Aspect of the Hawk","2302":"Improved Mend Pet","2309":"Frenzy","2314":"Two-Handed Weapon Specialization","2315":"Conviction","2316":"Redoubt","2320":"Reckoning","2322":"Spiritual Focus","2325":"Healing Light","2329":"Illumination","2330":"Seals of the Pure","2332":"Sanctified Light","2334":"Improved Hammer of Justice","2336":"Improved Execute","2339":"Shield Specialization","2340":"Savage Strikes","2345":"Holy Power","2346":"Unyielding Faith","2350":"Vindication","2352":"Holy Reach","2357":"Elemental Reach","2363":"Healing Way","2365":"Magic Absorption","2366":"Improved Defensive Stance","2369":"Improved Whirlwind","2370":"Fervor","2371":"Improved Berserker Stance","2374":"Sudden Death","2376":"Blood Frenzy","2378":"Contagion","2381":"Shadow and Flame","2382":"Soul Leech","2383":"Nether Protection","2387":"Lightning Overload","2389":"Empowered Stormstrike","2394":"Improved Chain Heal","2400":"Blade Twisting","2401":"Nerves of Steel","2402":"Surprise Attacks","2406":"Master Poisoner","2409":"Cheat Death","2410":"Improved Blink","2413":"Arcane Empowerment","2415":"Playing with Fire","2416":"Blazing Speed","2419":"Empowered Fire","2425":"Purifying Power","2426":"Blessed Life","2427":"Light's Grace","2431":"Ardent Defender","2433":"Crusade","2435":"Divine Purpose","2437":"Fanaticism","2438":"Sanctity of Battle","2440":"Shadow Embrace","2441":"Empowered Corruption","2442":"Blessed Resilience","2443":"Surge of Light","2445":"Holy Concentration","2451":"Shadow Power","2457":"Wrath of Cenarius","2467":"Ferocious Inspiration","2472":"Careful Aim","2473":"Master Marksman","2474":"Resourcefulness","2475":"Survival Instincts","2476":"Thrill of the Hunt","2477":"Expose Weakness","2478":"Master Tactician","2479":"Misery","2480":"Backlash","2482":"Rapid Killing","2484":"Improved Barrage","2485":"Nature's Majesty","2486":"Improved Mortal Strike","2487":"Combat Potency","2494":"Fiery Payback","2495":"Firestarter","2496":"Hot Streak","2498":"Fingers of Frost","2499":"Brain Freeze","2500":"Enduring Winter","2501":"Chilled to the Bone","2504":"Unrelenting Assault","2505":"Strength of Arms","2508":"Bloodsurge","2509":"Safeguard","2510":"Sword and Board","2512":"Death's Embrace","2513":"Everlasting Affliction","2514":"Eradication","2516":"Fel Synergy","2517":"Nemesis","2519":"Molten Skin","2520":"Backdraft","2521":"Improved Soul Leech","2523":"Critical Block","2524":"Aspiration","2526":"Rapture","2529":"Empowered Renew","2531":"Serendipity","2532":"Divine Providence","2533":"Improved Shadowform","2534":"Twisted Faith","2535":"Pain and Suffering","2537":"Owlkin Frenzy","2538":"Primal Precision","2541":"Rend and Tear","2542":"Infected Wounds","2543":"Improved Mangle","2544":"King of the Jungle","2545":"Living Seed","2546":"Eclipse","2547":"Gale Winds","2548":"Earth and Moon","2549":"Revitalize","2552":"Empowered Imp","2555":"Lava Flows","2556":"Storm, Earth and Fire","2557":"Improved Stormstrike","2558":"Static Shock","2559":"Earthen Power","2560":"Maelstrom Weapon","2564":"Tidal Waves","2565":"Deadly Brew","2568":"Focused Attacks","2569":"Cut to the Chase","2570":"Throwing Specialization","2574":"Waylay","2575":"Honor Among Thieves","2577":"Slaughter from the Shadows","2578":"Mental Dexterity","2580":"Piercing Shots","2582":"Wild Quiver","2583":"Improved Steady Shot","2585":"Invigoration","2586":"Cobra Strikes","2589":"Noxious Stings","2591":"Sniper Training","2592":"Hunting Party","2596":"The Art of War","2598":"Sacred Cleansing","2600":"Infusion of Light","2601":"Guarded by the Light","2602":"Touched by the Light","2603":"Focused Aim","2606":"Judgements of the Just","2607":"Shield of the Templar","2608":"Improved Fear","2609":"Missile Barrage","2610":"Burning Determination","2612":"Torment the Weak","2615":"T.N.T.","2617":"Taste for Blood","2618":"Improved Slam","2619":"Unending Fury","2620":"Renewed Hope","2621":"Warbringer","2623":"Celestial Bane","2624":"Nature's Splendor","2627":"Relentless Strikes","2628":"Pandemic","2631":"Armored to the Teeth","2632":"Shamanism","2634":"Booming Echoes","2635":"Frozen Power","2639":"Body and Soul","2642":"Juggernaut","2643":"Dance of Death","2644":"Thunderstruck","2645":"Vampirism","2652":"Bladed Armor","2657":"Subversion","2659":"Sudden Doom","2660":"Might of Mograine","2662":"Bloodworms","2667":"Black Ice","2668":"Chill of the Grave","2670":"Rime","2673":"Acclimation","2675":"Reaping","2677":"Blood-Caked Blade","2681":"Dirge","2683":"Bloody Strikes","2695":"On a Pale Horse","2696":"Guile of Gorefiend","2701":"Annihilation","2703":"Death Rune Mastery","2705":"Blood of the North","2706":"Two-Handed Weapon Specialization","2710":"Improved Death Strike","2713":"Power Surge","2715":"Savage Defense","2716":"Perforating Shots","2717":"Improved Glaive Toss","2718":"A New Dawn","2719":"Shredding Strikes","2721":"Power of Light","2725":"Hunting for Sport","2726":"Relentless","2730":"Spellblade","2732":"Improved Shadowburn","2737":"Burning Resolve","2738":"Precision Impact","2740":"Twist of Faith","2741":"First to the Fight","2742":"Incessant Screams","2754":"Lurking Shadow","2755":"Ice Warden","2756":"Arcane Fulmination","2757":"Natural Disaster","2761":"Glyph of Rejuvenation","2762":"Glyph of Entangling Roots","2764":"Glyph of Maul","2765":"Glyph of Mangle","2766":"Glyph of Shred","2768":"Glyph of Rake","2772":"Glyph of Starfall","2773":"Glyph of Insect Swarm","2774":"Glyph of Hurricane","2776":"Glyph of Starfire","2777":"Glyph of Moonfire","2779":"Glyph of Hammer of Justice","2783":"Glyph of Crusader Strike","2787":"Glyph of Exorcism","2790":"Glyph of Holy Light","2795":"Glyph of Chain Heal","2802":"Glyph of Lava Lash","2804":"Glyph of Stormstrike","2805":"Glyph of Lightning Shield","2806":"Glyph of Fire Nova","2810":"Glyph of Lava","2811":"Glyph of Fire Elemental Totem","2814":"Glyph of Renew","2815":"Glyph of Circle of Healing","2816":"Glyph of Psychic Scream","2818":"Glyph of Fear Ward","2819":"Glyph of Flash Heal","2820":"Glyph of Prayer of Healing","2821":"Glyph of Shadow Word: Pain","2827":"Glyph of Mind Flay","2833":"Glyph of Corruption","2837":"Glyph of Shadowburn","2843":"Glyph of Shadow Bolt","2845":"Glyph of Incinerate","2846":"Glyph of Fear","2852":"Glyph of Arcane Explosion","2853":"Glyph of Arcane Missiles","2855":"Glyph of Blink","2858":"Glyph of Fireball","2861":"Glyph of Scorch","2862":"Glyph of Ice Block","2866":"Glyph of Frost Nova","2873":"Glyph of Holy Wrath","2876":"Glyph of Backstab","2878":"Glyph of Eviscerate","2881":"Glyph of Vigor","2892":"Glyph of Preparation","2894":"Glyph of Sinister Strike","2895":"Glyph of Aimed Shot","2896":"Glyph of Steady Shot","2899":"Glyph of Serpent Sting","2901":"Glyph of Multi-Shot","2903":"Glyph of Arcane Shot","2904":"Glyph of Trueshot Aura","2912":"Glyph of Rapid Charge","2913":"Glyph of Resonating Power","2914":"Glyph of Heroic Strike","2915":"Glyph of Revenge","2917":"Glyph of Cleaving","2918":"Glyph of Execution","2919":"Glyph of Mortal Strike","2920":"Glyph of Bloodthirst","2921":"Glyph of Whirlwind","2922":"Glyph of Hamstring","2923":"Glyph of Intervene","2926":"Glyph of Rending","2927":"Glyph of Overpower","2928":"Glyph of Devastate","2939":"Glyph of Frost Strike","2942":"Glyph of Obliterate","2950":"Glyph of Blood Strike","2951":"Glyph of Death Strike","2954":"Glyph of Focus","2955":"Glyph of Blast Wave","2956":"Glyph of Thunderstorm","2963":"Glyph of Explosive Shot","2964":"Glyph of Kill Shot","2969":"Glyph of Arcane Barrage","2980":"Glyph of Penance","2983":"Glyph of Pain Suppression","2985":"Glyph of Killing Spree","2986":"Glyph of Fan of Knives","2988":"Glyph of Mutilate","2990":"Glyph of Thunder","3000":"Glyph of Bladestorm","3001":"Glyph of Shockwave","3015":"Glyph of Quick Decay","3019":"Glyph of Shamanistic Strikes","3020":"Holy Guardian","3024":"Aegis","3027":"Wisdom of Elune","3028":"Guile of Elune","3029":"Will of Elune","3030":"Courage of Elune","3031":"Reproachful Revenge","3032":"Raging Thunder","3033":"Elemental Boon","3034":"Lava Rush","3038":"Timber Sentinels","3042":"Multi-Multi-Shot","3043":"Nurtured Embers","3045":"Instigator","3048":"Cold Seeking Missiles","3050":"Blood Shield","3051":"Runic Defense","3052":"Runic Maelstrom","3053":"Saronite Phalanx","3055":"Rimebound Shadow","3057":"Black Ice Arsenal","3058":"Grave Ammunition","3059":"Runeforged Verdict","3062":"Runeblade Reflection","3065":"Bloodletter's Rhythm","3067":"Runic Contagion","3068":"Gathering Dread"},"meta":{"0":[0,2,10],"1":[0,4,10],"5":[0,3,10],"8":[0,2,10],"10":[0,3,1],"11":[0,3,1],"13":[0,3,1],"22":[0,0,10],"25":[1,3,30],"27":[1,0,10],"28":[0,0,36],"30":[0,2,10],"34":[1,4,36],"38":[1,3,10],"39":[1,0,34],"40":[0,3,40],"43":[1,3,10],"48":[1,4,10],"49":[1,0,10],"57":[0,2,10],"59":[0,2,10],"60":[0,2,10],"62":[0,2,26],"64":[0,4,10],"65":[0,4,50],"66":[0,2,40],"67":[0,2,1],"68":[0,2,10],"69":[0,2,30],"70":[0,4,36],"71":[0,2,20],"72":[0,2,40],"73":[0,4,28],"74":[0,2,20],"75":[0,4,30],"79":[0,2,10],"80":[0,2,10],"83":[0,2,10],"84":[0,3,10],"89":[0,2,20],"90":[0,3,10],"92":[0,2,30],"95":[0,4,10],"97":[0,2,14],"99":[0,2,10],"101":[0,2,10],"102":[0,2,18],"103":[0,2,10],"104":[0,3,60],"105":[0,2,1],"106":[0,2,10],"109":[0,2,20],"110":[0,2,28],"111":[0,4,10],"112":[0,2,30],"114":[0,4,20],"115":[0,4,20],"119":[0,2,10],"120":[0,2,18],"122":[0,3,24],"123":[0,0,10],"124":[0,3,20],"126":[0,2,20],"127":[0,2,40],"129":[0,3,34],"130":[0,2,20],"131":[0,4,30],"132":[0,2,10],"133":[0,2,10],"134":[0,2,10],"135":[0,4,12],"136":[0,2,22],"137":[0,2,10],"139":[0,2,16],"140":[0,4,10],"141":[0,0,10],"143":[0,2,10],"144":[0,2,10],"145":[0,4,40],"147":[0,4,10],"148":[0,4,10],"150":[0,4,60],"154":[0,4,50],"156":[0,2,10],"162":[0,4,20],"163":[0,4,12],"165":[0,4,35],"167":[0,2,22],"168":[0,2,10],"172":[0,3,50],"173":[0,3,50],"176":[0,3,10],"177":[0,4,10],"183":[0,4,40],"188":[0,2,10],"189":[0,3,36],"191":[0,4,20],"192":[0,2,10],"198":[0,2,10],"199":[0,2,30],"202":[0,2,60],"203":[0,2,10],"208":[0,3,30],"209":[0,2,10],"212":[0,4,22],"213":[0,2,10],"214":[0,2,10],"215":[0,3,10],"217":[0,2,20],"218":[0,2,16],"224":[0,3,30],"225":[0,2,10],"228":[0,3,10],"233":[0,2,26],"236":[0,4,60],"237":[0,4,60],"238":[0,4,60],"239":[0,2,12],"241":[0,2,12],"248":[0,2,12],"250":[0,3,40],"253":[0,2,10],"254":[0,2,36],"255":[0,2,1],"258":[0,2,30],"259":[0,2,20],"260":[0,2,20],"265":[0,4,30],"266":[0,2,30],"267":[0,3,36],"270":[0,2,10],"271":[0,2,36],"273":[0,2,10],"276":[0,2,10],"277":[0,2,40],"278":[0,3,16],"280":[0,4,60],"281":[0,1,10],"282":[0,2,40],"284":[0,4,50],"285":[0,2,30],"286":[0,2,22],"288":[0,2,36],"289":[0,2,28],"296":[0,0,12],"297":[0,2,40],"299":[0,4,30],"300":[0,3,1],"304":[0,0,1],"306":[0,3,12],"307":[0,0,1],"308":[0,0,1],"310":[0,2,16],"311":[0,3,10],"316":[0,0,1],"317":[0,0,12],"318":[0,0,1],"319":[0,0,1],"320":[0,2,1],"321":[0,0,1],"322":[0,3,10],"323":[0,0,1],"325":[0,0,1],"327":[0,0,22],"342":[0,0,1],"343":[0,0,20],"347":[0,0,1],"350":[0,0,1],"352":[0,0,14],"357":[0,0,12],"359":[0,3,20],"362":[0,2,14],"363":[0,0,1],"364":[0,0,1],"367":[0,0,16],"368":[0,3,10],"370":[0,0,20],"371":[0,0,10],"373":[0,0,1],"379":[0,0,40],"383":[0,0,10],"389":[0,0,12],"393":[0,0,1],"395":[0,0,1],"398":[0,0,10],"400":[0,0,14],"404":[0,3,34],"406":[0,0,1],"407":[0,3,12],"409":[0,3,1],"411":[0,0,18],"412":[0,3,26],"415":[0,3,22],"417":[0,0,20],"418":[0,0,30],"419":[0,4,16],"421":[0,0,1],"422":[0,0,10],"423":[0,0,10],"424":[0,0,1],"429":[0,0,1],"430":[0,0,16],"431":[0,0,1],"432":[0,3,16],"436":[0,0,18],"439":[0,0,26],"443":[0,3,40],"445":[0,0,20],"447":[0,0,22],"448":[0,0,1],"449":[0,2,12],"453":[0,0,1],"455":[0,3,30],"459":[0,0,1],"461":[0,0,1],"462":[0,3,12],"464":[0,2,24],"465":[0,0,10],"468":[0,0,16],"472":[0,0,16],"474":[0,0,20],"475":[0,3,10],"478":[0,0,1],"480":[0,0,26],"481":[0,0,32],"482":[0,3,30],"483":[0,0,12],"485":[0,0,32],"487":[0,0,1],"489":[0,0,12],"490":[0,0,10],"491":[0,0,20],"492":[0,0,1],"493":[0,0,10],"494":[0,3,20],"495":[0,0,10],"496":[0,3,10],"501":[0,0,16],"502":[0,0,1],"503":[0,0,12],"510":[0,0,16],"511":[0,0,34],"513":[0,0,16],"515":[0,3,10],"516":[0,0,14],"517":[0,0,40],"518":[0,3,32],"521":[0,4,36],"522":[0,0,20],"525":[0,2,10],"528":[0,3,20],"534":[0,0,40],"537":[0,2,24],"538":[0,0,40],"540":[0,0,18],"544":[0,0,18],"545":[0,0,22],"550":[0,2,40],"552":[0,0,36],"554":[0,0,10],"555":[0,0,36],"558":[0,2,40],"565":[0,0,32],"569":[0,0,12],"571":[0,3,20],"572":[0,0,50],"575":[0,0,32],"576":[0,0,1],"581":[0,0,1],"584":[0,3,12],"586":[0,0,1],"596":[0,0,1],"597":[0,0,10],"598":[0,0,1],"599":[0,0,1],"610":[0,3,36],"615":[0,3,40],"616":[0,0,26],"619":[0,3,34],"620":[0,3,28],"621":[0,2,20],"622":[0,3,20],"623":[0,3,20],"624":[0,3,20],"625":[0,3,20],"626":[0,3,20],"627":[0,3,20],"628":[0,3,20],"629":[0,3,20],"631":[0,4,40],"632":[0,3,40],"633":[0,3,40],"637":[0,0,44],"638":[0,0,36],"641":[0,0,22],"642":[0,3,1],"647":[0,0,1],"650":[0,0,1],"653":[0,3,14],"654":[0,0,12],"656":[0,2,1],"662":[0,4,34],"663":[0,0,20],"665":[0,2,14],"667":[0,0,32],"672":[0,2,30],"677":[0,3,1],"687":[0,0,32],"690":[0,3,18],"693":[0,3,1],"697":[0,3,20],"698":[0,2,14],"699":[0,0,28],"701":[0,3,36],"704":[0,3,40],"709":[0,0,14],"710":[0,0,14],"712":[0,0,40],"713":[0,0,28],"714":[0,3,1],"715":[0,3,40],"716":[0,3,40],"717":[0,0,12],"719":[0,3,30],"722":[0,2,14],"725":[0,2,14],"729":[0,2,30],"735":[0,1,28],"736":[0,1,32],"737":[0,1,36],"743":[0,2,30],"757":[0,2,1],"762":[0,1,1],"767":[0,1,28],"772":[0,1,30],"780":[0,2,1],"781":[0,2,44],"786":[0,2,32],"788":[0,0,10],"790":[0,0,40],"794":[0,0,1],"795":[0,0,1],"796":[0,0,1],"797":[0,0,1],"798":[0,0,1],"799":[0,0,1],"800":[0,0,1],"801":[0,0,1],"802":[0,0,1],"803":[0,0,1],"804":[0,0,1],"805":[0,0,1],"806":[0,0,1],"807":[0,0,1],"808":[0,0,1],"809":[0,0,1],"810":[0,0,1],"811":[0,0,1],"812":[0,0,20],"813":[0,0,20],"814":[0,0,20],"815":[0,0,20],"816":[0,4,60],"817":[0,0,1],"818":[0,0,1],"819":[0,0,1],"820":[0,0,1],"821":[0,0,20],"822":[0,0,20],"823":[0,0,1],"824":[0,0,1],"825":[0,0,1],"832":[0,3,44],"833":[0,0,1],"838":[0,0,1],"839":[0,0,18],"840":[0,0,18],"841":[0,0,18],"842":[0,0,18],"843":[0,0,18],"844":[0,0,18],"845":[0,0,10],"846":[0,0,10],"847":[0,0,10],"848":[0,0,10],"849":[0,0,10],"850":[0,0,10],"851":[0,0,1],"852":[0,0,1],"853":[0,0,1],"854":[0,0,1],"855":[0,0,1],"856":[0,0,1],"857":[0,0,1],"858":[0,0,1],"859":[0,0,1],"860":[0,0,1],"861":[0,0,1],"862":[0,0,1],"863":[0,0,1],"864":[0,0,1],"865":[0,0,1],"866":[0,0,1],"867":[0,0,1],"868":[0,0,1],"869":[0,0,16],"870":[0,0,16],"871":[0,0,16],"872":[0,0,16],"873":[0,0,16],"874":[0,0,16],"875":[0,0,1],"877":[0,0,1],"878":[0,0,1],"879":[0,0,1],"880":[0,0,1],"883":[0,0,20],"884":[0,0,20],"887":[0,0,1],"888":[0,0,1],"889":[0,0,1],"890":[0,0,1],"891":[0,0,1],"892":[0,0,1],"893":[0,0,1],"894":[0,0,1],"895":[0,0,1],"896":[0,0,16],"897":[0,0,16],"898":[0,0,16],"899":[0,0,16],"900":[0,0,16],"901":[0,0,16],"902":[0,0,1],"903":[0,0,1],"904":[0,0,1],"905":[0,0,1],"906":[0,0,1],"907":[0,0,1],"908":[0,0,10],"909":[0,0,10],"910":[0,0,10],"911":[0,0,10],"912":[0,0,10],"913":[0,0,10],"914":[0,0,10],"915":[0,0,10],"916":[0,0,10],"917":[0,0,10],"918":[0,0,14],"919":[0,0,14],"920":[0,0,14],"921":[0,0,14],"922":[0,0,14],"923":[0,0,14],"924":[0,3,20],"931":[0,3,30],"935":[0,3,10],"937":[0,3,30],"940":[0,3,28],"950":[0,3,30],"952":[0,3,25],"986":[0,0,16],"987":[0,0,16],"988":[0,0,16],"989":[0,0,16],"990":[0,0,16],"991":[0,0,16],"992":[0,0,18],"993":[0,0,18],"994":[0,0,18],"995":[0,0,18],"996":[0,0,18],"997":[0,0,18],"998":[0,0,32],"999":[0,0,32],"1000":[0,0,32],"1001":[0,0,32],"1002":[0,0,32],"1003":[0,0,32],"1004":[0,0,12],"1005":[0,0,12],"1006":[0,0,12],"1007":[0,0,12],"1008":[0,0,12],"1009":[0,0,12],"1010":[0,0,40],"1011":[0,0,40],"1012":[0,0,40],"1013":[0,0,40],"1014":[0,0,40],"1015":[0,0,22],"1016":[0,0,22],"1017":[0,0,22],"1018":[0,0,22],"1019":[0,0,22],"1020":[0,0,22],"1021":[0,0,1],"1022":[0,0,1],"1023":[0,0,1],"1024":[0,0,1],"1025":[0,0,1],"1026":[0,0,1],"1027":[0,0,1],"1028":[0,0,1],"1029":[0,0,1],"1030":[0,0,1],"1031":[0,0,1],"1032":[0,0,1],"1033":[0,0,50],"1034":[0,0,50],"1035":[0,0,50],"1036":[0,0,50],"1037":[0,0,50],"1038":[0,0,50],"1039":[0,0,16],"1040":[0,0,16],"1041":[0,0,16],"1043":[0,0,16],"1044":[0,0,16],"1045":[0,0,1],"1046":[0,0,1],"1047":[0,0,1],"1048":[0,0,1],"1049":[0,0,1],"1050":[0,0,1],"1051":[0,2,14],"1052":[0,2,14],"1053":[0,2,14],"1054":[0,2,14],"1055":[0,2,14],"1056":[0,2,14],"1057":[0,0,30],"1058":[0,0,30],"1059":[0,0,30],"1060":[0,0,30],"1061":[0,0,30],"1062":[0,0,30],"1063":[0,4,40],"1064":[0,4,40],"1065":[0,4,40],"1066":[0,4,40],"1067":[0,4,40],"1068":[0,4,40],"1069":[0,3,40],"1070":[0,3,40],"1071":[0,3,40],"1072":[0,3,40],"1073":[0,3,40],"1074":[0,3,40],"1075":[0,0,22],"1076":[0,0,22],"1077":[0,0,22],"1079":[0,0,22],"1080":[0,0,22],"1081":[0,4,40],"1082":[0,4,40],"1083":[0,4,40],"1084":[0,4,40],"1085":[0,4,40],"1086":[0,4,40],"1087":[0,0,1],"1088":[0,0,1],"1089":[0,0,1],"1090":[0,0,1],"1091":[0,0,1],"1092":[0,0,1],"1093":[0,3,30],"1099":[0,3,25],"1107":[0,3,30],"1108":[0,3,25],"1113":[0,3,40],"1114":[0,3,20],"1121":[0,3,10],"1126":[0,3,25],"1136":[0,3,10],"1141":[0,3,10],"1151":[0,3,26],"1171":[0,3,10],"1177":[0,3,30],"1184":[0,3,25],"1193":[0,3,10],"1195":[0,3,20],"1196":[0,3,20],"1198":[0,3,25],"1199":[0,3,20],"1200":[0,3,20],"1201":[0,3,20],"1202":[0,0,16],"1203":[0,3,22],"1206":[0,3,30],"1211":[0,0,30],"1213":[0,3,22],"1216":[0,0,30],"1218":[0,3,22],"1219":[0,3,22],"1220":[0,3,22],"1221":[0,0,16],"1222":[0,2,16],"1228":[0,0,16],"1231":[0,3,30],"1235":[0,0,22],"1236":[0,0,22],"1237":[0,4,30],"1238":[0,3,22],"1242":[0,0,30],"1243":[0,0,22],"1244":[0,0,30],"1246":[0,3,22],"1248":[0,3,22],"1250":[0,0,22],"1251":[0,0,36],"1253":[0,2,16],"1255":[0,4,30],"1258":[0,3,22],"1261":[0,0,30],"1264":[0,0,36],"1266":[0,2,36],"1269":[0,0,36],"1270":[0,3,36],"1271":[0,3,36],"1273":[0,2,36],"1275":[0,4,36],"1276":[0,0,36],"1277":[0,3,36],"1279":[0,3,36],"1281":[0,0,36],"1282":[0,0,40],"1283":[0,0,40],"1284":[0,3,40],"1285":[0,4,40],"1289":[0,3,40],"1292":[0,0,40],"1293":[0,0,40],"1296":[0,0,40],"1298":[0,4,40],"1300":[0,3,40],"1301":[0,4,40],"1302":[0,0,40],"1303":[0,3,40],"1304":[0,4,40],"1305":[0,3,40],"1307":[0,0,40],"1308":[0,3,40],"1309":[0,0,40],"1310":[0,0,40],"1312":[0,0,40],"1316":[0,3,22],"1320":[0,0,36],"1321":[0,3,40],"1322":[0,0,36],"1324":[0,3,22],"1327":[0,0,40],"1330":[0,3,34],"1334":[0,0,36],"1337":[0,2,16],"1340":[0,0,36],"1341":[0,0,36],"1342":[0,0,36],"1343":[0,0,36],"1344":[0,0,36],"1345":[0,0,36],"1349":[1,4,20],"1350":[1,2,10],"1355":[1,4,30],"1358":[1,2,36],"1361":[1,4,10],"1364":[1,4,20],"1365":[1,4,20],"1368":[1,3,10],"1369":[1,3,10],"1370":[1,3,10],"1371":[1,3,10],"1374":[1,4,10],"1375":[1,4,10],"1376":[1,4,10],"1377":[1,4,10],"1380":[1,3,40],"1381":[1,3,20],"1383":[1,3,10],"1384":[1,3,16],"1386":[1,4,10],"1389":[1,4,10],"1390":[1,3,15],"1391":[1,3,10],"1392":[1,4,50],"1393":[1,3,36],"1394":[1,4,16],"1395":[1,3,45],"1397":[1,4,20],"1398":[1,3,20],"1399":[1,3,40],"1401":[1,2,30],"1402":[1,3,20],"1406":[1,4,36],"1407":[1,3,40],"1408":[1,4,30],"1409":[1,4,40],"1410":[1,3,14],"1411":[1,4,10],"1412":[1,2,60],"1414":[1,3,30],"1415":[1,3,30],"1416":[1,3,10],"1422":[1,3,10],"1423":[1,4,10],"1424":[1,2,30],"1425":[1,3,30],"1428":[1,4,20],"1431":[1,3,30],"1432":[1,3,35],"1435":[1,2,10],"1437":[1,4,10],"1438":[1,3,10],"1439":[1,3,10],"1440":[1,4,10],"1441":[1,4,22],"1442":[1,3,40],"1443":[1,4,20],"1444":[1,2,20],"1446":[1,4,15],"1447":[1,4,20],"1448":[1,4,20],"1450":[1,4,10],"1454":[1,4,30],"1458":[1,4,10],"1459":[1,4,40],"1460":[1,4,40],"1461":[1,4,10],"1462":[1,4,10],"1463":[1,3,10],"1464":[1,4,10],"1465":[1,3,40],"1466":[1,2,10],"1467":[1,4,10],"1468":[1,4,10],"1469":[1,2,10],"1472":[1,4,10],"1473":[1,4,10],"1474":[1,4,20],"1476":[1,3,10],"1478":[1,4,10],"1479":[1,4,10],"1480":[1,4,40],"1481":[1,2,40],"1482":[1,2,40],"1483":[1,2,25],"1484":[1,4,10],"1487":[1,4,40],"1488":[1,4,20],"1490":[1,4,10],"1491":[1,3,10],"1494":[1,4,10],"1496":[1,3,10],"1498":[1,3,10],"1499":[1,3,30],"1500":[1,2,10],"1501":[1,2,24],"1503":[1,4,20],"1504":[1,3,30],"1505":[1,4,30],"1506":[1,3,24],"1507":[1,4,24],"1508":[1,4,40],"1509":[1,3,30],"1510":[1,4,30],"1511":[1,2,10],"1512":[1,3,30],"1513":[1,3,30],"1514":[1,3,20],"1515":[1,3,40],"1516":[1,3,10],"1519":[1,4,10],"1520":[1,4,20],"1521":[1,3,10],"1522":[1,3,10],"1523":[1,4,10],"1524":[1,2,16],"1525":[1,4,16],"1527":[1,3,25],"1528":[1,3,30],"1529":[1,3,22],"1530":[1,4,24],"1531":[1,2,36],"1533":[1,3,16],"1534":[1,3,16],"1535":[1,4,10],"1536":[1,4,20],"1537":[1,2,20],"1538":[1,4,20],"1539":[1,3,20],"1540":[1,4,20],"1541":[1,4,10],"1542":[1,4,10],"1543":[1,4,10],"1545":[1,3,30],"1546":[1,3,30],"1547":[1,4,20],"1548":[1,3,20],"1551":[1,4,28],"1552":[1,4,30],"1553":[1,3,10],"1555":[1,2,10],"1556":[1,4,20],"1557":[1,4,10],"1561":[1,3,20],"1562":[1,4,10],"1564":[1,3,10],"1566":[1,4,10],"1567":[1,3,10],"1568":[1,4,36],"1569":[1,2,36],"1570":[1,3,10],"1572":[1,4,10],"1573":[1,4,10],"1574":[1,3,60],"1576":[1,3,10],"1577":[1,3,10],"1578":[1,4,10],"1579":[1,4,20],"1581":[1,4,10],"1583":[1,3,30],"1584":[1,3,28],"1585":[1,3,28],"1586":[1,4,10],"1587":[1,4,10],"1588":[1,2,14],"1590":[1,3,10],"1591":[1,3,30],"1593":[1,3,40],"1597":[1,2,40],"1600":[1,2,35],"1602":[1,2,40],"1605":[1,4,32],"1608":[1,3,30],"1609":[1,3,36],"1610":[1,3,30],"1611":[1,4,22],"1613":[1,4,22],"1615":[1,3,10],"1616":[1,4,10],"1617":[1,4,10],"1618":[1,3,10],"1619":[1,4,10],"1620":[1,3,10],"1622":[1,4,10],"1623":[1,4,10],"1624":[1,3,30],"1625":[1,3,18],"1626":[1,3,32],"1627":[1,4,10],"1628":[1,4,35],"1629":[1,3,26],"1630":[1,2,36],"1631":[1,3,60],"1632":[1,3,10],"1633":[1,3,34],"1634":[1,3,28],"1635":[1,3,60],"1636":[1,3,34],"1637":[1,3,24],"1640":[1,4,16],"1641":[1,4,30],"1642":[1,3,30],"1643":[1,2,10],"1644":[1,3,36],"1646":[1,3,10],"1647":[1,3,18],"1650":[1,4,36],"1651":[1,3,14],"1652":[1,4,40],"1653":[1,3,40],"1654":[1,4,10],"1655":[1,4,20],"1656":[1,3,14],"1659":[1,3,20],"1660":[1,3,36],"1662":[1,3,44],"1663":[1,3,10],"1664":[1,4,10],"1665":[1,4,26],"1666":[1,3,40],"1667":[1,3,40],"1668":[1,3,15],"1669":[1,4,10],"1670":[1,3,22],"1671":[1,4,10],"1672":[1,3,60],"1673":[1,3,24],"1674":[1,4,26],"1675":[1,4,34],"1676":[1,3,40],"1677":[1,4,12],"1678":[1,4,40],"1679":[1,3,16],"1681":[1,4,28],"1682":[1,3,22],"1683":[1,3,35],"1685":[1,3,10],"1686":[1,4,60],"1687":[1,4,22],"1688":[1,3,50],"1689":[1,4,16],"1690":[1,4,22],"1691":[1,4,32],"1692":[1,3,30],"1693":[1,3,10],"1695":[1,3,40],"1696":[1,3,35],"1704":[1,1,12],"1705":[1,3,22],"1706":[1,2,10],"1708":[1,4,10],"1709":[1,2,10],"1710":[1,2,16],"1711":[1,2,10],"1712":[1,3,40],"1713":[1,4,10],"1714":[1,3,40],"1717":[1,3,36],"1718":[1,2,22],"1719":[1,3,22],"1720":[1,3,20],"1721":[1,3,40],"1722":[1,4,10],"1726":[1,3,10],"1728":[1,3,10],"1729":[1,3,10],"1730":[1,2,14],"1732":[1,3,20],"1733":[1,3,20],"1735":[1,2,10],"1736":[1,2,10],"1741":[1,3,40],"1742":[1,3,20],"1744":[1,4,10],"1745":[1,3,18],"1746":[1,3,10],"1748":[1,3,10],"1752":[1,3,28],"1755":[1,3,24],"1758":[1,4,10],"1759":[1,3,22],"1761":[1,2,24],"1763":[1,3,20],"1764":[1,3,10],"1766":[1,3,10],"1767":[1,3,10],"1768":[1,3,10],"1769":[1,3,10],"1774":[1,2,40],"1777":[1,2,36],"1783":[1,3,30],"1786":[1,3,20],"1787":[1,3,36],"1790":[1,3,40],"1797":[1,2,12],"1799":[1,2,15],"1802":[1,4,10],"1804":[1,2,20],"1806":[1,3,10],"1807":[1,3,40],"1810":[1,3,30],"1811":[1,2,10],"1813":[1,4,10],"1814":[1,3,10],"1815":[1,3,10],"1816":[1,4,10],"1817":[1,3,10],"1819":[1,2,20],"1820":[1,2,20],"1821":[1,2,25],"1822":[1,2,12],"1823":[1,4,30],"1824":[1,4,10],"1827":[1,3,22],"1828":[1,3,30],"1829":[1,4,40],"1830":[1,3,40],"1834":[1,4,10],"1835":[1,4,40],"1837":[1,3,30],"1839":[1,4,10],"1840":[1,4,10],"1842":[1,4,20],"1843":[1,4,16],"1844":[1,3,40],"1845":[1,4,10],"1849":[1,3,30],"1853":[1,2,10],"1854":[1,2,10],"1856":[1,3,25],"1861":[1,3,40],"1865":[1,4,30],"1868":[1,4,40],"1870":[1,3,30],"1871":[1,4,10],"1873":[1,4,10],"1874":[1,4,10],"1875":[1,4,20],"1877":[1,4,10],"1878":[1,4,24],"1881":[1,3,10],"1882":[1,2,22],"1883":[1,2,30],"1884":[1,4,10],"1890":[1,4,10],"1895":[1,4,10],"1896":[1,4,36],"1898":[1,3,20],"1902":[1,3,40],"1908":[1,4,20],"1909":[1,3,30],"1910":[1,3,30],"1911":[1,4,10],"1913":[1,2,25],"1914":[1,4,40],"1915":[1,4,10],"1916":[1,4,10],"1918":[1,3,20],"1919":[1,3,30],"1921":[1,2,20],"1922":[1,2,10],"1923":[1,3,20],"1924":[1,2,20],"1925":[1,3,36],"1926":[1,4,10],"1928":[1,2,22],"1930":[1,4,40],"1931":[1,3,40],"1932":[1,3,20],"1933":[1,3,40],"1936":[1,3,10],"1938":[1,2,10],"1939":[1,3,22],"1942":[1,4,10],"1943":[1,3,25],"1945":[1,4,30],"1947":[1,3,10],"1948":[1,4,40],"1950":[1,3,30],"1951":[1,3,30],"1952":[1,3,24],"1953":[1,2,24],"1955":[1,3,10],"1961":[1,3,20],"1962":[1,4,40],"1963":[1,4,30],"1964":[1,4,10],"1965":[1,3,22],"1966":[1,3,10],"1968":[1,4,10],"1970":[1,2,48],"1971":[1,2,44],"1972":[1,4,20],"1974":[1,3,10],"1979":[1,3,10],"1980":[1,2,20],"1983":[1,4,10],"1984":[1,2,30],"1985":[1,2,10],"1986":[1,3,10],"1987":[1,3,10],"1988":[1,2,30],"1989":[1,3,36],"1990":[1,2,30],"1991":[1,3,20],"1993":[1,3,10],"1994":[1,3,10],"1995":[1,3,22],"1997":[1,3,18],"1999":[1,4,10],"2000":[1,4,10],"2002":[1,2,40],"2003":[1,2,20],"2005":[1,4,10],"2006":[1,2,35],"2007":[1,4,40],"2008":[1,2,10],"2009":[1,4,10],"2011":[1,2,30],"2014":[1,3,30],"2015":[1,3,30],"2016":[1,3,24],"2019":[1,4,10],"2020":[1,4,30],"2021":[1,4,20],"2023":[1,3,40],"2024":[1,3,28],"2025":[1,3,44],"2027":[1,3,10],"2028":[1,3,20],"2029":[1,3,40],"2030":[1,3,36],"2031":[1,3,36],"2033":[1,0,20],"2042":[1,0,15],"2044":[1,0,12],"2045":[1,0,16],"2046":[1,0,10],"2047":[1,0,10],"2050":[1,0,15],"2051":[1,0,12],"2052":[1,0,22],"2054":[1,0,40],"2056":[1,0,10],"2058":[1,0,10],"2060":[1,0,16],"2061":[1,0,10],"2064":[1,0,20],"2065":[1,0,12],"2068":[1,0,10],"2071":[1,0,12],"2075":[1,0,20],"2076":[1,0,10],"2078":[1,0,10],"2079":[1,0,10],"2080":[1,0,12],"2083":[1,0,16],"2085":[1,0,24],"2086":[1,0,18],"2089":[1,0,10],"2091":[1,0,12],"2092":[1,0,18],"2093":[1,0,12],"2094":[1,0,22],"2103":[1,0,16],"2108":[1,0,12],"2109":[1,0,10],"2111":[1,0,18],"2113":[1,0,18],"2115":[1,0,22],"2117":[1,0,12],"2118":[1,0,18],"2119":[1,0,22],"2120":[1,0,10],"2127":[1,0,10],"2128":[1,0,10],"2130":[1,0,10],"2131":[1,0,12],"2135":[1,0,10],"2138":[1,0,10],"2148":[1,0,18],"2150":[1,0,10],"2151":[1,0,24],"2152":[1,0,10],"2153":[1,0,22],"2156":[1,0,22],"2158":[1,0,10],"2159":[1,0,10],"2161":[1,0,10],"2162":[1,0,12],"2163":[1,0,10],"2164":[1,0,10],"2166":[1,0,16],"2167":[1,0,12],"2168":[1,0,22],"2169":[1,0,10],"2170":[1,0,10],"2172":[1,0,16],"2173":[1,0,10],"2176":[1,0,16],"2181":[1,0,24],"2183":[1,0,18],"2186":[1,0,18],"2188":[1,0,10],"2192":[1,0,12],"2199":[1,0,16],"2201":[1,0,24],"2202":[1,0,18],"2203":[1,0,10],"2204":[1,0,10],"2205":[1,0,16],"2206":[1,0,16],"2207":[1,0,12],"2208":[1,0,18],"2209":[1,0,16],"2210":[1,0,10],"2211":[1,0,18],"2214":[1,0,10],"2216":[1,0,10],"2217":[1,0,15],"2218":[1,0,10],"2219":[1,0,10],"2228":[1,0,10],"2229":[1,0,22],"2232":[1,0,12],"2235":[1,0,18],"2236":[1,0,24],"2237":[1,0,10],"2238":[1,0,10],"2245":[1,0,10],"2248":[1,0,30],"2250":[1,0,10],"2251":[1,0,10],"2252":[1,0,12],"2256":[1,0,18],"2257":[1,0,10],"2261":[1,0,18],"2263":[1,0,10],"2280":[1,0,15],"2283":[1,0,16],"2284":[1,0,16],"2287":[1,0,16],"2288":[1,0,22],"2293":[1,0,10],"2294":[1,0,16],"2295":[1,0,15],"2297":[1,0,22],"2299":[1,0,18],"2300":[1,0,10],"2302":[1,0,12],"2309":[1,0,24],"2314":[1,0,22],"2315":[1,0,16],"2316":[1,0,34],"2320":[1,0,20],"2322":[1,0,12],"2325":[1,0,10],"2329":[1,0,16],"2330":[1,0,10],"2332":[1,0,22],"2334":[1,0,18],"2336":[1,0,18],"2339":[1,0,10],"2340":[1,0,10],"2345":[1,0,24],"2346":[1,0,12],"2350":[1,0,15],"2352":[1,0,18],"2357":[1,0,18],"2363":[1,0,22],"2365":[1,0,12],"2366":[1,0,24],"2369":[1,0,16],"2370":[1,0,22],"2371":[1,0,34],"2374":[1,0,20],"2376":[1,0,36],"2378":[1,0,15],"2381":[1,0,20],"2382":[1,0,30],"2383":[1,0,24],"2387":[1,0,20],"2389":[1,0,34],"2394":[1,0,34],"2400":[1,0,10],"2401":[1,0,30],"2402":[1,0,20],"2406":[1,0,30],"2409":[1,0,30],"2410":[1,0,22],"2413":[1,0,20],"2415":[1,0,22],"2416":[1,0,24],"2419":[1,0,20],"2425":[1,0,24],"2426":[1,0,30],"2427":[1,0,15],"2431":[1,0,30],"2433":[1,0,18],"2435":[1,0,24],"2437":[1,0,20],"2438":[1,0,18],"2440":[1,0,10],"2441":[1,0,15],"2442":[1,0,30],"2443":[1,0,20],"2445":[1,0,30],"2451":[1,0,30],"2457":[1,0,34],"2467":[1,0,30],"2472":[1,0,12],"2473":[1,0,34],"2474":[1,0,20],"2475":[1,0,12],"2476":[1,0,30],"2477":[1,0,30],"2478":[1,0,34],"2479":[1,0,25],"2480":[1,0,15],"2482":[1,0,15],"2484":[1,0,30],"2485":[1,0,12],"2486":[1,0,30],"2487":[1,0,15],"2494":[1,0,34],"2495":[1,0,16],"2496":[1,0,20],"2498":[1,0,20],"2499":[1,0,15],"2500":[1,0,36],"2501":[1,0,40],"2504":[1,0,20],"2505":[1,0,30],"2508":[1,0,20],"2509":[1,0,34],"2510":[1,0,40],"2512":[1,0,36],"2513":[1,0,20],"2514":[1,0,15],"2516":[1,0,10],"2517":[1,0,36],"2519":[1,0,18],"2520":[1,0,22],"2521":[1,0,34],"2523":[1,0,36],"2524":[1,0,34],"2526":[1,0,30],"2529":[1,0,25],"2531":[1,0,15],"2532":[1,0,40],"2533":[1,0,34],"2534":[1,0,20],"2535":[1,0,30],"2537":[1,0,34],"2538":[1,0,18],"2541":[1,0,30],"2542":[1,0,20],"2543":[1,0,36],"2544":[1,0,20],"2545":[1,0,34],"2546":[1,0,25],"2547":[1,0,34],"2548":[1,0,20],"2549":[1,0,25],"2552":[1,0,36],"2555":[1,0,30],"2556":[1,0,20],"2557":[1,0,34],"2558":[1,0,34],"2559":[1,0,36],"2560":[1,0,20],"2564":[1,0,40],"2565":[1,0,16],"2568":[1,0,34],"2569":[1,0,20],"2570":[1,0,34],"2574":[1,0,20],"2575":[1,0,36],"2577":[1,0,25],"2578":[1,0,22],"2580":[1,0,30],"2582":[1,0,20],"2583":[1,0,15],"2585":[1,0,34],"2586":[1,0,30],"2589":[1,0,15],"2591":[1,0,20],"2592":[1,0,40],"2596":[1,0,20],"2598":[1,0,34],"2600":[1,0,30],"2601":[1,0,36],"2602":[1,0,36],"2603":[1,0,10],"2606":[1,0,40],"2607":[1,0,40],"2608":[1,0,16],"2609":[1,0,20],"2610":[1,0,18],"2612":[1,0,10],"2615":[1,0,16],"2617":[1,0,10],"2618":[1,0,10],"2619":[1,0,25],"2620":[1,0,20],"2621":[1,0,20],"2623":[1,0,20],"2624":[1,0,10],"2627":[1,0,10],"2628":[1,0,10],"2631":[1,0,10],"2632":[1,0,40],"2634":[1,0,20],"2635":[1,0,20],"2639":[1,0,34],"2642":[1,0,15],"2643":[1,0,22],"2644":[1,0,15],"2645":[1,3,20],"2652":[1,0,12],"2657":[1,0,10],"2659":[1,0,20],"2660":[1,0,36],"2662":[1,0,20],"2667":[1,0,12],"2668":[1,0,15],"2670":[1,0,20],"2673":[1,0,36],"2675":[1,0,20],"2677":[1,0,15],"2681":[1,0,10],"2683":[1,0,10],"2695":[1,0,18],"2696":[1,0,36],"2701":[1,0,16],"2703":[1,0,15],"2705":[1,0,20],"2706":[1,0,12],"2710":[1,0,34],"2713":[1,0,10],"2715":[1,0,10],"2716":[1,0,34],"2717":[1,0,12],"2718":[1,0,36],"2719":[1,0,12],"2721":[1,0,36],"2725":[1,0,36],"2726":[1,0,24],"2730":[1,0,10],"2732":[1,0,22],"2737":[1,0,40],"2738":[1,3,36],"2740":[1,3,10],"2741":[1,3,40],"2742":[1,3,18],"2754":[1,2,11],"2755":[1,2,11],"2756":[1,2,11],"2757":[1,2,11],"2761":[1,2,11],"2762":[1,2,11],"2764":[1,2,11],"2765":[1,2,36],"2766":[1,2,11],"2768":[1,2,18],"2772":[1,2,40],"2773":[1,2,22],"2774":[1,2,36],"2776":[1,2,11],"2777":[1,2,11],"2779":[1,2,11],"2783":[1,2,11],"2787":[1,2,20],"2790":[1,2,11],"2795":[1,2,40],"2802":[1,2,11],"2804":[1,2,30],"2805":[1,2,11],"2806":[1,2,11],"2810":[1,2,22],"2811":[1,2,40],"2814":[1,2,11],"2815":[1,2,36],"2816":[1,2,11],"2818":[1,2,11],"2819":[1,2,20],"2820":[1,2,20],"2821":[1,2,11],"2827":[1,2,11],"2833":[1,2,11],"2837":[1,2,22],"2843":[1,2,11],"2845":[1,2,18],"2846":[1,2,11],"2852":[1,2,12],"2853":[1,2,11],"2855":[1,2,16],"2858":[1,2,11],"2861":[1,2,22],"2862":[1,2,11],"2866":[1,2,11],"2873":[1,2,11],"2876":[1,2,11],"2878":[1,2,11],"2881":[1,2,16],"2892":[1,2,12],"2894":[1,2,11],"2895":[1,2,16],"2896":[1,2,11],"2899":[1,2,11],"2901":[1,2,18],"2903":[1,2,11],"2904":[1,2,16],"2912":[1,2,11],"2913":[1,2,11],"2914":[1,2,11],"2915":[1,2,11],"2917":[1,2,16],"2918":[1,2,16],"2919":[1,2,30],"2920":[1,2,30],"2921":[1,2,14],"2922":[1,2,11],"2923":[1,2,20],"2926":[1,2,11],"2927":[1,2,11],"2928":[1,2,11],"2939":[1,2,36],"2942":[1,2,20],"2950":[1,2,11],"2951":[1,2,14],"2954":[1,2,40],"2955":[1,2,22],"2956":[1,2,40],"2963":[1,2,40],"2964":[1,2,32],"2969":[1,2,22],"2980":[1,2,40],"2983":[1,2,11],"2985":[1,2,40],"2986":[1,2,50],"2988":[1,2,36],"2990":[1,2,40],"3000":[1,2,40],"3001":[1,2,40],"3015":[1,2,11],"3019":[1,2,30],"3020":[1,2,11],"3024":[1,2,11],"3027":[1,2,11],"3028":[1,2,11],"3029":[1,2,11],"3030":[1,2,11],"3031":[1,2,12],"3032":[1,2,11],"3033":[1,2,11],"3034":[1,2,11],"3038":[1,2,36],"3042":[1,2,18],"3043":[1,2,16],"3045":[1,2,11],"3048":[1,2,11],"3050":[1,2,55],"3051":[1,2,38],"3052":[1,2,40],"3053":[1,2,55],"3055":[1,3,55],"3057":[1,2,55],"3058":[1,2,55],"3059":[1,2,55],"3062":[1,2,55],"3065":[1,2,40],"3067":[1,0,32],"3068":[1,2,20]},"bases":[{"i":586,"v":[1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032],"t":[38,1391,2214,2216,2542,3030]},{"i":406,"v":[99,105,137,794,795,796,797,798,823],"t":[1507,1535,1562,1572,1573,1615,1616,1617,1682,1722,1877,1915,2109,2127,2261,2400,2402,2894]},{"i":393,"v":[112,299,803,804,805,806,807,824],"t":[1414,1415,1478,1487,1522,1523,1527,1530,1535,1553,1705,1837,1870,1910,1919,1931,1955,1962,1968,1983,1988,2002,2094,2505,2510,2523,2618,2642,2741,3053]},{"i":599,"v":[71,89,130,819,820,887,888,889],"t":[1397,1398,1447,1488,1533,1631,1632,1712,1994,2555,2802,3034]},{"i":483,"v":[135,296,1004,1005,1006,1007,1008,1009],"t":[1602,1947,2093,2504,2915,3031]},{"i":1253,"v":[115,869,870,871,872,873,874],"t":[1537,1539,1567,1666,1720,1875,1913,1932,2294,2473,2476,2482,2484,2580,2583,2591,2895,2904]},{"i":581,"v":[141,266,799,800,801,802,825],"t":[1407,1408,1564,1643,1666,1823,2006,2467,2473,2475,2580,2582,2583,2591,2592,2603,2896]},{"i":411,"v":[120,839,840,841,842,843,844],"t":[1496,1500,1577,1761,1874,2028,2214,2219,2768,3028]},{"i":575,"v":[254,998,999,1000,1001,1002,1003],"t":[1567,1644,1720,1878,1932,1989,2473,2580,2591,2964]},{"i":367,"v":[126,896,897,898,899,900,901],"t":[1966,2091,2103,2917]},{"i":395,"v":[857,858,859,860,861,862],"t":[1437,1439,1505,1534,1615,1616,1646,1664,1665,1822,1840,1895,1913,1952,1988,2006,2287,2288,2340,2474,2719,2726]},{"i":28,"v":[1340,1341,1342,1343,1344,1345],"t":[34,1349,1391,1435,1500,1524,1525,1626,1630,1748,1993,2214,2219,2542,2543,2765,3028,3030]},{"i":1250,"v":[1015,1016,1017,1018,1019,1020],"t":[1437,1439,1505,1534,1646,1664,1665,1913,1950,1953,1988,2006,2287,2288,2340,2719,2726]},{"i":478,"v":[902,903,904,905,906,907],"t":[48,1478,1511,1553,1685,1790,1853,1947,2011,2089,2091,2644,2913,3032]},{"i":304,"v":[1087,1088,1089,1090,1091,1092],"t":[1507,1542,1543,1726,1997,2120,2127,2131,2400,2402,2574,2577,2876]},{"i":1211,"v":[1057,1058,1059,1060,1061,1062],"t":[1478,1504,1527,1530,1810,1881,1910,1930,2486,2505,2642,2919]},{"i":436,"v":[992,993,994,995,996,997],"t":[1615,1647,1666,1932,2294,2297,2476,2484,2580,2901,3042]},{"i":448,"v":[863,864,865,866,867,868],"t":[1534,1615,1617,1664,1665,1953,2287,2340,2474,2719,2726]},{"i":487,"v":[851,852,853,854,855,856],"t":[1350,1391,1691,1761,1993,2214,2219,2541,2542,2764,3030]},{"i":490,"v":[912,913,914,915,916,917],"t":[1478,1527,1530,1910,1943,1983,2083,2504,2505,2617,2927]},{"i":465,"v":[845,846,847,848,849,850],"t":[1500,1524,1525,2028,2217,2219,2541,2542,2766,3028]},{"i":665,"v":[1051,1052,1053,1054,1055,1056],"t":[1476,2660,2681,2703,2710,2951,3050,3051,3062,3065]},{"i":650,"v":[1045,1046,1047,1048,1049,1050],"t":[2657,2660,2675,2683,2696,2705,2950,3062,3065]},{"i":663,"v":[812,813,814,815,821,822],"t":[2657,2668,2670,2696,2701,2703,2942,3059,3062]},{"i":400,"v":[918,919,920,921,922,923],"t":[1410,1535,1545,1546,1988,2020,2369,2921]},{"i":597,"v":[203,209,908,909,910,911],"t":[1476,1936,1947,2080,2092,2093,2510,2928]},{"i":598,"v":[808,809,810,811,817,818],"t":[1566,1567,1569,1919,2437,2438,2596,2783]},{"i":1221,"v":[986,987,988,989,990,991],"t":[1476,1804,1898,2030,2108,3045]},{"i":1304,"v":[1081,1082,1083,1084,1085,1086],"t":[1602,1741,1829,1830,2985]},{"i":307,"v":[890,891,892,893,894,895],"t":[2076,2091,2914,2915]},{"i":1289,"v":[1069,1070,1071,1072,1073,1074],"t":[1790,1807,2644,3001]},{"i":572,"v":[1033,1034,1035,1036,1037,1038],"t":[1656,2986]},{"i":1285,"v":[1063,1064,1065,1066,1067,1068],"t":[1868,3000]},{"i":534,"v":[1010,1011,1012,1013,1014],"t":[1487,1522,1523,1931,1955,1962,1968,2002,2094,2510,2523,2741,3053]},{"i":459,"v":[123,134,788],"t":[1406,1537,1538,1570,1578,1579,1618,1619,1742,1758,1786,1787,1842,1964,2413,2499,2609,2612,2853,3048]},{"i":1298,"v":[236,237,238],"t":[1721,2485,2772,2954]},{"i":1242,"v":[0,111],"t":[1511,1512,1533,1545,1546,1553,1631,1632,1654,1690,1712,1811,1849,1854,2005,2389,2557,2804,3019]},{"i":502,"v":[132,273],"t":[1432,1728,1729,1758,1813,1814,1817,1842,2204,2210,2232,2623,2624,2776,2777,3027]},{"i":713,"v":[73,110],"t":[1432,1535,1551,1552,1681,1682,1696,1842,2203,2204,2207,2210,2457,2485,2546,2548]},{"i":363,"v":[22,276],"t":[1490,1528,1529,1726,1730,1881,1908,2020,2079,2376,2617,2642,2926]},{"i":310,"v":[218,233],"t":[1441,1488,1515,1574,1640,2058,2060,2061,2071,2202,2263,2501]},{"i":320,"v":[1,5],"t":[1845,1853,1854,1968,2188,2558,2805]},{"i":419,"v":[114,191],"t":[1428,1561,1763,1972,2021,2410,2855]},{"i":1269,"v":[74,124],"t":[1444,1507,1726,2120,2127,2131,2988]},{"i":311,"v":[79,176],"t":[1422,1423,2058,2202,2862,2866]},{"i":672,"v":[224,285],"t":[1583,1950,1951,1953,2014,2020]},{"i":389,"v":[239,241],"t":[1763,1814,2051,2071,2852]},{"i":1271,"v":[154,189],"t":[1425,1679,2051,2415]},{"i":517,"v":[277,282],"t":[1653,2547,2774]},{"i":443,"v":[632,633],"t":[2811]},{"i":1246,"v":[267,1839],"t":[1839]},{"i":319,"v":[270],"t":[39,1391,1394,1540,1608,1609,1620,1722,1827,1902,1938,1991,2023,2250,2251,2257,2280,2378,2441,2513,2514,2628,2833,3015]},{"i":1202,"v":[139],"t":[1381,1384,1394,1395,1397,1398,1440,1540,1541,1552,1568,1674,1709,1710,1923,1925,2051,2071,2419,2494,2496,2560,2612,2738]},{"i":468,"v":[1506],"t":[1414,1478,1490,1506,1507,1583,1673,1685,1689,1806,1878,1896,1910,1950,1952,1953,2336,2374,2505,2918]},{"i":445,"v":[109],"t":[1432,1535,1551,1552,1682,1696,1729,1758,1786,1842,2203,2204,2207,2210,2457,2485,2546,2548,2776]},{"i":316,"v":[67],"t":[1406,1440,1541,1552,1709,1710,1824,1842,1966,2000,2008,2046,2047,2419,2499,2612,2738,2858]},{"i":1293,"v":[69],"t":[1361,1365,1459,1460,1465,1508,1509,1510,1547,1548,1933,1942,1990,2007,2150,2153,2524,2980]},{"i":1216,"v":[127],"t":[1409,1414,1490,1498,1499,1500,1501,1531,1593,1691,1783,1883,1930,1945,1988,2508,2920]},{"i":453,"v":[248],"t":[1536,1539,1564,1742,1921,1932,2284,2293,2467,2475,2476,2482,2580,2583,2592,2903]},{"i":318,"v":[133],"t":[1393,1464,1465,1466,1600,1660,1890,1980,2029,2152,2445,2529,2531,2814]},{"i":350,"v":[225],"t":[1390,1484,1610,1620,1628,1839,1938,2237,2238,2250,2381,2480,2833,2843]},{"i":1309,"v":[104],"t":[1380,1381,1666,1844,1913,2284,2288,2415,2475,2476,2591,2592,2615,2963]},{"i":540,"v":[102],"t":[1355,1605,1628,1629,1634,1752,1991,2008,2280,2381,2382,2480,2845]},{"i":641,"v":[167],"t":[1398,1423,1611,1613,1670,1675,1683,1690,2167,2170,2555,2810,3033]},{"i":11,"v":[64],"t":[1368,1369,1370,1371,1416,1815,1948,2020,2078,2621,2642,2912]},{"i":347,"v":[281],"t":[1688,1692,1802,1909,2015,2325,2329,2332,2427,2600,2718,2790]},{"i":342,"v":[253],"t":[1462,1671,1918,2023,2162,2164,2479,2534,2535,2821,2827]},{"i":492,"v":[255],"t":[1402,1446,1543,1611,1632,1690,1986,1999,2027,2559,2634]},{"i":1236,"v":[136],"t":[1401,1432,1682,1759,1817,1823,2205,2232,2623,2624,2773]},{"i":379,"v":[66],"t":[1480,1481,1482,1834,1979,2183,2363,2394,2564,2795]},{"i":429,"v":[148],"t":[1514,1572,1573,1581,1924,2130,2135,2261,2569,2878]},{"i":430,"v":[198],"t":[1424,1425,1440,1679,1835,1843,1961,2051,2495,3043]},{"i":475,"v":[177],"t":[1746,1914,2138,2346,2401,2608,2619,2695,2818,2846]},{"i":1243,"v":[199],"t":[1484,1608,1718,1719,1827,1828,2381,2520,2732,2837]},{"i":1282,"v":[790],"t":[1536,1539,1570,1650,1758,1842,2071,2612,2853,2969]},{"i":352,"v":[140],"t":[1586,1587,1588,1590,1627,1667,2252,2440,2512]},{"i":493,"v":[84],"t":[1543,1611,1632,1670,1677,1986,2555,2556,2634]},{"i":717,"v":[163],"t":[1438,1636,1637,1641,1651,2288,2474,2475,2717]},{"i":1300,"v":[72],"t":[1399,1654,1683,1714,2168,2201,2632,2956,2990]},{"i":370,"v":[265],"t":[1503,1732,1733,2150,2425,2438,2596,2787]},{"i":343,"v":[131],"t":[1389,1980,2007,2156,2352,2531,2820]},{"i":447,"v":[286],"t":[1355,1440,2046,2071,2248,2263,2861]},{"i":538,"v":[202],"t":[1620,1902,1938,2250,2251,2257,2378]},{"i":1203,"v":[208],"t":[1425,1679,1865,1972,2051,2071,2955]},{"i":398,"v":[1447],"t":[1447,1677,1704,2167,2172,2806]},{"i":421,"v":[144],"t":[1408,2019,2295,2589,2896,2899]},{"i":1251,"v":[288],"t":[1620,2283,2284,2474,2591,2615]},{"i":1276,"v":[271],"t":[1443,1576,1678,1918,2162,2479]},{"i":1281,"v":[1933],"t":[1392,1660,1933,2352,2445,2815]},{"i":781,"v":[832],"t":[1662,1663,2025,2330,2740]},{"i":322,"v":[192],"t":[1777,1819,1916,2762]},{"i":368,"v":[215],"t":[2042,2334,2606,2779]},{"i":415,"v":[212],"t":[1882,1965,2119,2409]},{"i":464,"v":[122],"t":[1501,2216,2538,2544]},{"i":455,"v":[250],"t":[2509,2621,2923]},{"i":474,"v":[1961],"t":[1679,1961,2236]},{"i":496,"v":[228],"t":[2166,2742,2816]},{"i":699,"v":[289],"t":[1584,1585,2371]},{"i":701,"v":[70],"t":[1393,2156,2532]},{"i":757,"v":[188],"t":[1676,1994,2172]},{"i":1277,"v":[172],"t":[1358,1717,3038]},{"i":1301,"v":[280],"t":[1635,1652,1712]},{"i":439,"v":[62],"t":[2425,2873]},{"i":619,"v":[129],"t":[1633,2555]},{"i":715,"v":[297],"t":[1522,2643]},{"i":1213,"v":[92],"t":[1673,1687]},{"i":1270,"v":[173],"t":[1706,1842]},{"i":1275,"v":[284],"t":[2524,2983]},{"i":1248,"v":[258],"t":[2517]},{"i":371,"v":[183],"t":[]}],"dups":[{"g":11,"m":[794,795,796,797,798,823]},{"g":12,"m":[808,809,810,811,817,818]},{"g":0,"m":[812,813,814,815,821,822]},{"g":44,"m":[839,840,841,842,843,844]},{"g":4,"m":[851,852,853,854,855,856]},{"g":15,"m":[857,858,859,860,861,862]},{"g":6,"m":[863,864,865,866,867,868]},{"g":10,"m":[869,870,871,872,873,874]},{"g":5,"m":[890,891,892,893,894,895]},{"g":7,"m":[896,897,898,899,900,901]},{"g":18,"m":[902,903,904,905,906,907]},{"g":29,"m":[918,919,920,921,922,923]},{"g":3,"m":[986,987,988,989,990,991]},{"g":27,"m":[992,993,994,995,996,997]},{"g":57,"m":[1021,1023,1025,1027,1029,1031]},{"g":56,"m":[1022,1024,1026,1028,1030,1032]},{"g":40,"m":[1033,1034,1035,1036,1037,1038]},{"g":1,"m":[1051,1052,1053,1054,1055,1056]},{"g":8,"m":[1057,1058,1059,1060,1061,1062]},{"g":46,"m":[1069,1070,1071,1072,1073,1074]},{"g":43,"m":[1087,1088,1089,1090,1091,1092]},{"g":9,"m":[621,698,722,725,786]},{"g":58,"m":[819,820,887,888,889]},{"g":48,"m":[1010,1011,1012,1013,1014]},{"g":39,"m":[1045,1047,1048,1049,1050]},{"g":51,"m":[1081,1082,1083,1085,1086]},{"g":42,"m":[1340,1342,1343,1344,1345]},{"g":37,"m":[2754,2755,2756,2757,3020]},{"g":50,"m":[803,804,805,824]},{"g":59,"m":[43,1766,1769]},{"g":28,"m":[735,736,737]},{"g":23,"m":[875,879,880]},{"g":16,"m":[1040,1041,1044]},{"g":13,"m":[1076,1077,1080]},{"g":31,"m":[2086,2314,2706]},{"g":32,"m":[2151,2181,2229]},{"g":26,"m":[57,59]},{"g":25,"m":[103,119]},{"g":20,"m":[323,502]},{"g":52,"m":[368,462]},{"g":19,"m":[422,489]},{"g":45,"m":[423,569]},{"g":47,"m":[481,525]},{"g":53,"m":[767,772]},{"g":49,"m":[806,807]},{"g":21,"m":[833,838]},{"g":24,"m":[877,878]},{"g":22,"m":[883,884]},{"g":55,"m":[908,909]},{"g":54,"m":[910,911]},{"g":38,"m":[1004,1009]},{"g":2,"m":[1016,1017]},{"g":17,"m":[1039,1043]},{"g":41,"m":[1064,1068]},{"g":14,"m":[1075,1079]},{"g":34,"m":[2033,2299]},{"g":35,"m":[2044,2322]},{"g":33,"m":[2052,2345]},{"g":30,"m":[2054,2159]},{"g":36,"m":[2631,2652]}],"cds":[{"g":0,"n":"Shaman Shock spells","m":[84,492,493]},{"g":1,"n":"Glaive Toss","m":[163]},{"g":2,"n":"other interrupts","m":[278,306,407,432,482,584,653,1279]},{"g":3,"n":"other single target taunt abilities and Distracting Shot","m":[300]},{"g":4,"n":"other Shaman Shock spells","m":[494]},{"g":5,"n":"other Seismic spells","m":[1141,1171]},{"g":6,"n":"other Gavels","m":[1151]},{"g":7,"n":"other Tonics","m":[1195,1196,1198,1199,1200,1201]},{"g":8,"n":"other Feral Charges","m":[1238]},{"g":9,"n":"other Force of Nature spells","m":[1277]}],"gates":[{"i":60,"k":"Pfad","v":"Path of Healing"},{"i":65,"k":"Pfad","v":"Path of Healing"},{"i":66,"k":"Pfad","v":"Path of Healing"},{"i":67,"k":"Pfad","v":"Path of Healing"},{"i":68,"k":"Pfad","v":"Path of Healing"},{"i":95,"k":"Waffe","v":"Two-Handed Melee Weapon"},{"i":97,"k":"Pfad","v":"Path of Healing"},{"i":133,"k":"Pfad","v":"Path of Healing"},{"i":143,"k":"Pfad","v":"Path of Healing"},{"i":144,"k":"Pfad","v":"Path of Healing"},{"i":145,"k":"Pfad","v":"Path of Healing"},{"i":147,"k":"Item","v":"Duelist's Glove"},{"i":148,"k":"Item","v":"Duelist's Glove"},{"i":165,"k":"Rang","v":"Eclipse"},{"i":168,"k":"Pfad","v":"Path of Healing"},{"i":250,"k":"Pfad","v":"Path of Healing"},{"i":260,"k":"Pfad","v":"Path of Healing"},{"i":304,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":501,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":622,"k":"sonst","v":"Rune Forge"},{"i":623,"k":"sonst","v":"Rune Forge"},{"i":624,"k":"sonst","v":"Rune Forge"},{"i":625,"k":"sonst","v":"Rune Forge"},{"i":626,"k":"sonst","v":"Rune Forge"},{"i":627,"k":"sonst","v":"Rune Forge"},{"i":628,"k":"sonst","v":"Rune Forge"},{"i":629,"k":"sonst","v":"Rune Forge"},{"i":924,"k":"sonst","v":"Rune Forge"},{"i":935,"k":"Pfad","v":"Path of Healing"},{"i":1087,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1088,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1089,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1090,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1091,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1092,"k":"Waffe","v":"Dagger (Main Hand)"},{"i":1099,"k":"Pfad","v":"Path of Healing"},{"i":1107,"k":"Pfad","v":"Path of Healing"},{"i":1121,"k":"Pfad","v":"Path of Healing"},{"i":1126,"k":"Pfad","v":"Path of Healing"},{"i":1177,"k":"Pfad","v":"Path of Healing"},{"i":1308,"k":"sonst","v":"Tame Beast Abilities"},{"i":1364,"k":"Pfad","v":"Path of Healing"},{"i":1381,"k":"Rang","v":"Hot Streak"},{"i":1383,"k":"Pfad","v":"Path of Healing"},{"i":1384,"k":"Pfad","v":"Path of Healing"},{"i":1386,"k":"Pfad","v":"Path of Healing"},{"i":1389,"k":"Pfad","v":"Path of Healing"},{"i":1411,"k":"Pfad","v":"Path of Healing"},{"i":1412,"k":"Pfad","v":"Path of Healing"},{"i":1448,"k":"Pfad","v":"Path of Healing"},{"i":1519,"k":"Pfad","v":"Path of Healing"},{"i":1520,"k":"Pfad","v":"Path of Healing"},{"i":1521,"k":"Pfad","v":"Path of Healing"},{"i":1616,"k":"Item","v":"Duelist's Glove"},{"i":1617,"k":"Item","v":"Duelist's Glove"},{"i":1622,"k":"Pfad","v":"Path of Healing"},{"i":1623,"k":"Pfad","v":"Path of Healing"},{"i":1624,"k":"Pfad","v":"Path of Healing"},{"i":1625,"k":"Item","v":"Duelist's Glove"},{"i":1655,"k":"Rang","v":"Piercing Shots"},{"i":1693,"k":"Pfad","v":"Path of Healing"},{"i":1735,"k":"Item","v":"Duelist's Glove"},{"i":1736,"k":"Item","v":"Duelist's Glove"},{"i":1764,"k":"Item","v":"Duelist's Glove"},{"i":1799,"k":"Rang","v":"Tactical Mastery"},{"i":1820,"k":"Rang","v":"Molten Core"},{"i":1911,"k":"Pfad","v":"Path of Healing"},{"i":1974,"k":"Item","v":"Duelist's Glove"},{"i":2009,"k":"Pfad","v":"Path of Healing"},{"i":2472,"k":"Stat","v":"Primary Stat: Agility"},{"i":2578,"k":"Stat","v":"Primary Stat: Agility"},{"i":2645,"k":"Pfad","v":"Path of Healing"},{"i":2659,"k":"Rang","v":"Grave Coil"},{"i":2716,"k":"Stat","v":"Primary Stat: Strength"},{"i":2721,"k":"Stat","v":"Primary Stat: Might"},{"i":2881,"k":"Rang","v":"Vigor"}],"needs":[{"i":1655,"n":2580},{"i":1799,"n":2080},{"i":3050,"n":656}],"procs":[{"i":25,"p":15,"s":"dbc"},{"i":27,"p":15.0,"s":"tip"},{"i":34,"p":10.0,"s":"tip"},{"i":49,"p":100.0,"s":"tip"},{"i":106,"p":20.0,"s":"tip"},{"i":213,"p":20,"s":"dbc"},{"i":214,"p":75,"s":"dbc"},{"i":383,"p":15,"s":"dbc"},{"i":515,"p":100.0,"s":"tip"},{"i":521,"p":100.0,"s":"tip"},{"i":552,"p":15.0,"s":"tip"},{"i":729,"p":20.0,"s":"tip"},{"i":743,"p":20.0,"s":"tip"},{"i":762,"p":50.0,"s":"tip"},{"i":931,"p":5.0,"s":"tip"},{"i":937,"p":70,"s":"dbc"},{"i":940,"p":25.0,"s":"tip"},{"i":950,"p":20.0,"s":"tip"},{"i":952,"p":30.0,"s":"tip"},{"i":1093,"p":80,"s":"dbc"},{"i":1108,"p":40,"s":"dbc"},{"i":1113,"p":15,"s":"dbc"},{"i":1114,"p":20,"s":"dbc"},{"i":1136,"p":60,"s":"dbc"},{"i":1184,"p":25,"s":"dbc"},{"i":1193,"p":10,"s":"dbc"},{"i":1237,"p":33.0,"s":"tip"},{"i":1275,"p":60.0,"s":"tip"},{"i":1374,"p":25.0,"s":"tip"},{"i":1375,"p":25.0,"s":"tip"},{"i":1376,"p":25.0,"s":"tip"},{"i":1377,"p":25.0,"s":"tip"},{"i":1401,"p":25.0,"s":"tip"},{"i":1431,"p":8.0,"s":"tip"},{"i":1438,"p":50.0,"s":"tip"},{"i":1442,"p":25,"s":"dbc"},{"i":1458,"p":30.0,"s":"tip"},{"i":1461,"p":25.0,"s":"tip"},{"i":1462,"p":35.0,"s":"tip"},{"i":1463,"p":80,"s":"dbc"},{"i":1467,"p":10.0,"s":"tip"},{"i":1468,"p":35,"s":"dbc"},{"i":1469,"p":35,"s":"dbc"},{"i":1472,"p":30.0,"s":"tip"},{"i":1473,"p":33,"s":"dbc"},{"i":1474,"p":15.0,"s":"tip"},{"i":1483,"p":33,"s":"dbc"},{"i":1491,"p":20.0,"s":"tip"},{"i":1514,"p":20.0,"s":"tip"},{"i":1516,"p":15.0,"s":"tip"},{"i":1519,"p":20.0,"s":"tip"},{"i":1524,"p":20,"s":"dbc"},{"i":1536,"p":50.0,"s":"tip"},{"i":1555,"p":5.0,"s":"tip"},{"i":1556,"p":20.0,"s":"tip"},{"i":1557,"p":20.0,"s":"tip"},{"i":1576,"p":5.0,"s":"tip"},{"i":1577,"p":100.0,"s":"tip"},{"i":1579,"p":30.0,"s":"tip"},{"i":1581,"p":20.0,"s":"tip"},{"i":1584,"p":20.0,"s":"tip"},{"i":1597,"p":20.0,"s":"tip"},{"i":1611,"p":100.0,"s":"tip"},{"i":1626,"p":15.0,"s":"tip"},{"i":1628,"p":12.0,"s":"tip"},{"i":1642,"p":40.0,"s":"tip"},{"i":1644,"p":25.0,"s":"tip"},{"i":1656,"p":35.0,"s":"tip"},{"i":1664,"p":50.0,"s":"tip"},{"i":1665,"p":18,"s":"dbc"},{"i":1667,"p":25.0,"s":"tip"},{"i":1668,"p":15.0,"s":"tip"},{"i":1669,"p":3.0,"s":"tip"},{"i":1670,"p":15.0,"s":"tip"},{"i":1672,"p":15.0,"s":"tip"},{"i":1685,"p":25.0,"s":"tip"},{"i":1686,"p":33.0,"s":"tip"},{"i":1691,"p":12.0,"s":"tip"},{"i":1693,"p":25.0,"s":"tip"},{"i":1695,"p":35.0,"s":"tip"},{"i":1708,"p":25,"s":"dbc"},{"i":1711,"p":3,"s":"dbc"},{"i":1713,"p":22.0,"s":"tip"},{"i":1744,"p":10.0,"s":"tip"},{"i":1752,"p":14.0,"s":"tip"},{"i":1755,"p":10,"s":"dbc"},{"i":1814,"p":10.0,"s":"tip"},{"i":1816,"p":20.0,"s":"tip"},{"i":1835,"p":15,"s":"dbc"},{"i":1849,"p":15.0,"s":"tip"},{"i":1856,"p":20.0,"s":"tip"},{"i":1871,"p":5.0,"s":"tip"},{"i":1873,"p":5,"s":"dbc"},{"i":1874,"p":15.0,"s":"tip"},{"i":1875,"p":15.0,"s":"tip"},{"i":1877,"p":50.0,"s":"tip"},{"i":1884,"p":12.0,"s":"tip"},{"i":1896,"p":20.0,"s":"tip"},{"i":1922,"p":20.0,"s":"tip"},{"i":1938,"p":15.0,"s":"tip"},{"i":1939,"p":50.0,"s":"tip"},{"i":1947,"p":30.0,"s":"tip"},{"i":1962,"p":25.0,"s":"tip"},{"i":1963,"p":10,"s":"dbc"},{"i":1970,"p":20.0,"s":"tip"},{"i":1974,"p":20.0,"s":"tip"},{"i":1984,"p":4.0,"s":"tip"},{"i":1985,"p":30,"s":"dbc"},{"i":1989,"p":15.0,"s":"tip"},{"i":1991,"p":3.0,"s":"tip"},{"i":1995,"p":20.0,"s":"tip"},{"i":2003,"p":4.0,"s":"tip"},{"i":2006,"p":50.0,"s":"tip"},{"i":2009,"p":20,"s":"dbc"},{"i":2016,"p":25.0,"s":"tip"},{"i":2028,"p":10.0,"s":"tip"},{"i":2031,"p":20.0,"s":"tip"},{"i":2045,"p":100.0,"s":"tip"},{"i":2046,"p":100.0,"s":"tip"},{"i":2050,"p":10.0,"s":"tip"},{"i":2056,"p":15.0,"s":"tip"},{"i":2064,"p":100.0,"s":"tip"},{"i":2065,"p":30.0,"s":"tip"},{"i":2068,"p":15.0,"s":"tip"},{"i":2075,"p":10.0,"s":"tip"},{"i":2085,"p":50.0,"s":"tip"},{"i":2092,"p":65,"s":"dbc"},{"i":2093,"p":50,"s":"dbc"},{"i":2094,"p":100.0,"s":"tip"},{"i":2108,"p":100.0,"s":"tip"},{"i":2111,"p":100.0,"s":"tip"},{"i":2113,"p":100.0,"s":"tip"},{"i":2115,"p":6.0,"s":"tip"},{"i":2117,"p":100.0,"s":"tip"},{"i":2118,"p":100.0,"s":"tip"},{"i":2128,"p":60.0,"s":"tip"},{"i":2135,"p":100.0,"s":"tip"},{"i":2148,"p":50.0,"s":"tip"},{"i":2158,"p":100.0,"s":"tip"},{"i":2159,"p":6,"s":"dbc"},{"i":2161,"p":100.0,"s":"tip"},{"i":2163,"p":100.0,"s":"tip"},{"i":2173,"p":100.0,"s":"tip"},{"i":2176,"p":15.0,"s":"tip"},{"i":2192,"p":40,"s":"dbc"},{"i":2199,"p":30.0,"s":"tip"},{"i":2201,"p":15.0,"s":"tip"},{"i":2205,"p":100.0,"s":"tip"},{"i":2206,"p":15.0,"s":"tip"},{"i":2207,"p":75,"s":"dbc"},{"i":2208,"p":10,"s":"dbc"},{"i":2209,"p":100.0,"s":"tip"},{"i":2211,"p":50,"s":"dbc"},{"i":2218,"p":20.0,"s":"tip"},{"i":2228,"p":6.0,"s":"tip"},{"i":2235,"p":33.0,"s":"tip"},{"i":2238,"p":100.0,"s":"tip"},{"i":2245,"p":100.0,"s":"tip"},{"i":2250,"p":8.0,"s":"tip"},{"i":2256,"p":33.0,"s":"tip"},{"i":2280,"p":12.0,"s":"tip"},{"i":2284,"p":100.0,"s":"tip"},{"i":2288,"p":100.0,"s":"tip"},{"i":2297,"p":100.0,"s":"tip"},{"i":2300,"p":10.0,"s":"tip"},{"i":2302,"p":50.0,"s":"tip"},{"i":2309,"p":100.0,"s":"tip"},{"i":2315,"p":40,"s":"dbc"},{"i":2316,"p":10.0,"s":"tip"},{"i":2320,"p":10.0,"s":"tip"},{"i":2329,"p":100.0,"s":"tip"},{"i":2339,"p":100.0,"s":"tip"},{"i":2350,"p":65.0,"s":"tip"},{"i":2352,"p":20.0,"s":"tip"},{"i":2357,"p":33.0,"s":"tip"},{"i":2365,"p":10.0,"s":"tip"},{"i":2366,"p":100.0,"s":"tip"},{"i":2382,"p":30.0,"s":"tip"},{"i":2383,"p":30.0,"s":"tip"},{"i":2387,"p":20.0,"s":"tip"},{"i":2400,"p":100.0,"s":"tip"},{"i":2406,"p":100.0,"s":"tip"},{"i":2409,"p":100.0,"s":"tip"},{"i":2415,"p":100.0,"s":"tip"},{"i":2416,"p":10.0,"s":"tip"},{"i":2419,"p":100.0,"s":"tip"},{"i":2426,"p":10.0,"s":"tip"},{"i":2427,"p":100.0,"s":"tip"},{"i":2431,"p":100.0,"s":"tip"},{"i":2435,"p":100.0,"s":"tip"},{"i":2442,"p":60.0,"s":"tip"},{"i":2443,"p":50.0,"s":"tip"},{"i":2445,"p":100.0,"s":"tip"},{"i":2451,"p":30.0,"s":"tip"},{"i":2477,"p":100.0,"s":"tip"},{"i":2478,"p":15.0,"s":"tip"},{"i":2480,"p":25.0,"s":"tip"},{"i":2487,"p":100.0,"s":"tip"},{"i":2494,"p":10.0,"s":"tip"},{"i":2495,"p":100.0,"s":"tip"},{"i":2496,"p":100.0,"s":"tip"},{"i":2498,"p":15.0,"s":"tip"},{"i":2499,"p":15.0,"s":"tip"},{"i":2500,"p":100.0,"s":"tip"},{"i":2508,"p":100.0,"s":"tip"},{"i":2510,"p":30.0,"s":"tip"},{"i":2513,"p":100.0,"s":"tip"},{"i":2514,"p":15.0,"s":"tip"},{"i":2516,"p":100.0,"s":"tip"},{"i":2519,"p":9.0,"s":"tip"},{"i":2521,"p":100.0,"s":"tip"},{"i":2526,"p":100.0,"s":"tip"},{"i":2533,"p":100.0,"s":"tip"},{"i":2535,"p":100.0,"s":"tip"},{"i":2537,"p":24.0,"s":"tip"},{"i":2545,"p":100.0,"s":"tip"},{"i":2546,"p":100.0,"s":"tip"},{"i":2549,"p":15.0,"s":"tip"},{"i":2552,"p":100.0,"s":"tip"},{"i":2556,"p":100.0,"s":"tip"},{"i":2557,"p":100.0,"s":"tip"},{"i":2558,"p":15.0,"s":"tip"},{"i":2559,"p":100.0,"s":"tip"},{"i":2564,"p":100.0,"s":"tip"},{"i":2565,"p":100.0,"s":"tip"},{"i":2568,"p":100.0,"s":"tip"},{"i":2569,"p":100.0,"s":"tip"},{"i":2570,"p":100.0,"s":"tip"},{"i":2574,"p":100.0,"s":"tip"},{"i":2575,"p":100.0,"s":"tip"},{"i":2577,"p":100.0,"s":"tip"},{"i":2582,"p":30.0,"s":"tip"},{"i":2583,"p":50.0,"s":"tip"},{"i":2585,"p":100.0,"s":"tip"},{"i":2586,"p":60.0,"s":"tip"},{"i":2592,"p":100.0,"s":"tip"},{"i":2596,"p":50.0,"s":"tip"},{"i":2598,"p":30.0,"s":"tip"},{"i":2601,"p":100.0,"s":"tip"},{"i":2602,"p":33.0,"s":"tip"},{"i":2607,"p":100.0,"s":"tip"},{"i":2609,"p":40.0,"s":"tip"},{"i":2610,"p":100.0,"s":"tip"},{"i":2617,"p":100.0,"s":"tip"},{"i":2620,"p":100.0,"s":"tip"},{"i":2621,"p":100.0,"s":"tip"},{"i":2627,"p":20.0,"s":"tip"},{"i":2632,"p":100.0,"s":"tip"},{"i":2635,"p":20.0,"s":"tip"},{"i":2639,"p":100.0,"s":"tip"},{"i":2642,"p":100.0,"s":"tip"},{"i":2659,"p":9.0,"s":"tip"},{"i":2662,"p":9.0,"s":"tip"},{"i":2670,"p":15.0,"s":"tip"},{"i":2673,"p":30.0,"s":"tip"},{"i":2675,"p":100.0,"s":"tip"},{"i":2677,"p":30.0,"s":"tip"},{"i":2703,"p":100.0,"s":"tip"},{"i":2705,"p":30.0,"s":"tip"},{"i":2713,"p":100.0,"s":"tip"},{"i":2715,"p":100.0,"s":"tip"},{"i":2725,"p":66,"s":"dbc"},{"i":2730,"p":12.0,"s":"tip"},{"i":2732,"p":30.0,"s":"tip"},{"i":2737,"p":33,"s":"dbc"},{"i":2738,"p":20.0,"s":"tip"},{"i":2761,"p":33.0,"s":"tip"},{"i":2819,"p":50,"s":"dbc"},{"i":2833,"p":8.0,"s":"tip"},{"i":2894,"p":50.0,"s":"tip"},{"i":2922,"p":10.0,"s":"tip"},{"i":2927,"p":100.0,"s":"tip"},{"i":2939,"p":10,"s":"dbc"},{"i":3024,"p":33,"s":"dbc"},{"i":3027,"p":10,"s":"dbc"},{"i":3028,"p":20,"s":"dbc"},{"i":3029,"p":25,"s":"dbc"},{"i":3030,"p":8,"s":"dbc"},{"i":3033,"p":6,"s":"dbc"},{"i":3034,"p":25.0,"s":"tip"},{"i":3051,"p":15.0,"s":"tip"},{"i":3055,"p":25.0,"s":"tip"},{"i":3058,"p":25.0,"s":"tip"},{"i":3067,"p":10.0,"s":"tip"},{"i":3068,"p":10.0,"s":"tip"}],"chains":[{"i":1573,"r":[357,406,417,429,501,616,709,1672]},{"i":1842,"r":[308,316,445,502,544,565,713,716]},{"i":1683,"r":[11,308,325,327,545,565,641,1284]},{"i":1507,"r":[304,406,468,501,1222,1235,1269]},{"i":1987,"r":[30,40,404,518,1255,1303,1316]},{"i":2740,"r":[80,156,780,781,1337,2211,2370]},{"i":1913,"r":[83,395,449,1250,1253,1307,1309]},{"i":1569,"r":[513,598,1261,1273,1310,2329,2433]},{"i":1423,"r":[308,311,325,327,565,641]},{"i":1440,"r":[316,430,431,447,610,1202]},{"i":1541,"r":[316,323,431,638,1202,1244]},{"i":1572,"r":[406,417,429,501,616,1672]},{"i":1441,"r":[308,310,545,565,816,1284]},{"i":1690,"r":[325,327,492,641,1242,2387]},{"i":1355,"r":[323,447,472,540,1244,1292]},{"i":1422,"r":[79,308,311,325,327,565]},{"i":1979,"r":[11,321,325,327,379,1383]},{"i":1534,"r":[11,395,448,510,511,1250]},{"i":1679,"r":[418,430,474,638,1203,1271]},{"i":1659,"r":[359,364,503,555,1296,1302]},{"i":1574,"r":[11,308,310,545,565,1292]},{"i":1924,"r":[217,259,429,552,709,1672]},{"i":3057,"r":[308,565,647,1322,1327,2667]},{"i":3062,"r":[650,663,665,667,1320,1321]},{"i":1389,"r":[308,343,424,545,565]},{"i":1543,"r":[304,492,493,494,501]},{"i":1587,"r":[10,352,383,642,654]},{"i":1654,"r":[325,327,1242,1300,2558]},{"i":1758,"r":[445,459,502,1282,2294]},{"i":1834,"r":[321,379,461,491,503]},{"i":1525,"r":[28,40,101,472,485]},{"i":1488,"r":[308,310,545,599,1284]},{"i":1540,"r":[319,323,638,1202,1244]},{"i":1552,"r":[316,445,713,1202,2546]},{"i":1628,"r":[350,480,540,2280,2520]},{"i":1930,"r":[1211,1216,1320,1690,2560]},{"i":1567,"r":[513,598,637,1310,2433]},{"i":1570,"r":[459,513,544,1282,2294]},{"i":1632,"r":[492,493,494,599,1242]},{"i":2027,"r":[10,11,492,642,677]},{"i":1398,"r":[599,641,1202,1690,2560]},{"i":1514,"r":[11,417,429,1672,2498]},{"i":1923,"r":[575,1202,1253,1283,1307]},{"i":1932,"r":[436,453,575,1253,2024]},{"i":1513,"r":[704,1231,1266,1690,2560]},{"i":1636,"r":[409,537,710,717,1305]},{"i":1432,"r":[445,502,713,1236,2546]},{"i":1696,"r":[11,162,445,713,2546]},{"i":1435,"r":[28,362,516,554,2370]},{"i":1511,"r":[325,327,478,1242,1312]},{"i":1797,"r":[10,317,642,677,714]},{"i":1588,"r":[10,352,642,677,714]},{"i":1819,"r":[322,515,690,719,2209]},{"i":1928,"r":[647,1219,1322,1324,1327]},{"i":1953,"r":[83,448,468,672,1250]},{"i":1774,"r":[10,40,642,677,714]},{"i":3052,"r":[1320,1322,1334,1690,2560]},{"i":1971,"r":[558,697,1255,2309,2580]},{"i":3053,"r":[11,534,576,667,1330]},{"i":1386,"r":[308,545,565,1284]},{"i":1450,"r":[373,495,550,1228]},{"i":1535,"r":[406,445,713,2546]},{"i":1566,"r":[598,1310,2345,2433]},{"i":1578,"r":[11,373,459,1264]},{"i":1619,"r":[11,325,327,459]},{"i":1802,"r":[321,347,424,461]},{"i":1926,"r":[10,642,677,714]},{"i":1968,"r":[11,320,534,576]},{"i":2009,"r":[321,364,461,555]},{"i":1640,"r":[11,310,1284,1327]},{"i":1536,"r":[453,1282,2294,2609]},{"i":1687,"r":[631,1213,1685,2169]},{"i":1665,"r":[150,395,448,1250]},{"i":1454,"r":[485,501,537,1305]},{"i":1605,"r":[11,495,540,687]},{"i":43,"r":[10,642,677,714]},{"i":1369,"r":[11,64,1371,2050]},{"i":1416,"r":[11,75,528,1238]},{"i":1439,"r":[11,83,395,1250]},{"i":1615,"r":[395,406,436,448]}]}</script>
+<script>
+(function(){
+  var raw = document.getElementById("syn-data");
+  if (!raw) return;
+  var D;
+  try { D = JSON.parse(raw.textContent); } catch (e) { return; }
+
+  var Q = ["Normal", "Uncommon", "Rare", "Epic", "Legendary"];
+  var KIND = ["Ability", "Talent"];
+  var LAB = {erb:"Vererbung", gcd:"Gleicher GCD", cd:"Geteilter CD", kette:"Kette", proc:"Proc", gate:"Sperre"};
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;"}[c];
+    });
+  }
+  function fold(s){
+    return String(s || "").toLowerCase()
+      .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+  }
+  function nm(i){ return D.nm[String(i)] || ("#" + i); }
+  function meta(i){ return D.meta[String(i)] || [0, 0, 0]; }
+
+  var baseOf = {};
+  var variantsOf = {};
+  var talsOf = {};
+  (D.bases || []).forEach(function(b){
+    variantsOf[b.i] = b.v;
+    talsOf[b.i] = b.t;
+    (b.v || []).forEach(function(v){ baseOf[v] = b.i; });
+  });
+  var dupOf = {};
+  (D.dups || []).forEach(function(g){
+    (g.m || []).forEach(function(i){ dupOf[i] = g.m; });
+  });
+  var cdOf = {};
+  (D.cds || []).forEach(function(g){
+    (g.m || []).forEach(function(i){ cdOf[i] = g; });
+  });
+  var gateOf = {};
+  (D.gates || []).forEach(function(g){ gateOf[g.i] = g; });
+  var needOf = {};
+  (D.needs || []).forEach(function(n){ needOf[n.i] = n.n; });
+  var procOf = {};
+  (D.procs || []).forEach(function(p){ procOf[p.i] = p; });
+  var refsOf = {};
+  (D.chains || []).forEach(function(c){ refsOf[c.i] = c.r; });
+
+  var ids = Object.keys(D.nm).map(Number);
+
+  function tags(i){
+    var t = [];
+    if (baseOf[i] != null || variantsOf[i]) t.push("erb");
+    if (dupOf[i]) t.push("gcd");
+    if (cdOf[i]) t.push("cd");
+    if (refsOf[i]) t.push("kette");
+    if (procOf[i]) t.push("proc");
+    if (gateOf[i]) t.push("gate");
+    return t;
+  }
+
+  function list(arr, lim){
+    var a = arr || [];
+    lim = lim || 8;
+    var slice = a.slice(0, lim).map(function(j){
+      return '<span class="nm">' + esc(nm(j)) + "</span>";
+    });
+    if (a.length > lim) slice.push("+" + (a.length - lim));
+    return slice.join(" · ");
+  }
+
+  function card(i){
+    var m = meta(i);
+    var t = tags(i);
+    var q = Q[m[1]] || "";
+    var html = ['<article class="hit">'];
+    html.push("<h3>" + esc(nm(i)) + "</h3>");
+    html.push('<p class="meta">' + (KIND[m[0]] || "") +
+      ' · <span class="qual q-' + q + '">' + q + "</span> · Stufe " + m[2] + "</p>");
+    html.push('<div class="tags">');
+    t.forEach(function(k){
+      html.push('<span class="tagpill ' + k + '">' + LAB[k] + "</span>");
+    });
+    html.push("</div><dl>");
+    if (baseOf[i] != null) {
+      html.push("<dt>Erbt Talente von</dt><dd>" + esc(nm(baseOf[i])) + "</dd>");
+    }
+    if (variantsOf[i] && variantsOf[i].length) {
+      html.push("<dt>Schulvarianten (gleicher GCD)</dt><dd>" + list(variantsOf[i], 12) + "</dd>");
+    }
+    var tals = talsOf[i] || (baseOf[i] != null ? talsOf[baseOf[i]] : null);
+    if (tals && tals.length) {
+      html.push("<dt>Talente der Basis</dt><dd>" + list(tals, 8) + "</dd>");
+    }
+    if (needOf[i] != null) {
+      html.push("<dt>Braucht</dt><dd>" + esc(nm(needOf[i])) + "</dd>");
+    }
+    if (refsOf[i]) {
+      html.push("<dt>Wirkt auf</dt><dd>" + list(refsOf[i], 8) + "</dd>");
+    }
+    if (procOf[i]) {
+      html.push("<dt>Proc</dt><dd>" + procOf[i].p + " % (" +
+        (procOf[i].s === "tip" ? "Tooltip" : "DBC, nur 1–99") + ")</dd>");
+    }
+    if (gateOf[i]) {
+      html.push("<dt>Sperre</dt><dd>" + esc(gateOf[i].k) + ": " + esc(gateOf[i].v) + "</dd>");
+    }
+    if (cdOf[i]) {
+      html.push("<dt>Geteilter Cooldown</dt><dd>" + esc(cdOf[i].n) + " — " + list(cdOf[i].m, 8) + "</dd>");
+    }
+    if (dupOf[i] && !variantsOf[i]) {
+      html.push("<dt>Gleiche GCD-Gruppe</dt><dd>" +
+        list(dupOf[i].filter(function(j){ return j !== i; }), 8) + "</dd>");
+    }
+    html.push("</dl></article>");
+    return html.join("");
+  }
+
+  var qHit = document.getElementById("qHit");
+  var hitList = document.getElementById("hitList");
+  var hitStat = document.getElementById("hitStat");
+  var filt = "alle";
+  if (!qHit || !hitList) return;
+
+  window.synSetHit = function(qVal, fVal){
+    if (qVal) qHit.value = qVal;
+    if (fVal){
+      filt = fVal;
+      document.querySelectorAll("#nachschlagen .filters:not(.school-filters) button[data-f]").forEach(function(b){
+        b.setAttribute("aria-pressed", b.getAttribute("data-f") === filt ? "true" : "false");
+      });
+    }
+    var qNow = fold(qHit.value || "");
+    document.querySelectorAll("#nachschlagen .school-filters button[data-q]").forEach(function(b){
+      b.setAttribute("aria-pressed", fold(b.getAttribute("data-q") || "") === qNow ? "true" : "false");
+    });
+    render();
+  };
+
+  function render(){
+    var q = fold(qHit.value || "");
+    var out = [];
+    ids.forEach(function(i){
+      var t = tags(i);
+      if (filt !== "alle" && t.indexOf(filt) < 0) return;
+      if (q && fold(nm(i)).indexOf(q) < 0) return;
+      out.push(i);
+    });
+    out.sort(function(a, b){ return fold(nm(a)).localeCompare(fold(nm(b))); });
+    if (!q && filt === "alle") {
+      hitStat.textContent = D.nInherit + " Vererbungen · " + D.nDupG +
+        " GCD-Gruppen · " + D.nProcTip + " Tooltip-Procs. Tippe einen Namen.";
+      hitList.innerHTML = "";
+      return;
+    }
+    var show = out.slice(0, 12);
+    hitStat.textContent = out.length === 0
+      ? "Kein Treffer in den Synergie-Daten. Die Buildschmiede hat den ganzen Katalog."
+      : (out.length === 1 ? "1 Treffer" : out.length + " Treffer") +
+        (out.length > 12 ? " (erste 12)" : "");
+    hitList.innerHTML = show.map(card).join("");
+  }
+
+  qHit.addEventListener("input", render);
+  qHit.addEventListener("search", render);
+  render();
+
+  var qSyn = document.getElementById("qSyn");
+  if (qSyn) {
+    qSyn.addEventListener("input", function(){
+      var v = (qSyn.value || "").trim();
+      if (v.length < 3) return;
+      var hit = ids.some(function(i){ return fold(nm(i)).indexOf(fold(v)) >= 0; });
+      if (!hit) return;
+      qHit.value = v;
+      var box = document.getElementById("nachschlagen");
+      if (box) {
+        box.open = true;
+        box.hidden = false;
+        box.classList.remove("off");
+      }
+      render();
+    });
+  }
+})();
+
+</script>
+<script>
+(function(){
+  var KEY = "aldi-buildschmiede-syn-tip";
+  var panel = document.getElementById("synTipPanel");
+  var dismissed = document.getElementById("synTipDismissed");
+  if (!panel || !dismissed) return;
+
+  function read(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return {};
+      var d = JSON.parse(raw);
+      return d && typeof d === "object" ? d : {};
+    } catch (e) { return {}; }
+  }
+  function write(obj){
+    try { localStorage.setItem(KEY, JSON.stringify(obj)); } catch (e) { /* egal */ }
+  }
+  function show(open){
+    panel.hidden = !open;
+    dismissed.hidden = open;
+  }
+  show(!read().done);
+
+  var closeBtn = document.getElementById("synTipClose");
+  var hideBtn = document.getElementById("synTipHide");
+  var reopenBtn = document.getElementById("synTipReopen");
+  if (closeBtn) closeBtn.addEventListener("click", function(){ show(false); });
+  if (hideBtn) hideBtn.addEventListener("click", function(){
+    write({done: true});
+    show(false);
+  });
+  if (reopenBtn) reopenBtn.addEventListener("click", function(){ show(true); });
+})();
+</script>
+</body>
+</html>
