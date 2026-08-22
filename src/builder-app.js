@@ -408,6 +408,72 @@
     return '<span class="esschip invchip" title="' + esc(tip + " " + n) + '">' +
       ico + "<i>" + esc(kind) + "</i> " + n + "</span>";
   }
+  // WoW CLASS_ID + Spec-Tab (1-basiert) — wie GetTabTEInvestment / CAClassButton.
+  var WOW_CLASS = {
+    1: "Warrior", 2: "Paladin", 3: "Hunter", 4: "Rogue", 5: "Priest",
+    6: "DeathKnight", 7: "Shaman", 8: "Mage", 9: "Warlock", 11: "Druid"
+  };
+  var WOW_SPEC = {
+    1: ["", "Arms", "Fury", "Protection"],
+    2: ["", "Holy", "Protection", "Retribution"],
+    3: ["", "BeastMastery", "Marksmanship", "Survival"],
+    4: ["", "Assassination", "Combat", "Subtlety"],
+    5: ["", "Discipline", "Holy", "Shadow"],
+    6: ["", "Blood", "Frost", "Unholy"],
+    7: ["", "Elemental", "Enhancement", "Restoration"],
+    8: ["", "Arcane", "Fire", "Frost"],
+    9: ["", "Affliction", "Demonology", "Destruction"],
+    11: ["", "Balance", "Feral", "Restoration"]
+  };
+  // Erster Talent-Eintrag je Klasse+Spec-Tab (spectags) — Icon aus Sprite.
+  var TAB_ICON = Object.create(null);
+  (function () {
+    for (var ti = 0; ti < CAT.length; ti++) {
+      if (CAT[ti][1] !== 1) continue;
+      var cls = CAT[ti][2], tab = TREE[ti];
+      if (!cls || cls === "Classless" || !tab) continue;
+      var tk = cls + "|" + tab;
+      if (TAB_ICON[tk] === undefined) TAB_ICON[tk] = ti;
+    }
+  })();
+  function tabIconIdx(clsId, specId) {
+    var cls = WOW_CLASS[clsId];
+    var tab = WOW_SPEC[clsId] && WOW_SPEC[clsId][specId];
+    if (!cls || !tab) return undefined;
+    var idx = TAB_ICON[cls + "|" + tab];
+    return idx !== undefined ? idx : undefined;
+  }
+  function tabInvestLabel(clsId, specId) {
+    var cls = WOW_CLASS[clsId] || ("Klasse " + clsId);
+    var tab = (WOW_SPEC[clsId] && WOW_SPEC[clsId][specId]) ||
+      ("Tab " + specId);
+    return cls + " · " + tab;
+  }
+  function investTabChip(t) {
+    var idx = tabIconIdx(t.cls, t.spec);
+    var lab = tabInvestLabel(t.cls, t.spec);
+    var ico = idx !== undefined
+      ? '<span class="icon essico" role="presentation" style="width:14px;height:14px;flex:0 0 14px;' +
+        iconStyle(idx, 14) + '"></span>'
+      : "";
+    return '<span class="esschip invchip tabchip" title="Talent Essence ' +
+      esc(lab) + '">' + ico + esc(lab) + " <i>TE</i> " + t.n + "</span>";
+  }
+  // Pick Lock — einziger Lock-Spell im Sprite (gemessen, idx 410).
+  var LOCK_ICON_IDX = 410;
+  function lockIconHtml(size, title) {
+    size = size || 14;
+    var tip = title || "Gesperrt";
+    if (LOCK_ICON_IDX !== undefined && SPR.idx[LOCK_ICON_IDX] >= 0) {
+      return '<span class="icon lockico essico" role="img" aria-label="' +
+        esc(tip) + '" title="' + esc(tip) +
+        '" style="width:' + size + "px;height:" + size + "px;flex:0 0 " +
+        size + "px;" + iconStyle(LOCK_ICON_IDX, size) + '"></span>';
+    }
+    return '<span class="lockico csslock" role="img" aria-label="' + esc(tip) +
+      '" title="' + esc(tip) + '" style="width:' + size + "px;height:" +
+      size + "px;flex:0 0 " + size + 'px;"></span>';
+  }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -2729,22 +2795,22 @@
         inv.push(essInvestChip("TE", c.invest.TE, "Talent Essence ausgegeben"));
       }
       if (c.invest.CP !== undefined) {
-        inv.push('<span class="esschip invchip" title="Class Points">' +
+        // Kein gemessenes CP-Icon (Constants/UI: nur AE/TE, kein classicon-CP).
+        inv.push('<span class="esschip invchip" title="Class Points — kein Client-Icon gemessen">' +
           "<i>CP</i> " + c.invest.CP + "</span>");
+      }
+      if (c.investTabs && c.investTabs.length) {
+        c.investTabs.forEach(function (t) { inv.push(investTabChip(t)); });
       }
       if (inv.length) {
         meta.push('<span class="invgroup">Investition ' +
           inv.join(" ") + "</span>");
       }
     }
-    if (c.investTabs && c.investTabs.length) {
-      meta.push("Talent-Tabs " + c.investTabs.slice(0, 6).map(function (t) {
-        return t.cls + "/" + t.spec + ":" + t.n;
-      }).join(", ") + (c.investTabs.length > 6 ? "…" : ""));
-    }
     if (c.locked && c.locked.length) {
-      meta.push(c.locked.length + " Sperre" +
-        (c.locked.length === 1 ? "" : "n"));
+      meta.push('<span class="invgroup">' + lockIconHtml(14, "Gesperrte Einträge") +
+        " " + c.locked.length + " Sperre" +
+        (c.locked.length === 1 ? "" : "n") + "</span>");
     }
     if (c.mast && c.mast.length) {
       meta.push(c.mast.length + " Mastery");
@@ -2798,17 +2864,7 @@
           }).join(", ") + "</div>");
       }
       if (c.locked && c.locked.length) {
-        var lockBits = c.locked.map(function (eid) {
-          return esc(nameByEid(eid));
-        });
-        if (lockBits.length > 8) {
-          o.push('<div class="wepline"><b>Sperren</b> ' + lockBits.length +
-            "</div>" + wrapDetails(lockBits.join(", "),
-            "Sperren (" + lockBits.length + ")"));
-        } else {
-          o.push('<div class="wepline"><b>Sperren</b> ' +
-            lockBits.join(", ") + "</div>");
-        }
+        o.push(wcIdGridHtml(c.locked, "Sperren", "eid"));
       }
       o.push("</div>");
     }
@@ -6397,30 +6453,21 @@
     next: "dein nächster Treffer", pulse: "Impuls"
   };
 
-  function chainTooltipText(i) {
+  var GTT_SCHOOL_VAR = {
+    Fire: "--fire", Frost: "--frost", Shadow: "--shadow", Nature: "--nature",
+    Holy: "--holy", Arcane: "--arcane", Physical: "--physical"
+  };
+
+  function gttCatalogBody(i) {
     var raw = CAT[i] && CAT[i][5];
     if (!raw) return "";
-    var tip = String(raw).replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
-    if (!tip) return "";
-    if (tip.length <= 120) return tip;
-    var parts = tip.match(/[^.!?]+[.!?]+/g);
-    if (!parts || !parts.length) {
-      return tip.slice(0, 180) + (tip.length > 180 ? "…" : "");
-    }
-    var lines = [], len = 0, pi;
-    for (pi = 0; pi < parts.length && lines.length < 4; pi++) {
-      var p = parts[pi].trim();
-      if (!p) continue;
-      if (len + p.length > 300 && lines.length >= 2) break;
-      lines.push(p);
-      len += p.length;
-    }
-    if (!lines.length) return tip.slice(0, 180) + "…";
-    if (pi < parts.length) {
-      var last = lines[lines.length - 1];
-      if (last.charAt(last.length - 1) !== "…") lines[lines.length - 1] = last + "…";
-    }
-    return lines.join("\n");
+    return esc(String(raw).replace(/\r\n/g, "\n").trim());
+  }
+
+  function gttSchoolStyle(i) {
+    var s = SC[i];
+    if (!s) return "";
+    return GTT_SCHOOL_VAR[s.sch] || GTT_SCHOOL_VAR[s.fsch] || "";
   }
 
   function methTriggerLine(i) {
@@ -6586,17 +6633,49 @@
   function chainNodeTip(i, have) {
     if (i === null || i === undefined || !CAT[i]) return "";
     var r = CAT[i];
-    var lines = [r[0] + " · " + (r[1] ? "Talent" : "Fähigkeit")];
-    var tip = chainTooltipText(i);
-    if (tip) lines.push(tip);
-    var does = chainDoesLines(i);
-    if (does.length) lines.push(does.slice(0, 5).join(" · "));
+    var m = MC[i] || {};
+    var parts = [];
+    var schVar = gttSchoolStyle(i);
+    var nameStyle = schVar
+      ? ' style="color:color-mix(in srgb,var(' + schVar + ') 72%,var(--gold))"'
+      : "";
+    parts.push('<div class="gtt-name q' + r[3] + '"' + nameStyle + ">" +
+      esc(r[0]) + "</div>");
+    parts.push('<div class="gtt-kind">' + (r[1] ? "Talent" : "Fähigkeit") +
+      " · Stufe " + r[4] + "</div>");
+    var castT = m.cast
+      ? esc(fmt(m.cast) + " Sek. Wirken")
+      : (m.cd || m.cost || m.range ? "Sofort" : "");
+    var rangeT = m.range ? esc(String(m.range) + " m") : "";
+    if (castT || rangeT) {
+      parts.push('<div class="gtt-cast">' +
+        (castT ? '<span class="gtt-cast-t">' + castT + "</span>" : "") +
+        (rangeT ? '<span class="gtt-range">' + rangeT + "</span>" : "") +
+        "</div>");
+    }
+    var costLines = [];
+    if (m.cost && m.res) costLines.push(esc(fmt(m.cost) + " " + m.res));
+    if (m.cd) costLines.push("Abklingzeit " + esc(secs(m.cd)));
+    if (m.ch) {
+      costLines.push(esc(String(m.ch)) + (m.ch === 1 ? " Ladung" : " Ladungen"));
+    }
+    if (m.chr) costLines.push("Aufladung " + esc(secs(m.chr)));
+    if (costLines.length) {
+      parts.push('<div class="gtt-cost">' +
+        costLines.map(function (l) { return "<div>" + l + "</div>"; }).join("") +
+        "</div>");
+    }
+    var body = gttCatalogBody(i);
+    if (body) parts.push('<div class="gtt-body">' + body + "</div>");
     var links = chainLinkLines(i, have || null);
     if (links.length) {
-      lines.push("— Verkettung —");
-      links.slice(0, 5).forEach(function (l) { lines.push(l); });
+      parts.push('<div class="gtt-chain">' +
+        links.slice(0, 6).map(function (l) {
+          return "<p>" + esc(l) + "</p>";
+        }).join("") +
+        "</div>");
     }
-    return lines.slice(0, 10).join("\n");
+    return parts.join("");
   }
 
   function pill(i, live, takeable, have) {
@@ -6605,7 +6684,7 @@
       (takeable ? " take" : "") + '"' +
       (takeable ? ' data-add="' + i + '" role="button"' : "") +
       ' tabindex="0"' +
-      (tip ? ' data-tip="' + esc(tip) + '"' : "") +
+      (tip ? ' data-tip-html="' + esc(tip) + '"' : "") +
       ' style="border-left:3px solid var(--q' + CAT[i][3] + ')">' +
       (live ? "✓ " : "") + esc(CAT[i][0]) + "</span>";
   }
@@ -6829,7 +6908,7 @@
       var cardTip = chainNodeTip(i, have);
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
         '<div class="chn-hd" tabindex="0"' +
-        (cardTip ? ' data-tip="' + esc(cardTip) + '"' : "") +
+        (cardTip ? ' data-tip-html="' + esc(cardTip) + '"' : "") +
         '><span class="icon" style="width:22px;height:22px;' +
         'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
         '<span class="nm q' + CAT[i][3] + '">' +
@@ -8028,18 +8107,24 @@
       catch (e) { return false; }
     }
     function host(t) {
-      return t && t.closest ? t.closest("[data-tip]") : null;
+      return t && t.closest
+        ? t.closest("[data-tip-html], [data-tip]")
+        : null;
     }
-    function textOf(el) {
-      var raw = String(el.getAttribute("data-tip") || "").replace(/[ \t]+/g, " ").trim();
-      if (!raw) return "";
+    function tipOf(el) {
+      var html = el.getAttribute("data-tip-html");
+      if (html) return { mode: "html", content: html };
+      var raw = String(el.getAttribute("data-tip") || "")
+        .replace(/[ \t]+/g, " ").trim();
+      if (!raw) return null;
       var vis = String(el.innerText || "").replace(/\s+/g, " ").trim();
-      return raw.replace(/\s+/g, " ").trim() === vis ? "" : raw;
+      if (raw.replace(/\s+/g, " ").trim() === vis) return null;
+      return { mode: "text", content: raw };
     }
     function hide(force) {
       if (timer) { clearTimeout(timer); timer = null; }
       if (!force && pinned) return;
-      box.classList.remove("on");
+      box.classList.remove("on", "gtt");
       box.hidden = true;
       box.textContent = "";
       if (force && pinned) {
@@ -8059,24 +8144,30 @@
       box.style.left = Math.round(x) + "px";
       box.style.top = Math.round(y) + "px";
     }
-    function show(el, text) {
+    function show(el, tip) {
       cur = el;
-      box.textContent = text;
+      if (tip.mode === "html") {
+        box.innerHTML = tip.content;
+        box.classList.add("gtt");
+      } else {
+        box.textContent = tip.content;
+        box.classList.remove("gtt");
+      }
       box.hidden = false;
       box.classList.add("on");
       place(el);
     }
     function arm(el) {
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       if (cur === el && box.classList.contains("on")) { place(el); return; }
       hide(false);
       cur = el;
       var wait = delayMs();
-      if (!wait) { show(el, text); return; }
+      if (!wait) { show(el, tip); return; }
       timer = setTimeout(function () {
         timer = null;
-        if (cur === el) show(el, textOf(el) || text);
+        if (cur === el) show(el, tipOf(el) || tip);
       }, wait);
     }
     document.addEventListener("pointerover", function (e) {
@@ -8093,10 +8184,10 @@
     document.addEventListener("focusin", function (e) {
       var el = host(e.target);
       if (!el) return;
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       hide(true);
-      show(el, text);
+      show(el, tip);
     });
     document.addEventListener("focusout", function (e) {
       var el = host(e.target);
@@ -8109,13 +8200,13 @@
       var el = host(e.target);
       if (!el) { hide(true); return; }
       if (el.hasAttribute("data-jump") || el.hasAttribute("data-add")) return;
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       if (pinned === el) { hide(true); return; }
       if (pinned) pinned.classList.remove("pin");
       pinned = el;
       el.classList.add("pin");
-      show(el, text);
+      show(el, tip);
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") hide(true);

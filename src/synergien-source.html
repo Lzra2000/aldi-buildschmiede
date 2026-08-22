@@ -630,15 +630,48 @@ body:has(#synTipPanel:not([hidden])) .mast{padding-top:clamp(6px,1.2vw,12px)}
 a.school,a.limit,[data-jump]{transition:border-color var(--hover-fade) var(--ease-out),color var(--hover-fade) var(--ease-out)}
 a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--c,var(--accent)) 55%,var(--rule))}
 #hoverTip{
-  position:fixed;z-index:var(--hover-z);max-width:min(42ch,calc(100vw - 24px));
-  padding:7px 10px 8px 12px;background:var(--raised);color:var(--ink);
-  border:1px solid var(--metal,var(--rule));pointer-events:none;white-space:pre-line;
-  box-shadow:0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi,rgba(255,255,255,.06));
+  position:fixed;z-index:var(--hover-z);max-width:min(300px,calc(100vw - 24px));
+  padding:10px 12px 11px;
+  background:color-mix(in srgb,var(--ground) 82%,var(--sunken));
+  color:var(--ink);
+  border:1px solid var(--metal,var(--rule));pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.45),0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi,rgba(255,255,255,.06));
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;line-height:1.35;
-  opacity:0;visibility:hidden}
+  white-space:pre-line;opacity:0;visibility:hidden}
 #hoverTip::before{
   content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--gold,var(--accent));opacity:.7}
+  background:var(--gold,var(--accent));opacity:.55}
+#hoverTip.gtt{
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:13px;line-height:1.45;white-space:normal;padding:11px 13px 12px}
+#hoverTip.gtt .gtt-name{
+  font-family:"Source Serif 4",Georgia,serif;font-size:15px;font-weight:700;
+  line-height:1.25;color:var(--gold,var(--accent));margin:0 0 2px}
+#hoverTip.gtt .gtt-name.q0{color:var(--ink-soft)}
+#hoverTip.gtt .gtt-name.q1{color:var(--q1)}
+#hoverTip.gtt .gtt-name.q2{color:var(--q2)}
+#hoverTip.gtt .gtt-name.q3{color:var(--q3)}
+#hoverTip.gtt .gtt-name.q4{color:var(--q4)}
+#hoverTip.gtt .gtt-kind{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;
+  letter-spacing:.04em;color:var(--ink-faint);margin:0 0 5px}
+#hoverTip.gtt .gtt-cast{
+  display:flex;justify-content:flex-end;align-items:baseline;gap:10px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  color:var(--ink-soft);margin:0 0 2px}
+#hoverTip.gtt .gtt-cast-t{margin-right:auto;text-align:left}
+#hoverTip.gtt .gtt-range{text-align:right;white-space:nowrap}
+#hoverTip.gtt .gtt-cost{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  color:var(--ink-soft);line-height:1.4;margin:0 0 2px}
+#hoverTip.gtt .gtt-body{
+  margin-top:7px;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+#hoverTip.gtt .gtt-chain{
+  margin-top:8px;padding-top:7px;border-top:1px solid var(--rule-soft);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;
+  color:var(--ink-faint);line-height:1.45}
+#hoverTip.gtt .gtt-chain p{margin:0 0 3px}
+#hoverTip.gtt .gtt-chain p:last-child{margin-bottom:0}
 #hoverTip.on{
   opacity:1;visibility:visible;
   transition:opacity var(--hover-fade) var(--ease-out)}
@@ -1758,18 +1791,24 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
     catch (e) { return false; }
   }
   function host(t){
-    return t && t.closest ? t.closest("[data-tip], [data-jump], a.school, a.limit") : null;
+    return t && t.closest
+      ? t.closest("[data-tip-html], [data-tip], [data-jump], a.school, a.limit")
+      : null;
   }
-  function textOf(el){
-    var raw = (el.getAttribute("data-tip") || el.getAttribute("title") || "").replace(/\s+/g, " ").trim();
-    if (!raw) return "";
+  function tipOf(el){
+    var html = el.getAttribute("data-tip-html");
+    if (html) return { mode: "html", content: html };
+    var raw = (el.getAttribute("data-tip") || el.getAttribute("title") || "")
+      .replace(/\s+/g, " ").trim();
+    if (!raw) return null;
     var vis = String(el.innerText || "").replace(/\s+/g, " ").trim();
-    return raw === vis ? "" : raw;
+    if (raw === vis) return null;
+    return { mode: "text", content: raw };
   }
   function hide(force){
     if (timer) { clearTimeout(timer); timer = null; }
     if (!force && pinned) return;
-    box.classList.remove("on");
+    box.classList.remove("on", "gtt");
     box.hidden = true;
     box.textContent = "";
     if (force && pinned) { pinned.classList.remove("pin"); pinned = null; }
@@ -1786,28 +1825,34 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
     box.style.left = Math.round(x) + "px";
     box.style.top = Math.round(y) + "px";
   }
-  function show(el, text){
+  function show(el, tip){
     if (el.getAttribute("title")) {
       el.setAttribute("data-tip", el.getAttribute("title"));
       el.removeAttribute("title");
     }
     cur = el;
-    box.textContent = text;
+    if (tip.mode === "html") {
+      box.innerHTML = tip.content;
+      box.classList.add("gtt");
+    } else {
+      box.textContent = tip.content;
+      box.classList.remove("gtt");
+    }
     box.hidden = false;
     box.classList.add("on");
     place(el);
   }
   function arm(el){
-    var text = textOf(el);
-    if (!text) return;
+    var tip = tipOf(el);
+    if (!tip) return;
     if (cur === el && box.classList.contains("on")) { place(el); return; }
     hide(false);
     cur = el;
     var wait = delayMs();
-    if (!wait) { show(el, text); return; }
+    if (!wait) { show(el, tip); return; }
     timer = setTimeout(function(){
       timer = null;
-      if (cur === el) show(el, textOf(el) || text);
+      if (cur === el) show(el, tipOf(el) || tip);
     }, wait);
   }
   document.addEventListener("pointerover", function(e){
@@ -1824,10 +1869,10 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
   document.addEventListener("focusin", function(e){
     var el = host(e.target);
     if (!el) return;
-    var text = textOf(el);
-    if (!text) return;
+    var tip = tipOf(el);
+    if (!tip) return;
     hide(true);
-    show(el, text);
+    show(el, tip);
   });
   document.addEventListener("focusout", function(e){
     var el = host(e.target);
@@ -1840,13 +1885,13 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
     var el = host(e.target);
     if (!el) { hide(true); return; }
     if (el.hasAttribute("data-jump") || el.tagName === "A") return;
-    var text = textOf(el);
-    if (!text) return;
+    var tip = tipOf(el);
+    if (!tip) return;
     if (pinned === el) { hide(true); return; }
     if (pinned) pinned.classList.remove("pin");
     pinned = el;
     el.classList.add("pin");
-    show(el, text);
+    show(el, tip);
   });
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape") hide(true);

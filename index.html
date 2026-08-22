@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aldi Ehrfürchtig Buildschmiede</title>
+<title>Aldi Ehrf?rchtig Buildschmiede</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
 /*
-  BUILDSCHMIEDE TOKEN BLOCK — share with synergien-source.html
+  BUILDSCHMIEDE TOKEN BLOCK ? share with synergien-source.html
   Own forge-slate chrome (CSS only). No Ascension/WoW BLP frame kits.
   Dark = default. Light = parchment reading mode. Not neon, not purple/cream.
 
@@ -20,11 +20,11 @@
     --caution --warn                         verbesserbar / soft warnings (amber)
     --good --success                         ok / full / live (muted green)
     --info                                   neutral info (slate-blue)
-    --q0…--q4                                quality data, desaturated
+    --q0?--q4                                quality data, desaturated
     --ember                                  Wildcard heat (not severity)
     --ground --raised --sunken               stone panels
     --rule --rule-soft --edge                metal lines
-  School hues (--fire…--physical) are data tints, not UI scream.
+  School hues (--fire?--physical) are data tints, not UI scream.
   Spell/item icons: sprite / D.iic only (assemble), never UI chrome.
 */
 
@@ -153,7 +153,7 @@ input[type=search]{flex:1 1 190px;min-width:0}
 .filtmore>summary::after{content:" +";color:var(--ink-faint)}
 .filtmore[open]{flex:1 1 100%}
 .filtmore[open]>summary,.filtmore.active>summary{border-color:var(--accent);color:var(--accent)}
-.filtmore[open]>summary::after{content:" −"}
+.filtmore[open]>summary::after{content:" ?"}
 .filtmore-n{margin-left:6px;font-size:10px;font-weight:700;color:var(--accent);
   font-variant-numeric:tabular-nums}
 .filtmore-in{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;align-items:center}
@@ -235,7 +235,7 @@ footer p{max-width:74ch}
   border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
 .footnav a:hover{border-bottom-color:var(--accent)}
 
-/* Tutorial — forge-slate, one accent, dismissible. No cream/purple. */
+/* Tutorial ? forge-slate, one accent, dismissible. No cream/purple. */
 .muted{color:var(--muted,var(--ink-dim))}
 .tut,.tut-bar{
   position:relative;
@@ -461,7 +461,7 @@ a.vtab:hover{color:var(--ink)}
 }
 @media(min-width:900px) and (max-width:1399px){.card-wide{grid-column:span 2}}
 
-/* Auswertung: Befund zuerst, Rest sekundär */
+/* Auswertung: Befund zuerst, Rest sekund?r */
 .analyse{display:grid;gap:12px;align-items:start}
 .analyse-lead{border-left:3px solid var(--accent)}
 .framectl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -547,7 +547,7 @@ footer{padding:32px 0 60px;color:var(--ink-faint);font-size:13px;
 /* --- Import als aufklappbares Panel --- */
 details.panel>summary{cursor:pointer;list-style:none}
 details.panel>summary::-webkit-details-marker{display:none}
-details.panel>summary::after{content:"−";font-family:"JetBrains Mono",monospace;
+details.panel>summary::after{content:"?";font-family:"JetBrains Mono",monospace;
   color:var(--ink-faint);margin-left:8px}
 details.panel:not([open])>summary::after{content:"+"}
 details.panel:not([open])>summary{border-bottom:0}
@@ -1013,14 +1013,14 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 .chip.warnable.bad{border-color:var(--danger);background:var(--danger-soft)}
 .chip.warnable.bad b{color:var(--danger)}
 
-/* Spell icons: sprite via assemble (.icon{background-image:url(data:…)}).
-   Position + background-size ONLY from iconStyle() — never hardcode size here
-   (AGENTS.md Sprite trap — white/empty tiles). No BLP slot ::after overlays. */
+/* Spell icons: sprite via assemble (.icon{background-image:url(data:?)}).
+   Position + background-size ONLY from iconStyle() ? never hardcode size here
+   (AGENTS.md Sprite trap ? white/empty tiles). No BLP slot ::after overlays. */
 .icon{background-repeat:no-repeat;overflow:hidden;
   flex:0 0 auto;image-rendering:auto;position:relative;
   border:1px solid rgba(0,0,0,.45);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.25)}
-/* Size must match iconStyle(i, 32) — do not set background-size here. */
+/* Size must match iconStyle(i, 32) ? do not set background-size here. */
 .icon.scico{flex:0 0 32px;width:32px;height:32px}
 .icon::before,.icon::after{content:none;display:none;background:none}
 .icon.qf1{box-shadow:0 0 0 1px var(--q1), inset 0 0 0 1px rgba(0,0,0,.35)}
@@ -1078,6 +1078,14 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 .esschip.free{border-color:var(--good);color:var(--good);background:var(--good-soft)}
 .esschip.ok{border-color:var(--good);color:var(--good)}
 .esschip.soft{border-color:var(--rule);color:var(--ink-soft)}
+.esschip.tabchip{gap:4px}
+.lockico{display:inline-block;vertical-align:-3px;border-radius:2px}
+.lockico.csslock{position:relative;opacity:.85}
+.lockico.csslock::before{content:"";position:absolute;left:3px;top:6px;width:8px;height:6px;
+  border:2px solid var(--ink-soft);border-radius:1px;box-sizing:border-box}
+.lockico.csslock::after{content:"";position:absolute;left:4px;top:2px;width:6px;height:5px;
+  border:2px solid var(--ink-soft);border-top-left-radius:4px;border-top-right-radius:4px;
+  border-bottom:none;box-sizing:border-box}
 .esshint{margin:6px 0 0;font-size:11px;color:var(--ink-faint);line-height:1.4;
   font-family:inherit}
 
@@ -1092,7 +1100,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 .toast{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);
   box-shadow:0 2px 10px var(--edge)}
 
-/* Dichte: 1800px, kompakte Zeilen, klebrige Seite, höhere Liste. Farben bleiben. */
+/* Dichte: 1800px, kompakte Zeilen, klebrige Seite, h?here Liste. Farben bleiben. */
 :root{--page-max:1800px;--gap:12px;--sticky-top:88px;--jump-pad:calc(var(--sticky-top) + 16px)}
 @media(max-width:900px){:root{--sticky-top:132px}}
 .tbin{min-height:56px}
@@ -1307,18 +1315,54 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
 .slot{transition:background var(--hover-fade) var(--ease-out)}
 .slot:hover,.slot:focus-within{background:color-mix(in srgb,var(--sunken) 55%,transparent)}
 #hoverTip{
-  position:fixed;z-index:var(--hover-z);max-width:min(32ch,calc(100vw - 24px));
-  padding:7px 10px 8px 12px;background:var(--raised);color:var(--ink);
-  border:1px solid var(--metal);pointer-events:none;white-space:pre-line;
-  box-shadow:0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi);
+  position:fixed;z-index:var(--hover-z);max-width:min(300px,calc(100vw - 24px));
+  padding:10px 12px 11px;
+  background:color-mix(in srgb,var(--ground) 82%,var(--sunken));
+  color:var(--ink);
+  border:1px solid var(--metal);pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.45),0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi);
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;line-height:1.35;
-  opacity:0;visibility:hidden}
-.pill[data-tip],.chn-hd[data-tip]{cursor:help}
-.pill[data-tip]:focus-visible,.chn-hd[data-tip]:focus-visible{
+  white-space:pre-line;opacity:0;visibility:hidden}
+.pill[data-tip-html],.pill[data-tip],.chn-hd[data-tip-html],.chn-hd[data-tip]{cursor:help}
+.pill[data-tip-html]:focus-visible,.pill[data-tip]:focus-visible,
+.chn-hd[data-tip-html]:focus-visible,.chn-hd[data-tip]:focus-visible{
   outline:2px solid var(--accent);outline-offset:2px}
 #hoverTip::before{
   content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--gold);opacity:.7}
+  background:var(--gold);opacity:.55}
+#hoverTip.gtt{
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:13px;line-height:1.45;white-space:normal;padding:11px 13px 12px}
+#hoverTip.gtt .gtt-name{
+  font-family:"Source Serif 4",Georgia,serif;font-size:15px;font-weight:700;
+  line-height:1.25;color:var(--gold);margin:0 0 2px}
+#hoverTip.gtt .gtt-name.q0{color:var(--ink-soft)}
+#hoverTip.gtt .gtt-name.q1{color:var(--q1)}
+#hoverTip.gtt .gtt-name.q2{color:var(--q2)}
+#hoverTip.gtt .gtt-name.q3{color:var(--q3)}
+#hoverTip.gtt .gtt-name.q4{color:var(--q4)}
+#hoverTip.gtt .gtt-kind{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;
+  letter-spacing:.04em;color:var(--ink-faint);margin:0 0 5px}
+#hoverTip.gtt .gtt-cast{
+  display:flex;justify-content:flex-end;align-items:baseline;gap:10px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  color:var(--ink-soft);margin:0 0 2px}
+#hoverTip.gtt .gtt-cast-t{margin-right:auto;text-align:left}
+#hoverTip.gtt .gtt-range{text-align:right;white-space:nowrap}
+#hoverTip.gtt .gtt-cost{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  color:var(--ink-soft);line-height:1.4;margin:0 0 2px}
+#hoverTip.gtt .gtt-cost:empty{display:none}
+#hoverTip.gtt .gtt-body{
+  margin-top:7px;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+#hoverTip.gtt .gtt-body:empty{display:none}
+#hoverTip.gtt .gtt-chain{
+  margin-top:8px;padding-top:7px;border-top:1px solid var(--rule-soft);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;
+  color:var(--ink-faint);line-height:1.45}
+#hoverTip.gtt .gtt-chain p{margin:0 0 3px}
+#hoverTip.gtt .gtt-chain p:last-child{margin-bottom:0}
 #hoverTip.on{
   opacity:1;visibility:visible;
   transition:opacity var(--hover-fade) var(--ease-out)}
@@ -2394,6 +2438,72 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       kind === "TE" ? "Talent Essence" : kind);
     return '<span class="esschip invchip" title="' + esc(tip + " " + n) + '">' +
       ico + "<i>" + esc(kind) + "</i> " + n + "</span>";
+  }
+  // WoW CLASS_ID + Spec-Tab (1-basiert) — wie GetTabTEInvestment / CAClassButton.
+  var WOW_CLASS = {
+    1: "Warrior", 2: "Paladin", 3: "Hunter", 4: "Rogue", 5: "Priest",
+    6: "DeathKnight", 7: "Shaman", 8: "Mage", 9: "Warlock", 11: "Druid"
+  };
+  var WOW_SPEC = {
+    1: ["", "Arms", "Fury", "Protection"],
+    2: ["", "Holy", "Protection", "Retribution"],
+    3: ["", "BeastMastery", "Marksmanship", "Survival"],
+    4: ["", "Assassination", "Combat", "Subtlety"],
+    5: ["", "Discipline", "Holy", "Shadow"],
+    6: ["", "Blood", "Frost", "Unholy"],
+    7: ["", "Elemental", "Enhancement", "Restoration"],
+    8: ["", "Arcane", "Fire", "Frost"],
+    9: ["", "Affliction", "Demonology", "Destruction"],
+    11: ["", "Balance", "Feral", "Restoration"]
+  };
+  // Erster Talent-Eintrag je Klasse+Spec-Tab (spectags) — Icon aus Sprite.
+  var TAB_ICON = Object.create(null);
+  (function () {
+    for (var ti = 0; ti < CAT.length; ti++) {
+      if (CAT[ti][1] !== 1) continue;
+      var cls = CAT[ti][2], tab = TREE[ti];
+      if (!cls || cls === "Classless" || !tab) continue;
+      var tk = cls + "|" + tab;
+      if (TAB_ICON[tk] === undefined) TAB_ICON[tk] = ti;
+    }
+  })();
+  function tabIconIdx(clsId, specId) {
+    var cls = WOW_CLASS[clsId];
+    var tab = WOW_SPEC[clsId] && WOW_SPEC[clsId][specId];
+    if (!cls || !tab) return undefined;
+    var idx = TAB_ICON[cls + "|" + tab];
+    return idx !== undefined ? idx : undefined;
+  }
+  function tabInvestLabel(clsId, specId) {
+    var cls = WOW_CLASS[clsId] || ("Klasse " + clsId);
+    var tab = (WOW_SPEC[clsId] && WOW_SPEC[clsId][specId]) ||
+      ("Tab " + specId);
+    return cls + " · " + tab;
+  }
+  function investTabChip(t) {
+    var idx = tabIconIdx(t.cls, t.spec);
+    var lab = tabInvestLabel(t.cls, t.spec);
+    var ico = idx !== undefined
+      ? '<span class="icon essico" role="presentation" style="width:14px;height:14px;flex:0 0 14px;' +
+        iconStyle(idx, 14) + '"></span>'
+      : "";
+    return '<span class="esschip invchip tabchip" title="Talent Essence ' +
+      esc(lab) + '">' + ico + esc(lab) + " <i>TE</i> " + t.n + "</span>";
+  }
+  // Pick Lock — einziger Lock-Spell im Sprite (gemessen, idx 410).
+  var LOCK_ICON_IDX = 410;
+  function lockIconHtml(size, title) {
+    size = size || 14;
+    var tip = title || "Gesperrt";
+    if (LOCK_ICON_IDX !== undefined && SPR.idx[LOCK_ICON_IDX] >= 0) {
+      return '<span class="icon lockico essico" role="img" aria-label="' +
+        esc(tip) + '" title="' + esc(tip) +
+        '" style="width:' + size + "px;height:" + size + "px;flex:0 0 " +
+        size + "px;" + iconStyle(LOCK_ICON_IDX, size) + '"></span>';
+    }
+    return '<span class="lockico csslock" role="img" aria-label="' + esc(tip) +
+      '" title="' + esc(tip) + '" style="width:' + size + "px;height:" +
+      size + "px;flex:0 0 " + size + 'px;"></span>';
   }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
@@ -4716,22 +4826,22 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
         inv.push(essInvestChip("TE", c.invest.TE, "Talent Essence ausgegeben"));
       }
       if (c.invest.CP !== undefined) {
-        inv.push('<span class="esschip invchip" title="Class Points">' +
+        // Kein gemessenes CP-Icon (Constants/UI: nur AE/TE, kein classicon-CP).
+        inv.push('<span class="esschip invchip" title="Class Points — kein Client-Icon gemessen">' +
           "<i>CP</i> " + c.invest.CP + "</span>");
+      }
+      if (c.investTabs && c.investTabs.length) {
+        c.investTabs.forEach(function (t) { inv.push(investTabChip(t)); });
       }
       if (inv.length) {
         meta.push('<span class="invgroup">Investition ' +
           inv.join(" ") + "</span>");
       }
     }
-    if (c.investTabs && c.investTabs.length) {
-      meta.push("Talent-Tabs " + c.investTabs.slice(0, 6).map(function (t) {
-        return t.cls + "/" + t.spec + ":" + t.n;
-      }).join(", ") + (c.investTabs.length > 6 ? "…" : ""));
-    }
     if (c.locked && c.locked.length) {
-      meta.push(c.locked.length + " Sperre" +
-        (c.locked.length === 1 ? "" : "n"));
+      meta.push('<span class="invgroup">' + lockIconHtml(14, "Gesperrte Einträge") +
+        " " + c.locked.length + " Sperre" +
+        (c.locked.length === 1 ? "" : "n") + "</span>");
     }
     if (c.mast && c.mast.length) {
       meta.push(c.mast.length + " Mastery");
@@ -4785,17 +4895,7 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
           }).join(", ") + "</div>");
       }
       if (c.locked && c.locked.length) {
-        var lockBits = c.locked.map(function (eid) {
-          return esc(nameByEid(eid));
-        });
-        if (lockBits.length > 8) {
-          o.push('<div class="wepline"><b>Sperren</b> ' + lockBits.length +
-            "</div>" + wrapDetails(lockBits.join(", "),
-            "Sperren (" + lockBits.length + ")"));
-        } else {
-          o.push('<div class="wepline"><b>Sperren</b> ' +
-            lockBits.join(", ") + "</div>");
-        }
+        o.push(wcIdGridHtml(c.locked, "Sperren", "eid"));
       }
       o.push("</div>");
     }
@@ -8384,30 +8484,21 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
     next: "dein nächster Treffer", pulse: "Impuls"
   };
 
-  function chainTooltipText(i) {
+  var GTT_SCHOOL_VAR = {
+    Fire: "--fire", Frost: "--frost", Shadow: "--shadow", Nature: "--nature",
+    Holy: "--holy", Arcane: "--arcane", Physical: "--physical"
+  };
+
+  function gttCatalogBody(i) {
     var raw = CAT[i] && CAT[i][5];
     if (!raw) return "";
-    var tip = String(raw).replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
-    if (!tip) return "";
-    if (tip.length <= 120) return tip;
-    var parts = tip.match(/[^.!?]+[.!?]+/g);
-    if (!parts || !parts.length) {
-      return tip.slice(0, 180) + (tip.length > 180 ? "…" : "");
-    }
-    var lines = [], len = 0, pi;
-    for (pi = 0; pi < parts.length && lines.length < 4; pi++) {
-      var p = parts[pi].trim();
-      if (!p) continue;
-      if (len + p.length > 300 && lines.length >= 2) break;
-      lines.push(p);
-      len += p.length;
-    }
-    if (!lines.length) return tip.slice(0, 180) + "…";
-    if (pi < parts.length) {
-      var last = lines[lines.length - 1];
-      if (last.charAt(last.length - 1) !== "…") lines[lines.length - 1] = last + "…";
-    }
-    return lines.join("\n");
+    return esc(String(raw).replace(/\r\n/g, "\n").trim());
+  }
+
+  function gttSchoolStyle(i) {
+    var s = SC[i];
+    if (!s) return "";
+    return GTT_SCHOOL_VAR[s.sch] || GTT_SCHOOL_VAR[s.fsch] || "";
   }
 
   function methTriggerLine(i) {
@@ -8573,17 +8664,49 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
   function chainNodeTip(i, have) {
     if (i === null || i === undefined || !CAT[i]) return "";
     var r = CAT[i];
-    var lines = [r[0] + " · " + (r[1] ? "Talent" : "Fähigkeit")];
-    var tip = chainTooltipText(i);
-    if (tip) lines.push(tip);
-    var does = chainDoesLines(i);
-    if (does.length) lines.push(does.slice(0, 5).join(" · "));
+    var m = MC[i] || {};
+    var parts = [];
+    var schVar = gttSchoolStyle(i);
+    var nameStyle = schVar
+      ? ' style="color:color-mix(in srgb,var(' + schVar + ') 72%,var(--gold))"'
+      : "";
+    parts.push('<div class="gtt-name q' + r[3] + '"' + nameStyle + ">" +
+      esc(r[0]) + "</div>");
+    parts.push('<div class="gtt-kind">' + (r[1] ? "Talent" : "Fähigkeit") +
+      " · Stufe " + r[4] + "</div>");
+    var castT = m.cast
+      ? esc(fmt(m.cast) + " Sek. Wirken")
+      : (m.cd || m.cost || m.range ? "Sofort" : "");
+    var rangeT = m.range ? esc(String(m.range) + " m") : "";
+    if (castT || rangeT) {
+      parts.push('<div class="gtt-cast">' +
+        (castT ? '<span class="gtt-cast-t">' + castT + "</span>" : "") +
+        (rangeT ? '<span class="gtt-range">' + rangeT + "</span>" : "") +
+        "</div>");
+    }
+    var costLines = [];
+    if (m.cost && m.res) costLines.push(esc(fmt(m.cost) + " " + m.res));
+    if (m.cd) costLines.push("Abklingzeit " + esc(secs(m.cd)));
+    if (m.ch) {
+      costLines.push(esc(String(m.ch)) + (m.ch === 1 ? " Ladung" : " Ladungen"));
+    }
+    if (m.chr) costLines.push("Aufladung " + esc(secs(m.chr)));
+    if (costLines.length) {
+      parts.push('<div class="gtt-cost">' +
+        costLines.map(function (l) { return "<div>" + l + "</div>"; }).join("") +
+        "</div>");
+    }
+    var body = gttCatalogBody(i);
+    if (body) parts.push('<div class="gtt-body">' + body + "</div>");
     var links = chainLinkLines(i, have || null);
     if (links.length) {
-      lines.push("— Verkettung —");
-      links.slice(0, 5).forEach(function (l) { lines.push(l); });
+      parts.push('<div class="gtt-chain">' +
+        links.slice(0, 6).map(function (l) {
+          return "<p>" + esc(l) + "</p>";
+        }).join("") +
+        "</div>");
     }
-    return lines.slice(0, 10).join("\n");
+    return parts.join("");
   }
 
   function pill(i, live, takeable, have) {
@@ -8592,7 +8715,7 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       (takeable ? " take" : "") + '"' +
       (takeable ? ' data-add="' + i + '" role="button"' : "") +
       ' tabindex="0"' +
-      (tip ? ' data-tip="' + esc(tip) + '"' : "") +
+      (tip ? ' data-tip-html="' + esc(tip) + '"' : "") +
       ' style="border-left:3px solid var(--q' + CAT[i][3] + ')">' +
       (live ? "✓ " : "") + esc(CAT[i][0]) + "</span>";
   }
@@ -8816,7 +8939,7 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       var cardTip = chainNodeTip(i, have);
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
         '<div class="chn-hd" tabindex="0"' +
-        (cardTip ? ' data-tip="' + esc(cardTip) + '"' : "") +
+        (cardTip ? ' data-tip-html="' + esc(cardTip) + '"' : "") +
         '><span class="icon" style="width:22px;height:22px;' +
         'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
         '<span class="nm q' + CAT[i][3] + '">' +
@@ -10015,18 +10138,24 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       catch (e) { return false; }
     }
     function host(t) {
-      return t && t.closest ? t.closest("[data-tip]") : null;
+      return t && t.closest
+        ? t.closest("[data-tip-html], [data-tip]")
+        : null;
     }
-    function textOf(el) {
-      var raw = String(el.getAttribute("data-tip") || "").replace(/[ \t]+/g, " ").trim();
-      if (!raw) return "";
+    function tipOf(el) {
+      var html = el.getAttribute("data-tip-html");
+      if (html) return { mode: "html", content: html };
+      var raw = String(el.getAttribute("data-tip") || "")
+        .replace(/[ \t]+/g, " ").trim();
+      if (!raw) return null;
       var vis = String(el.innerText || "").replace(/\s+/g, " ").trim();
-      return raw.replace(/\s+/g, " ").trim() === vis ? "" : raw;
+      if (raw.replace(/\s+/g, " ").trim() === vis) return null;
+      return { mode: "text", content: raw };
     }
     function hide(force) {
       if (timer) { clearTimeout(timer); timer = null; }
       if (!force && pinned) return;
-      box.classList.remove("on");
+      box.classList.remove("on", "gtt");
       box.hidden = true;
       box.textContent = "";
       if (force && pinned) {
@@ -10046,24 +10175,30 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       box.style.left = Math.round(x) + "px";
       box.style.top = Math.round(y) + "px";
     }
-    function show(el, text) {
+    function show(el, tip) {
       cur = el;
-      box.textContent = text;
+      if (tip.mode === "html") {
+        box.innerHTML = tip.content;
+        box.classList.add("gtt");
+      } else {
+        box.textContent = tip.content;
+        box.classList.remove("gtt");
+      }
       box.hidden = false;
       box.classList.add("on");
       place(el);
     }
     function arm(el) {
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       if (cur === el && box.classList.contains("on")) { place(el); return; }
       hide(false);
       cur = el;
       var wait = delayMs();
-      if (!wait) { show(el, text); return; }
+      if (!wait) { show(el, tip); return; }
       timer = setTimeout(function () {
         timer = null;
-        if (cur === el) show(el, textOf(el) || text);
+        if (cur === el) show(el, tipOf(el) || tip);
       }, wait);
     }
     document.addEventListener("pointerover", function (e) {
@@ -10080,10 +10215,10 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
     document.addEventListener("focusin", function (e) {
       var el = host(e.target);
       if (!el) return;
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       hide(true);
-      show(el, text);
+      show(el, tip);
     });
     document.addEventListener("focusout", function (e) {
       var el = host(e.target);
@@ -10096,13 +10231,13 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       var el = host(e.target);
       if (!el) { hide(true); return; }
       if (el.hasAttribute("data-jump") || el.hasAttribute("data-add")) return;
-      var text = textOf(el);
-      if (!text) return;
+      var tip = tipOf(el);
+      if (!tip) return;
       if (pinned === el) { hide(true); return; }
       if (pinned) pinned.classList.remove("pin");
       pinned = el;
       el.classList.add("pin");
-      show(el, text);
+      show(el, tip);
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") hide(true);
