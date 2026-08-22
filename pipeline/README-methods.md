@@ -55,6 +55,16 @@ Treffer nur bei Deal-/Weapon-/Heal-Formulierungen. Treffer ohne `w` / `flat` /
 `ap` / `sp` / `heal` / `tick` landen hier — inkl. Kurzgrund
 (`schadenstext_ohne_zahl`, `nur_multiplikator_kein_basisschaden`, …).
 
+Parser-Nachzug in `scaling.py` (ohne SP/AP zu erfinden): bare `weapon damage`
+(=100%), `weapon damage plus N`, `N to M additional`, armor-piercing Flats,
+CP-Finisher-Zahlen, `N plus M over T` (nur Sofortanteil), Heil-Zusatzformen.
+`sync_tooltips.py` gegen AscensionDBC: Katalog bereits aktuell (0 Diffs);
+512 Eintraege bleiben wegen SP/AP/PL-`$`-Formeln bewusst unaufgeloest.
+
+**Assemble:** bei parallelen `src/`-Aenderungen anderer Lanes nur
+`data/scaling.json` + `data/methods.json` committen; `pipeline/assemble.py`
+spaeter von der src-Lane oder nach Merge — sonst Index-Konflikt.
+
 ## Zusatz: Ressourcenkarte (`resmap`)
 
 DBC-Kosten je Pool (`Wut`, `Energie`, `Mana`, …). Mehrere Pools im selben

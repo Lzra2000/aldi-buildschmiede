@@ -9,9 +9,12 @@ auch NICHT geraten; die Seite sagt dann ehrlich, dass die Zahl fehlt.
 Ausgabe scaling.json: pro Katalogindex ein Objekt, leere Felder weggelassen.
 
   w      Prozent Waffenschaden            150  -> "150% weapon damage"
+         auch bare "weapon damage" / "weapon damage plus N" (= 100%)
   wh     welche Waffe                     mh | oh | ranged | any
   sch    Schadensschule des Angriffs      "Fire"
   flat   [min, max] Grundschaden
+         inkl. "N to M additional", "armor-piercing", CP-Finisher,
+         "N plus M over T" (nur Sofortanteil N)
   fsch   Schule des Grundschadens
   dot    Dauer in Sekunden
   tick   Schaden pro Sekunde (falls genannt)
@@ -36,18 +39,21 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(os.path.dirname(HERE), "data")
 
 # Schulen aus Katalog-Tooltips, inkl. Ascension-Mischformen (*strike, *storm).
+# Laengere Namen zuerst (Shadowstrike vor Shadow), sonst greift der Prefix.
 # "Pysical" ist ein Tippfehler im Katalog und wird auf Physical normalisiert.
 SCHOOL = (
-    r"(?:Fire|Frost|Nature|Shadow|Arcane|Holy|Physical|Pysical|Bleed|Radiant|"
-    r"Void|Spellfire|Frostfire|Shadowflame|Shadowfrost|Astral|Storm|Lightning|"
-    r"Chaos|Spellstorm|Firestorm|Plague|Divine|Elemental|Twilight|Chromatic|"
+    r"(?:Spellfire|Frostfire|Shadowflame|Shadowfrost|Spellstorm|Firestorm|"
     r"Holyfrost|Holyfire|Holyflame|Spellshadow|"
     r"Firestrike|Froststrike|Stormstrike|Shadowstrike|Holystrike|"
-    r"Spellstrike|Arcanestrike)"
+    r"Spellstrike|Arcanestrike|"
+    r"Fire|Frost|Nature|Shadow|Arcane|Holy|Physical|Pysical|Bleed|Radiant|"
+    r"Void|Astral|Storm|Lightning|Chaos|Plague|Divine|Elemental|Twilight|"
+    r"Chromatic)"
 )
 
 # "75% of your normal weapon damage", "30% Nature weapon damage",
 # "100% armor-piercing weapon damage", "150% weapon damage as Fire"
+# "damag" = bekannter Katalog-Tippfehler (Whirlwind).
 RX_WEAPON = re.compile(
     r"(\d+(?:\.\d+)?)\s*%\s*"
     r"(?:of\s+(?:your\s+)?)?"
@@ -59,32 +65,76 @@ RX_WEAPON = re.compile(
     r"\s*"
     r"weapon'?s?\s+(?:average\s+)?"
     r"(?:(" + SCHOOL + r")\s+)?"
-    r"damage"
+    r"damag(?:e)?"
+    r"(?:\s+as\s+(" + SCHOOL + r")(?:\s+damage)?)?",
+    re.I)
+
+# Bare "weapon damage" / "weapon damage plus N [as School]" ohne fuehrendes %.
+# Im Tooltip = 100% Waffenanteil (WoW-Konvention), kein erfundener SP/AP.
+RX_WEAPON_BARE = re.compile(
+    r"(?:dealing|deals|deal|causing|causes|does)\s+"
+    r"(?:your\s+)?"
+    r"(main[-\s]?hand|off[-\s]?hand|ranged|melee)?"
+    r"\s*"
+    r"(" + SCHOOL + r")?"
+    r"\s*"
+    r"weapon'?s?\s+damag(?:e)?"
+    r"(?:\s+plus\s+(\d[\d,]*(?:\.\d+)?))?"
     r"(?:\s+as\s+(" + SCHOOL + r")(?:\s+damage)?)?",
     re.I)
 
 RX_FLAT = re.compile(
-    r"(\d[\d,]*(?:\.\d+)?)\s+to\s+(\d[\d,]*(?:\.\d+)?)\s+(" + SCHOOL + r")?\s*damage",
+    r"(\d[\d,]*(?:\.\d+)?)\s+to\s+(\d[\d,]*(?:\.\d+)?)\s+"
+    r"(?:additional\s+)?"
+    r"(?:armor[-\s]?piercing\s+)?"
+    r"(" + SCHOOL + r")?\s*damage",
     re.I)
 # Finishing moves / ältere Texte: "28-32 damage", "94 Spellstrike damage over"
 RX_FLAT_HYPHEN = re.compile(
-    r"(\d[\d,]*(?:\.\d+)?)\s*-\s*(\d[\d,]*(?:\.\d+)?)\s+(" + SCHOOL + r")?\s*damage",
+    r"(\d[\d,]*(?:\.\d+)?)\s*-\s*(\d[\d,]*(?:\.\d+)?)\s+"
+    r"(?:additional\s+)?"
+    r"(?:armor[-\s]?piercing\s+)?"
+    r"(" + SCHOOL + r")?\s*damage",
     re.I)
 RX_FLAT1 = re.compile(
     r"(?:causing|causes|dealing|deals|deal|inflict(?:s|ing)?|for)\s+"
-    r"(\d[\d,]*(?:\.\d+)?)\s+(?:(" + SCHOOL + r")\s+)?damage",
+    r"(\d[\d,]*(?:\.\d+)?)\s+"
+    r"(?:(?:additional|armor[-\s]?piercing)\s+)*"
+    r"(?:(" + SCHOOL + r")\s+)?damage",
     re.I)
 # "1 point: 121 damage over 12 sec" / "94 Spellstrike damage over 12 sec"
 RX_FLAT_OVER = re.compile(
-    r"(\d[\d,]*(?:\.\d+)?)\s+(?:(" + SCHOOL + r")\s+)?damage\s+over\s+\d+",
+    r"(\d[\d,]*(?:\.\d+)?)\s+(?:additional\s+)?(?:(" + SCHOOL + r")\s+)?damage\s+over\s+\d+",
     re.I)
 # "plus 83 Firestrike damage" / "24 additional Holy damage"
 RX_FLAT_PLUS = re.compile(
     r"(?:plus|additional)\s+(\d[\d,]*(?:\.\d+)?)\s+(?:(" + SCHOOL + r")\s+)?damage",
     re.I)
+# "405 plus 239 over 6 seconds Shadow damage" — nur der Sofortanteil als flat
+RX_FLAT_PLUS_OVER = re.compile(
+    r"(\d[\d,]*(?:\.\d+)?)\s+plus\s+(\d[\d,]*(?:\.\d+)?)\s+over\s+(\d+)\s*"
+    r"(?:sec(?:onds?)?)?\s*(" + SCHOOL + r")?\s*damage",
+    re.I)
+# "24 additional Holy damage" / "granting ... 24 additional Holy damage"
+RX_FLAT_ADDITIONAL = re.compile(
+    r"(\d[\d,]*(?:\.\d+)?)\s+additional\s+(?:(" + SCHOOL + r")\s+)?damage",
+    re.I)
+# "increases melee damage by 18" (ohne %) — Flat-Bonus, kein Koeffizient
+RX_FLAT_MELEE_BONUS = re.compile(
+    r"increases?\s+melee\s+damage\s+by\s+(\d[\d,]*(?:\.\d+)?)(?!\s*%)",
+    re.I)
+# Finishing moves: "5 points: 437 damage" — hoechster genannter CP-Wert
+RX_CP_FLAT = re.compile(
+    r"(\d)\s+points?\s*:\s*(\d[\d,]*(?:\.\d+)?)\s+damage",
+    re.I)
 RX_HEAL = re.compile(
     r"heal(?:s|ing)?\s+[^.]{0,80}?for\s+(\d[\d,]*(?:\.\d+)?)"
     r"(?:\s+to\s+(\d[\d,]*(?:\.\d+)?))?",
+    re.I)
+# "healing an additional 64" / "triggers a 261 heal"
+RX_HEAL_ADD = re.compile(
+    r"heal(?:s|ing)?\s+(?:an?\s+)?additional\s+(\d[\d,]*(?:\.\d+)?)"
+    r"|(\d[\d,]*(?:\.\d+)?)\s+heal(?:s|ing)?\b",
     re.I)
 RX_DOT = re.compile(r"over\s+(\d+)\s*sec", re.I)
 RX_TICK = re.compile(
@@ -207,47 +257,101 @@ def extract(desc):
         sch = school_name(m.group(3) or m.group(4) or m.group(5))
         if sch:
             o["sch"] = sch
+    else:
+        m = RX_WEAPON_BARE.search(d)
+        if m:
+            o["w"] = 100.0
+            hand = (m.group(1) or "any").lower().replace(" ", "").replace("-", "")
+            o["wh"] = {"mainhand": "mh", "offhand": "oh", "ranged": "ranged",
+                       "melee": "any", "any": "any"}.get(hand, "any")
+            sch = school_name(m.group(2) or m.group(4))
+            if sch:
+                o["sch"] = sch
+            if m.group(3):
+                v = num(m.group(3))
+                o["flat"] = [v, v]
+                fsch = school_name(m.group(4))
+                if fsch:
+                    o["fsch"] = fsch
 
     m = RX_FLAT.search(d)
     if m:
-        o["flat"] = [num(m.group(1)), num(m.group(2))]
-        sch = school_name(m.group(3))
-        if sch:
-            o["fsch"] = sch
-    else:
-        m = RX_FLAT_HYPHEN.search(d)
-        if m:
+        if "flat" not in o:
             o["flat"] = [num(m.group(1)), num(m.group(2))]
             sch = school_name(m.group(3))
             if sch:
                 o["fsch"] = sch
+    else:
+        m = RX_FLAT_HYPHEN.search(d)
+        if m:
+            if "flat" not in o:
+                o["flat"] = [num(m.group(1)), num(m.group(2))]
+                sch = school_name(m.group(3))
+                if sch:
+                    o["fsch"] = sch
         else:
             m = RX_FLAT1.search(d)
             if m:
-                o["flat"] = [num(m.group(1)), num(m.group(1))]
-                sch = school_name(m.group(2))
-                if sch:
-                    o["fsch"] = sch
-            else:
-                m = RX_FLAT_OVER.search(d)
-                if m:
+                if "flat" not in o:
                     o["flat"] = [num(m.group(1)), num(m.group(1))]
                     sch = school_name(m.group(2))
                     if sch:
                         o["fsch"] = sch
-                else:
-                    m = RX_FLAT_PLUS.search(d)
-                    if m:
+            else:
+                m = RX_FLAT_OVER.search(d)
+                if m:
+                    if "flat" not in o:
                         o["flat"] = [num(m.group(1)), num(m.group(1))]
                         sch = school_name(m.group(2))
                         if sch:
                             o["fsch"] = sch
+                else:
+                    m = RX_FLAT_PLUS_OVER.search(d)
+                    if m:
+                        if "flat" not in o:
+                            # Sofortanteil; DoT-Zusatz bleibt ungeteilt (kein Tick erfunden)
+                            o["flat"] = [num(m.group(1)), num(m.group(1))]
+                            sch = school_name(m.group(4))
+                            if sch:
+                                o["fsch"] = sch
+                    else:
+                        m = RX_FLAT_PLUS.search(d)
+                        if m and "flat" not in o:
+                            o["flat"] = [num(m.group(1)), num(m.group(1))]
+                            sch = school_name(m.group(2))
+                            if sch:
+                                o["fsch"] = sch
+
+    if "flat" not in o:
+        m = RX_FLAT_ADDITIONAL.search(d)
+        if m:
+            o["flat"] = [num(m.group(1)), num(m.group(1))]
+            sch = school_name(m.group(2))
+            if sch:
+                o["fsch"] = sch
+        else:
+            m = RX_FLAT_MELEE_BONUS.search(d)
+            if m:
+                v = num(m.group(1))
+                o["flat"] = [v, v]
+
+    if "flat" not in o:
+        cps = RX_CP_FLAT.findall(d)
+        if cps:
+            best = max(cps, key=lambda x: int(x[0]))
+            v = num(best[1])
+            o["flat"] = [v, v]
 
     m = RX_HEAL.search(d)
     if m:
         lo = num(m.group(1))
         hi = num(m.group(2)) if m.group(2) else lo
         o["heal"] = [lo, hi]
+    elif "heal" not in o:
+        m = RX_HEAL_ADD.search(d)
+        if m:
+            v = num(m.group(1) or m.group(2))
+            o["heal"] = [v, v]
 
     m = RX_DOT.search(d)
     if m:

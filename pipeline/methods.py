@@ -40,7 +40,8 @@ RX_DEALS = re.compile(
     re.I,
 )
 RX_NOT_DEALS = re.compile(
-    r"damage\s+taken|reduc(?:es?|ing)\s+.{0,40}?damage|absorb|immune",
+    r"damage\s+taken|reduc(?:es?|ing)\s+.{0,40}?damage|absorb|immune|"
+    r"damage\s+caused|may\s+interrupt",
     re.I,
 )
 
