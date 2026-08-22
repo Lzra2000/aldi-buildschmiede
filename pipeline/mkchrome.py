@@ -111,37 +111,56 @@ def write_uichrome():
     print("geschrieben:", dest, "|", round(total / 1024.0, 1), "KB b64")
 
 
+# Soft-Cap: WebP pro Eintrag ~0.8 KB — unter assemble-Limit 512 KB bleiben.
+ITEMICONS_WEBP_SOFT_MAX_KB = 380
+
+
 def enrich_itemicons():
+    """Ergaenzt fehlende 32px-WebP-urls; behaelt cls/sub/inv; stoppt vor Soft-Cap."""
     src = os.path.join(DATA, "itemicons.json")
     raw = json.load(io.open(src, encoding="utf-8"))
-    flat = {}
-    for k, v in raw.items():
-        if isinstance(v, str):
-            flat[k] = v
-        elif isinstance(v, dict):
-            flat[k] = v.get("i") or v.get("icon") or v.get("name") or ""
     out = {}
-    ok = miss = 0
-    for iid, name in flat.items():
+    ok = miss = skipped = 0
+    for iid in sorted(raw.keys(), key=lambda x: int(x) if str(x).isdigit() else 0):
+        v = raw[iid]
+        if isinstance(v, str):
+            entry = {"i": v}
+        elif isinstance(v, dict):
+            entry = dict(v)
+            if not entry.get("i"):
+                entry["i"] = entry.get("icon") or entry.get("name") or ""
+        else:
+            continue
+        name = entry.get("i") or ""
         if not name:
+            continue
+        if entry.get("url", "").startswith("data:image/"):
+            out[iid] = entry
+            ok += 1
+            continue
+        # Budget: bestehende Datei + bisheriger out
+        provisional = json.dumps(out, ensure_ascii=False, separators=(",", ":"))
+        if len(provisional.encode("utf-8")) / 1024.0 > ITEMICONS_WEBP_SOFT_MAX_KB:
+            out[iid] = entry  # Name/Meta ohne url
+            skipped += 1
             continue
         path = find_icon_blp(name)
         if not path:
-            out[iid] = {"i": name}
+            out[iid] = entry
             miss += 1
             continue
         try:
             b64 = to_webp_b64(path, size=32, quality=78)
+            entry["url"] = "data:image/webp;base64," + b64
+            ok += 1
         except Exception:
-            out[iid] = {"i": name}
             miss += 1
-            continue
-        out[iid] = {"i": name, "url": "data:image/webp;base64," + b64}
-        ok += 1
+        out[iid] = entry
     io.open(src, "w", encoding="utf-8").write(
-        json.dumps(out, ensure_ascii=False, separators=(",", ":"))
+        json.dumps(out, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     )
-    print("itemicons:", ok, "mit url,", miss, "ohne |",
+    print("itemicons:", ok, "mit url,", miss, "ohne BLP,", skipped,
+          "ohne url (Budget) |",
           round(os.path.getsize(src) / 1024.0, 1), "KB")
 
 
