@@ -88,7 +88,7 @@
       "</span>";
   }
 
-  // Facetten-Gewichte wie pipeline/_method_spelltags.py (Levelrun 10–59).
+  // Facetten-Gewichte wie pipeline/_method_spelltags.py (Level 10–60).
   var STAG_WEIGHT = {
     mobility: 12, interrupt: 14, hard_cc: 8, soft_cc: 10,
     defensive: 9, direct_heal: 7, hot: 4, absorb: 5,
@@ -584,18 +584,46 @@
 
   var forcedPath = null;
 
+  // Magieschule aus scaling.json — Physical zählt nicht als Duality-Hybrid.
+  function isMagicSchool(name) {
+    if (!name) return false;
+    var n = String(name).toLowerCase();
+    return n !== "physical" && n !== "phys";
+  }
+
+  // Path-Flags: Tag-Bits plus scaling (Waffenschaden als Element).
+  // „65% Shadowstrike weapon damage“ ist oft nur WEAPON getaggt — ohne sch/fsch
+  // würde Duality unterzählen und Intelligence fälschlich gewinnen.
+  function pathFlags(i) {
+    var t = TAG[i] || 0;
+    var sc = SC[i] || {};
+    var school = sc.sch || sc.fsch || "";
+    var isW = !!(t & T_WEAPON) || !!sc.w;
+    var isM = !!(t & T_MAGIC);
+    if (!isM && sc.w && isMagicSchool(school)) isM = true;
+    if (!isM && !sc.w && isMagicSchool(sc.fsch || sc.sch)) isM = true;
+    return {
+      w: isW,
+      m: isM,
+      wm: isW && isM,
+      h: !!(t & T_HEAL),
+      phys: !!(t & T_PHYS),
+      crit: !!(t & T_CRIT),
+      arpen: !!(t & T_ARPEN)
+    };
+  }
+
   function profile(ids) {
     var p = { w: 0, m: 0, h: 0, wm: 0, crit: 0, arpen: 0, phys: 0, n: ids.length };
     ids.forEach(function (i) {
-      var t = TAG[i] || 0;
-      var isW = !!(t & T_WEAPON), isM = !!(t & T_MAGIC);
-      if (isW) p.w++;
-      if (isM) p.m++;
-      if (isW && isM) p.wm++;
-      if (t & T_HEAL) p.h++;
-      if (t & T_PHYS) p.phys++;
-      if (t & T_CRIT) p.crit++;
-      if (t & T_ARPEN) p.arpen++;
+      var f = pathFlags(i);
+      if (f.w) p.w++;
+      if (f.m) p.m++;
+      if (f.wm) p.wm++;
+      if (f.h) p.h++;
+      if (f.phys) p.phys++;
+      if (f.crit) p.crit++;
+      if (f.arpen) p.arpen++;
     });
     p.pw = p.w - p.wm;
     p.pm = p.m - p.wm;
@@ -708,11 +736,11 @@
     var out = [], shown = 0, MAX = 6;
     var wm = [], pm = [], pw = [], hl = [];
     ids.forEach(function (i) {
-      var t = TAG[i] || 0;
-      if ((t & T_WEAPON) && (t & T_MAGIC)) wm.push(i);
-      else if (t & T_MAGIC) pm.push(i);
-      else if (t & T_WEAPON) pw.push(i);
-      if (t & T_HEAL) hl.push(i);
+      var f = pathFlags(i);
+      if (f.wm) wm.push(i);
+      else if (f.m) pm.push(i);
+      else if (f.w) pw.push(i);
+      if (f.h) hl.push(i);
     });
     function nm(list, k) {
       return list.slice(0, k).map(function (i) { return "<b>" + esc(CAT[i][0]) + "</b>"; })
@@ -875,9 +903,32 @@
   }
 
   // Season10-Stil: entryId vor spellId vor Name — loest Vengeance & Co.
+  // Live-Export-IDs koennen vom Katalog abweichen: eid/sid nur akzeptieren,
+  // wenn der Name passt (exakt oder Client-Kurzform „Presence“ ⊂ „Blood Presence“).
+  // Sonst wuerde z. B. eine fremde entryId still den falschen Katalogeintrag waehlen.
+  function namesCompatible(exportName, catalogName) {
+    var a = String(exportName || "").toLowerCase().trim();
+    var b = String(catalogName || "").toLowerCase().trim();
+    if (!a) return true;
+    if (!b) return false;
+    if (a === b) return true;
+    // Wortgrenze: „Presence“ ↔ „Blood Presence“, nicht „Aura“ ↔ beliebige Aura.
+    if (a.length >= 4 && (b.length > a.length ? b.slice(-(a.length + 1)) === " " + a
+                                              : a.slice(-(b.length + 1)) === " " + b)) {
+      return true;
+    }
+    return false;
+  }
+
   function resolveTok(tok) {
-    if (tok.eid && BYEID[tok.eid] !== undefined) return { i: BYEID[tok.eid], how: "eid" };
-    if (tok.id && BYSID[tok.id] !== undefined) return { i: BYSID[tok.id], how: "sid" };
+    if (tok.eid && BYEID[tok.eid] !== undefined) {
+      var ie = BYEID[tok.eid];
+      if (namesCompatible(tok.n, CAT[ie][0])) return { i: ie, how: "eid" };
+    }
+    if (tok.id && BYSID[tok.id] !== undefined) {
+      var isid = BYSID[tok.id];
+      if (namesCompatible(tok.n, CAT[isid][0])) return { i: isid, how: "sid" };
+    }
     var i = BYNAME[String(tok.n || "").toLowerCase().trim()];
     if (i !== undefined) return { i: i, how: "name" };
     return null;
@@ -1617,7 +1668,7 @@
     if (!db || !db.b || !level) return null;
     var key = String(level);
     if (db.b[key]) return db.b[key];
-    // Nächstliegendes Band 10–59, sonst fehlt
+    // Nächstliegendes Band 10–60, sonst fehlt
     var best = null, bestDist = 999;
     Object.keys(db.b).forEach(function (k) {
       var lv = +k, d = Math.abs(lv - level);
@@ -1666,7 +1717,7 @@
           formatDmgPair(band) + " (ohne AP/SP)");
       } else if (db.dmg) {
         bits.push("DBC-Basis " + formatDmgPair(db.dmg) +
-          " (Band 10–59 fehlt)");
+          " (Band 10–60 fehlt)");
       } else {
         bits.push("DBC-Schaden fehlt");
       }
@@ -1688,13 +1739,13 @@
     return { bare: bare, scaled: scaled };
   }
 
-  // ---------- Levelrun-Bänder (D.ilb aus ItemStat.dbc) ----------
+  // ---------- Stufenbänder 10–60 (D.ilb aus ItemStat.dbc) ----------
   // Mid-Schaden = Import (min+max)/2 bzw. DPS×Tempo. Keine Spell-Koeffizienten.
   function ilvlBandAt(level) {
     if (!ILB || !ILB.levels || !level) return null;
     var L = Math.round(+level);
     if (L < 10) L = 10;
-    if (L > 59) L = 59;
+    if (L > 60) L = 60;
     return ILB.levels[L] || ILB.levels[String(L)] || null;
   }
   function weaponIs2H(w) {
@@ -2126,17 +2177,13 @@
     if (c.ilvl && c.level && ILB) {
       var ib = ilvlBandAt(c.level);
       var verd = bandVerdict(c.ilvl, ib && ib.ilvl, "ilvl");
-      if (isEndgameLevel(c.level)) {
-        note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> Import ' +
-          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
-          bandLabel(verd, ib && ib.ilvl, "ilvl") +
-          ". ItemStat-Bänder enden bei 59 — Vergleich nur Anhalt, kein Raid-BiS.</div>";
-      } else {
-        note = '<div class="ilvlnote"><b>Levelrun-ilvl</b> Import ' +
-          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
-          bandLabel(verd, ib && ib.ilvl, "ilvl") +
-          ". Band aus ItemStat — Anhalt für den Levelrun.</div>";
-      }
+      note = '<div class="ilvlnote"><b>' + frameLabel() + '-ilvl</b> Import ' +
+        c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+        bandLabel(verd, ib && ib.ilvl, "ilvl") +
+        (isEndgameFrame()
+          ? ". ItemStat-Band Stufe 60 — Anhalt fürs Endgame, kein Raid-BiS."
+          : ". Band aus ItemStat — Anhalt für den Levelrun.") +
+        "</div>";
     } else if (c.ilvl && !ILB) {
       note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> ' +
         c.ilvl.toFixed(1) +
@@ -2145,9 +2192,18 @@
     box.innerHTML = note + renderGearPaperdoll(c.gear);
   }
 
-  // Stufe ≥ 60: Endgame-Ton. ItemStat-Bänder decken nur 10–59.
+  // Stufe ≥ 60 = Endgame-Auto. Rahmen-Toggle kann Levelrun/Endgame erzwingen.
   function isEndgameLevel(level) {
     return level != null && +level >= 60;
+  }
+  var FRAME_PREF = "auto"; // auto | levelrun | endgame
+  function isEndgameFrame() {
+    if (FRAME_PREF === "endgame") return true;
+    if (FRAME_PREF === "levelrun") return false;
+    return isEndgameLevel(CHAR && CHAR.level);
+  }
+  function frameLabel() {
+    return isEndgameFrame() ? "Endgame" : "Levelrun";
   }
   function fmtStatPct(n) {
     return String(Number(n).toFixed(2)).replace(".", ",");
@@ -2159,7 +2215,7 @@
   function charIssues(ids) {
     if (!CHAR) return [];
     var c = CHAR, s = c.stats, out = [];
-    var endgame = isEndgameLevel(c.level);
+    var endgame = isEndgameFrame();
     var p = profile(ids);
     var best = scorePaths(p)[0];
     var have = PATHBY[normPath(c.path)];
@@ -2431,15 +2487,21 @@
       }
     }
 
-    // 8. Plaetze nicht ausgereizt
+    // 8. Plaetze nicht ausgereizt — nur wenn noch Essence da ist, mit der
+    //    man sie fuellen koennte. 22/30 bei AE 0 ist Levelrun-Normal, kein
+    //    „Build leer“-Befund. Ohne ESSENCE-Zeile: nur bei wirklich leerer Liste.
     var cnt = counts();
-    if (cnt.a < MAX_A || cnt.t < MAX_T) {
-      var free = [];
-      if (cnt.a < MAX_A) free.push((MAX_A - cnt.a) + " Ability-Plätze");
-      if (cnt.t < MAX_T) free.push((MAX_T - cnt.t) + " Talent-Plätze");
+    var free = [];
+    var freeA = MAX_A - cnt.a;
+    var freeT = MAX_T - cnt.t;
+    var canFillA = freeA > 0 && (c.essA !== undefined ? c.essA > 0 : cnt.a === 0);
+    var canFillT = freeT > 0 && (c.essT !== undefined ? c.essT > 0 : cnt.t === 0);
+    if (canFillA) free.push(freeA + " Ability-Plätze");
+    if (canFillT) free.push(freeT + " Talent-Plätze");
+    if (free.length) {
       push("fix", free.join(" und ") + " frei",
-        " Ein leerer Platz gibt dir nichts. Selbst ein mittelmäßiger Eintrag " +
-        "schlägt einen leeren Platz.");
+        " Du hast noch Essence dafür. Ein leerer Platz gibt dir nichts — " +
+        "selbst ein mittelmäßiger Eintrag schlägt ihn.");
     }
 
     // 9. Katalogluecken ehrlich benennen
@@ -2491,32 +2553,29 @@
       }
     }
 
-    // 11. Levelrun-ilvl / Waffen-Mid gegen ItemStat-Stufenband (D.ilb)
+    // 11. ilvl / Waffen-Mid gegen ItemStat-Stufenband (D.ilb, 10–60)
     if (c.level && ILB) {
       var Lband = ilvlBandAt(c.level);
       if (c.ilvl > 0 && Lband && Lband.ilvl) {
         var iv = bandVerdict(c.ilvl, Lband.ilvl, "ilvl");
-        if (endgame) {
-          push("info", "Gegenstandsstufe auf L60",
-            " Import " + c.ilvl.toFixed(1) +
-            " — ItemStat-Bänder decken nur Stufe 10–59 ab; Median " +
-            Lband.ilvl.p50 + " ist nur Anhalt, kein Raid-BiS. Path, Essence, " +
-            "Budget und Hit zählen mehr.");
-        } else if (iv === "low") {
+        if (iv === "low") {
           push("warn", "Gegenstandsstufe unter dem Stufenband",
             " Import " + c.ilvl.toFixed(1) + " bei Stufe " + c.level +
-            " (Median " + Lband.ilvl.p50 +
-            "). Für den Levelrun lohnt sich frisches Gear aus Quests/Dungeons.");
+            " (Median " + Lband.ilvl.p50 + "). " +
+            (endgame
+              ? "Fürs Endgame lohnt sich stärkeres Gear — Band ist Anhalt, kein BiS."
+              : "Für den Levelrun lohnt sich frisches Gear aus Quests/Dungeons."));
         } else if (iv === "ok" || iv === "high") {
           push("ok", "Gegenstandsstufe passt zur Stufe",
             " " + c.ilvl.toFixed(1) + " ilvl · ItemStat-Median " +
-            Lband.ilvl.p50 + " für Stufe " + c.level + ".");
+            Lband.ilvl.p50 + " für Stufe " + c.level +
+            (endgame ? " (Endgame-Anhalt)." : "."));
         }
       }
       var mhIss = (c.weapons || []).filter(function (w) {
         return w.slot === "MH";
       })[0];
-      if (!endgame && mhIss) {
+      if (mhIss) {
         var midIss = weaponMidDamage(mhIss);
         var keyIss = weaponBandKey(mhIss);
         var wbIss = keyIss && Lband && Lband[keyIss];
@@ -2537,13 +2596,6 @@
           push("info", "Kein Waffen-Stufenband",
             " Für Stufe " + c.level + " fehlt das ItemStat-" +
             keyIss + "-Band — Import-DPS bleibt die Quelle.");
-        }
-      } else if (endgame && mhIss) {
-        var midEnd = weaponMidDamage(mhIss);
-        if (midEnd != null) {
-          push("info", "Hauptwaffe auf L60",
-            " Import Mid " + midEnd.toFixed(0) +
-            " — kein L60-ItemStat-Band; nur der gemessene Wert.");
         }
       }
     } else if (c.ilvl > 0 && !ILB) {
@@ -2668,7 +2720,7 @@
       box.innerHTML = '<div class="empty">Importiere deinen Charakter mit ' +
         "<code>/bs</code>, dann steht hier, was kritisch ist und was du " +
         "verbessern kannst — Path, Essence, Budget, Skill Cards und Hit " +
-        "für Levelrun und L60.</div>";
+        "für <b>Levelrun</b> und <b>Endgame</b>.</div>";
       return;
     }
     var krit = list.filter(function (h) { return h.indexOf("issue krit") > 0; }).length;
@@ -2676,11 +2728,11 @@
     hd.textContent = krit + " kritisch · " + fix + " verbesserbar";
     hd.className = "cnt " + (krit ? "over" : fix ? "ok" : "full");
     var lead = '<div class="qhint">' +
-      (isEndgameLevel(CHAR.level)
-        ? "Befund für Endgame: Path, Essence, Budget und Hit wiegen schwerer " +
-          "als ItemStat-Bänder (nur 10–59)."
-        : "Befund für den Levelrun: Path, Essence, Budget und Skill Cards aus " +
-          "deinem Import.") +
+      (isEndgameFrame()
+        ? "Befund für <b>Endgame</b>: Path, Essence, Budget und Hit wiegen " +
+          "schwer — ItemStat-Band Stufe 60 ist Anhalt, kein Raid-BiS."
+        : "Befund für den <b>Levelrun</b>: Path, Essence, Budget und Skill " +
+          "Cards aus deinem Import.") +
       "</div>";
     box.innerHTML = lead + list.join("");
   }
@@ -3389,10 +3441,10 @@
       d: "Waffenangriffe, die als Feuer, Frost oder Natur zählen. Ignorieren " +
          "Armor und ziehen trotzdem vollen Nutzen aus Spell Power.",
       score: function (i) {
-        var t = TAG[i] || 0, s = SC[i] || {};
+        var f = pathFlags(i), s = SC[i] || {};
         var v = 0;
-        if ((t & T_WEAPON) && (t & T_MAGIC)) v += 10;
-        else if (t & T_WEAPON) v += 3;
+        if (f.wm) v += 10;
+        else if (f.w) v += 3;
         if (s.w) v += s.w / 40;
         return v;
       }
@@ -3402,10 +3454,10 @@
       d: "Physischer Schaden aus Waffenangriffen. Einfach zu spielen, " +
          "skaliert geradlinig mit Waffe und Attack Power.",
       score: function (i) {
-        var t = TAG[i] || 0, s = SC[i] || {};
+        var f = pathFlags(i), s = SC[i] || {};
         var v = 0;
-        if ((t & T_WEAPON) && !(t & T_MAGIC)) v += 9;
-        if (t & T_PHYS) v += 3;
+        if (f.w && !f.m) v += 9;
+        if (f.phys) v += 3;
         if (s.w) v += s.w / 35;
         if (s.ap) v += 3;
         return v;
@@ -3416,9 +3468,9 @@
       d: "Reine Sprüche ohne Waffenanteil. Der Path mit dem stärksten " +
          "Spell-Power-Multiplikator.",
       score: function (i) {
-        var t = TAG[i] || 0, s = SC[i] || {};
+        var f = pathFlags(i), s = SC[i] || {};
         var v = 0;
-        if ((t & T_MAGIC) && !(t & T_WEAPON)) v += 9;
+        if (f.m && !f.w) v += 9;
         if (s.flat) v += 3;
         if (s.sp) v += 3;
         return v;
@@ -3433,7 +3485,7 @@
         var v = 0;
         if (s.dot) v += 8;
         if (s.tick) v += 6;
-        if (TAG[i] & T_MAGIC) v += 2;
+        if (pathFlags(i).m) v += 2;
         return v;
       }
     },
@@ -3714,7 +3766,11 @@
       "einen vollständigen Build zusammen: erst die Fähigkeiten der " +
       "Ausrichtung, dann die Talente, die genau <em>diese</em> Fähigkeiten " +
       "verbessern. Dubletten, zu hohe Stufen, gesperrte Paths und dein " +
-      "Seltenheits-Budget sind dabei berücksichtigt." +
+      "Seltenheits-Budget sind dabei berücksichtigt. " +
+      (isEndgameFrame()
+        ? "<b>Endgame</b>: Stufe-60-Fähigkeiten sind gültig " +
+          "(bei importierter Stufe)."
+        : "<b>Levelrun</b>: Bewertung fürs Leveln 10–59.") +
       (CHAR ? "" : " <strong>Ohne importierten Charakter kennt der Generator " +
        "weder deine Stufe noch dein Budget</strong> — dann sind die " +
        "Vorschläge theoretisch.") + "</div>");
@@ -3788,7 +3844,7 @@
     if (CHAR && CHAR.stats && CHAR.stats.HITPCT !== undefined) {
       statFooter += " Melee-Hit-Cap " + HIT_CAP_BOSS +
         " % Raidboss stammt aus dem Charakterfenster" +
-        (isEndgameLevel(CHAR.level) ? " — auf L60 besonders relevant" : "") + ".";
+        (isEndgameFrame() ? " — im Endgame besonders relevant" : "") + ".";
     }
     o.push('<div class="qhint">' + statFooter + "</div>");
     box.innerHTML = o.join("");
@@ -3918,8 +3974,11 @@
     L.push("1. Welche zwei oder drei Einträge in diesem Build sind am " +
       "schwächsten und wodurch würdest du sie ersetzen?");
     L.push("2. Passt der Path zu dem, was der Build tut?");
-    L.push("3. Auf welche Item-Stats soll ich beim Leveln von 10 auf 59 " +
-      "achten, und in welcher Reihenfolge?");
+    L.push(isEndgameFrame()
+      ? "3. Auf welche Item-Stats soll ich im Endgame (Stufe 60) " +
+        "achten, und in welcher Reihenfolge?"
+      : "3. Auf welche Item-Stats soll ich beim Leveln von 10 auf 59 " +
+        "achten, und in welcher Reihenfolge?");
     L.push("4. Fehlt dem Build etwas Grundsätzliches — Ressourcen, " +
       "Überleben, Flächenschaden?");
     L.push("");
@@ -4500,7 +4559,9 @@
   function save() {
     try {
       localStorage.setItem(STORE, JSON.stringify({
-        b: encode(), c: CHAR ? document.getElementById("pasteBox").value : ""
+        b: encode(),
+        c: CHAR ? document.getElementById("pasteBox").value : "",
+        frame: FRAME_PREF
       }));
     } catch (e) { /* Privatmodus: dann eben nicht */ }
   }
@@ -4524,6 +4585,10 @@
       // nach jedem Neuladen der importierte Build zurueck statt des
       // bearbeiteten - alle Aenderungen waeren still verloren gewesen.
       if (d.b) { decode(d.b); any = true; }
+      if (d.frame === "levelrun" || d.frame === "endgame" ||
+          d.frame === "auto") {
+        FRAME_PREF = d.frame;
+      }
       return any;
     } catch (e) { /* kaputter Eintrag: ignorieren */ }
     return false;
@@ -5130,7 +5195,7 @@
 
     var o = [];
     o.push('<div class="qhint"><b>Tag-Struktur</b> — gewichtete Facetten-Abdeckung '
-      + "für Levelruns. Quelle: <code>SpellTags.dbc</code> ∩ Katalog "
+      + "für " + frameLabel() + ". Quelle: <code>SpellTags.dbc</code> ∩ Katalog "
       + "(" + (STAGS.taggedEntries || Object.keys(STAG_BY_I).length)
       + " getaggte Einträge). Keine erfundenen Schadenszahlen.</div>");
     o.push('<div class="stagscore"><b>' + fp.score + " / " + fp.max
@@ -5177,7 +5242,8 @@
       }
     } else {
       o.push('<div class="flag syn"><b>Alle gewichteten Facetten belegt</b> '
-        + "— laut SpellTags deckt der Build die Levelrun-Checkliste ab.</div>");
+        + "— laut SpellTags deckt der Build die " + frameLabel()
++ "-Checkliste ab.</div>");
     }
     box.innerHTML = o.join("");
   }
@@ -5213,7 +5279,8 @@
         + "</span></div>");
     });
     o.push("</div>");
-    o.push('<div class="srcnote">Interrupt und Mobilität wiegen für Levelruns '
+    o.push('<div class="srcnote">Interrupt und Mobilität wiegen für ' +
+      frameLabel() + " "
       + "stärker als z.&nbsp;B. Cleave. Fehlende Tags heißen „nicht in der DBC "
       + "markiert“, nicht „Fähigkeit nutzlos“.</div>");
     root.innerHTML = o.join("");
@@ -5234,7 +5301,8 @@
     var g = METH.gaps;
     var r = METH.resmap;
 
-    html.push('<div class="headline"><b>1. Levelrun-Tempo-Score</b>');
+    html.push('<div class="headline"><b>1. Tempo-Score</b> ' +
+      '<span class="meta">(' + frameLabel() + ', Level 10–60)</span>');
     html.push(esc(t.note || ""));
     html.push("</div>");
     html.push('<div class="flag syn"><b>' + (t.nHigh || 0)
@@ -5357,8 +5425,39 @@
     toast("Geleert");
   });
 
+  function syncFrameCtl() {
+    document.querySelectorAll(".frameb").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-frame") === FRAME_PREF);
+    });
+    var hint = document.getElementById("frameHint");
+    if (hint) {
+      var auto = isEndgameLevel(CHAR && CHAR.level) ? "Endgame" : "Levelrun";
+      hint.textContent = FRAME_PREF === "auto"
+        ? "wirkt als " + auto +
+          (CHAR && CHAR.level ? " (Stufe " + CHAR.level + ")" : "")
+        : "manuell · " + frameLabel();
+    }
+    var brand = document.getElementById("brandFrame");
+    if (brand) {
+      brand.textContent = "Season 10 Wildcard · " + frameLabel();
+    }
+  }
+
+  document.querySelectorAll(".frameb").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var f = btn.getAttribute("data-frame");
+      if (f !== "auto" && f !== "levelrun" && f !== "endgame") return;
+      FRAME_PREF = f;
+      syncFrameCtl();
+      refresh();
+      toast("Rahmen: " + (f === "auto" ? "Auto (" + frameLabel() + ")"
+        : frameLabel()));
+    });
+  });
+
   function refresh() {
     var ids = Object.keys(picked).map(Number);
+    syncFrameCtl();
     slots();
     recountBudget();
     renderChar();
