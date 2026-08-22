@@ -67,6 +67,8 @@ Weitere Anker: [AGENTS.md](AGENTS.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [
 
 GitHub Pages: Branch **`main`**, Ordner **`/`**. Pages baut **nicht** aus `src/` und nicht aus `docs/` — nur die mitgepushten Artefakte `index.html` / `synergien.html`. Beide sind gleichrangig: `assemble.py` schreibt immer Builder **und** Synergien.
 
+**CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) prüft auf Push/PR zu `main` assemble, JS-Syntax, `tests/`, optional Addon-Lua — ohne Pages-Redeploy.
+
 ### Lizenz
 
 Im Repo liegt **keine `LICENSE`-Datei**. Eigenen Code und Mitwirkung bitte vor Weitergabe/Fork klären; Ascension-/Blizzard-Clientdaten bleiben außerhalb dieses Pakets (siehe AGENTS.md).
