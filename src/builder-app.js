@@ -2964,7 +2964,7 @@
       }).slice(0, 20).forEach(function (i) {
         o.push('<div class="cmprow"><span class="icon" style="width:20px;' +
           'height:20px;flex:0 0 20px;' + iconStyle(i, 20) + '"></span>' +
-          '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+          '<span class="nm q' + CAT[i][3] + '">' +
           esc(CAT[i][0]) + "</span>" +
           '<span class="genwhy">' + esc(g.why[i] || "") + "</span></div>");
       });
@@ -3627,7 +3627,7 @@
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
         '<div class="chn-hd"><span class="icon" style="width:22px;height:22px;' +
         'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
-        '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+        '<span class="nm q' + CAT[i][3] + '">' +
         esc(CAT[i][0]) + "</span>" +
         '<span class="meta">' + (CAT[i][1] ? "TAL" : "ABI") + " · lvl" +
         CAT[i][4] + "</span></div>" +
@@ -3973,7 +3973,7 @@
             (addable && !stop ? ' data-add="' + i + '" role="button" tabindex="0"' : "") + ">" +
             '<span class="icon" style="width:20px;height:20px;flex:0 0 20px;' +
             iconStyle(i, 20) + '"></span>' +
-            '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+            '<span class="nm q' + CAT[i][3] + '">' +
             esc(CAT[i][0]) + "</span>" +
             (stop ? '<span class="stop">' + esc(stop) + "</span>"
                   : (addable ? '<span class="sugadd">+</span>' : "")) + "</div>");
@@ -4369,8 +4369,8 @@
           o.push('<div class="sug" data-add="' + f.i + '" role="button" tabindex="0">'
             + '<span class="icon" style="width:22px;height:22px;flex:0 0 22px;'
             + iconStyle(f.i, 22) + '"></span>'
-            + '<div class="sugb"><span class="nm" style="color:var(--q'
-            + CAT[f.i][3] + ')">' + esc(CAT[f.i][0]) + "</span>"
+            + '<div class="sugb"><span class="nm q'
+            + CAT[f.i][3] + '">' + esc(CAT[f.i][0]) + "</span>"
             + '<span class="sugwhy">schließt ' + f.fill
             + (f.fill === 1 ? " Lücke" : " Lücken") + ": "
             + esc(covers) + " · lvl" + (CAT[f.i][4] || "?") + "</span></div>"
