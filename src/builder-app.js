@@ -1358,6 +1358,102 @@
     };
   }
 
+  // Lesbare Skill-Card-Kacheln (Charakter + Auswertung).
+  function skillCardsHtml(c) {
+    if (!c) return "";
+    var o = [];
+    var nNamed = 0;
+    if (c.scard && c.scard.length) {
+      var filled = c.scard.filter(function (s) { return !s.blocked; }).length;
+      var blocked = c.scard.length - filled;
+      var nActive = c.scard.filter(function (s) { return s.active; }).length;
+      nNamed = c.scard.filter(function (s) { return s.sid; }).length;
+      o.push('<div class="wepline"><b>Skill Cards</b> ' + filled + " belegt" +
+        (blocked ? ", " + blocked + " blockiert" : "") +
+        (nActive ? ", " + nActive + " aktiv" : "") + "</div>");
+      o.push('<div class="scardgrid">');
+      c.scard.forEach(function (s) {
+        var parts = scardDeckParts(s.tag);
+        var tone = s.q !== undefined ? gearQTone(s.q)
+          : (parts.kind === "Golden" ? 3 : null);
+        var cls = "scard" + (s.blocked ? " blocked" : "") +
+          (s.active ? " active" : "");
+        var metaBits = [];
+        if (parts.deck) metaBits.push(parts.deck);
+        if (parts.kind) metaBits.push(parts.kind);
+        if (s.active) metaBits.push("aktiv");
+        if (s.blocked) metaBits.push("blockiert");
+        var sid = s.sid || 0;
+        var catIdx = sid ? BYSID[sid] : undefined;
+        var title, icoHtml;
+        if (s.blocked) {
+          title = "Leer";
+          icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+        } else if (sid && catIdx !== undefined) {
+          title = CAT[catIdx][0];
+          icoHtml = '<span class="icon scico" style="width:28px;height:28px;' +
+            iconStyle(catIdx, 28) + '"></span>';
+        } else if (sid) {
+          title = "Spell #" + sid;
+          icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+          metaBits.push("Karte #" + s.cardId);
+        } else {
+          title = "Karte #" + s.cardId;
+          icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
+        }
+        var tip = [parts.deck, parts.kind,
+          s.cardId ? "card #" + s.cardId : "",
+          sid ? "spell #" + sid : ""].filter(Boolean).join(" · ");
+        o.push('<div class="' + cls + '"' +
+          (tone !== null
+            ? ' style="border-left:3px solid var(--q' + tone + ')"'
+            : "") +
+          (tip ? ' title="' + esc(tip) + '"' : "") + ">" +
+          icoHtml +
+          '<div class="scbody"><span class="scname">' + esc(title) + "</span>" +
+          '<span class="scmeta">' + esc(metaBits.join(" · ")) +
+          "</span></div></div>");
+      });
+      o.push("</div>");
+      if (!nNamed && filled) {
+        o.push('<div class="wepline muted">Kartennamen brauchst du Addon 1.5.7+ ' +
+          "(neu exportieren).</div>");
+      }
+    }
+    if (c.carded && c.carded.length) {
+      var onCard = Object.create(null);
+      (c.scard || []).forEach(function (s) {
+        if (s.sid) onCard[s.sid] = 1;
+      });
+      var extras = c.carded.filter(function (sid) { return !onCard[sid]; });
+      var showList = nNamed ? extras : c.carded;
+      if (showList && showList.length) {
+        o.push('<div class="wepline"><b>' +
+          (nNamed ? "Weitere auf Karten" : "Auf Karten") + "</b></div>");
+        o.push('<div class="scardgrid scard-spells">');
+        showList.forEach(function (sid) {
+          var idx = BYSID[sid];
+          var nm = idx !== undefined ? CAT[idx][0] : ("Spell #" + sid);
+          var ico = idx !== undefined
+            ? '<span class="icon scico" style="width:28px;height:28px;' +
+              iconStyle(idx, 28) + '"></span>'
+            : '<span class="scico scico-empty" aria-hidden="true"></span>';
+          o.push('<div class="scard">' + ico +
+            '<div class="scbody"><span class="scname">' + esc(nm) + "</span>" +
+            '<span class="scmeta">#' + sid + "</span></div></div>");
+        });
+        o.push("</div>");
+      }
+    }
+    if (c.scardPend !== undefined && c.scardPend > 0) {
+      o.push('<div class="wepline muted">' + c.scardPend +
+        " Skill Card" + (c.scardPend === 1 ? "" : "s") +
+        " noch einzulösen</div>");
+    }
+    return o.join("");
+  }
+
+
   // ---------- Charakterkarte ----------
   // WoW-Paperdoll-Reihenfolge (Export-Labels aus Collect.lua).
   // GetItemInfo-Qualität (0–5+) → unsere --q0…--q4-Tokens.
@@ -2001,80 +2097,7 @@
           " Skill Card" + (c.scardPend === 1 ? "" : "s") +
           " noch einzulösen</div>");
       }
-      var nNamed = 0;
-      if (c.scard && c.scard.length) {
-        var filled = c.scard.filter(function (s) { return !s.blocked; }).length;
-        var blocked = c.scard.length - filled;
-        var nActive = c.scard.filter(function (s) { return s.active; }).length;
-        nNamed = c.scard.filter(function (s) { return s.sid; }).length;
-        o.push('<div class="wepline"><b>Skill Cards</b> ' + filled + " belegt" +
-          (blocked ? ", " + blocked + " blockiert" : "") +
-          (nActive ? ", " + nActive + " aktiv" : "") + "</div>");
-        o.push('<div class="scardgrid">');
-        c.scard.forEach(function (s) {
-          var parts = scardDeckParts(s.tag);
-          var tone = s.q !== undefined ? gearQTone(s.q)
-            : (parts.kind === "Golden" ? 3 : null);
-          var cls = "scard" + (s.blocked ? " blocked" : "") +
-            (s.active ? " active" : "");
-          var metaBits = [];
-          if (parts.deck) metaBits.push(parts.deck);
-          if (parts.kind) metaBits.push(parts.kind);
-          if (s.active) metaBits.push("aktiv");
-          if (s.blocked) metaBits.push("blockiert");
-          var sid = s.sid || 0;
-          var catIdx = sid ? BYSID[sid] : undefined;
-          var title, icoHtml;
-          if (s.blocked) {
-            title = "Leer";
-            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
-          } else if (sid && catIdx !== undefined) {
-            title = CAT[catIdx][0];
-            icoHtml = '<span class="icon scico" style="width:28px;height:28px;' +
-              iconStyle(catIdx, 28) + '"></span>';
-          } else if (sid) {
-            title = "Spell #" + sid;
-            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
-            metaBits.push("Karte #" + s.cardId);
-          } else {
-            title = "Karte #" + s.cardId;
-            icoHtml = '<span class="scico scico-empty" aria-hidden="true"></span>';
-          }
-          var tip = [parts.deck, parts.kind,
-            s.cardId ? "card #" + s.cardId : "",
-            sid ? "spell #" + sid : ""].filter(Boolean).join(" · ");
-          o.push('<div class="' + cls + '"' +
-            (tone !== null
-              ? ' style="border-left:3px solid var(--q' + tone + ')"'
-              : "") +
-            (tip ? ' title="' + esc(tip) + '"' : "") + ">" +
-            icoHtml +
-            '<div class="scbody"><span class="scname">' + esc(title) + "</span>" +
-            '<span class="scmeta">' + esc(metaBits.join(" · ")) +
-            "</span></div></div>");
-        });
-        o.push("</div>");
-        if (!nNamed && filled) {
-          o.push('<div class="wepline muted">Kartennamen brauchst du Addon 1.5.7+ ' +
-            "(neu exportieren).</div>");
-        }
-      }
-      if (c.carded && c.carded.length) {
-        var onCard = Object.create(null);
-        (c.scard || []).forEach(function (s) {
-          if (s.sid) onCard[s.sid] = 1;
-        });
-        var extras = c.carded.filter(function (sid) { return !onCard[sid]; });
-        // Ohne :sSPELLID: CARDED als Namensliste. Mit :s: nur Rest zeigen.
-        var showList = nNamed ? extras : c.carded;
-        if (showList && showList.length) {
-          var names = showList.map(function (sid) { return nameBySid(sid); });
-          o.push('<div class="wepline"><b>' +
-            (nNamed ? "Weitere auf Karten" : "Auf Karten") + "</b> " +
-            names.slice(0, 12).map(esc).join(", ") +
-            (names.length > 12 ? "…" : "") + "</div>");
-        }
-      }
+      o.push(skillCardsHtml(c));
       o.push("</div>");
     }
 
@@ -2161,36 +2184,68 @@
   function renderGearBox(c) {
     var box = document.getElementById("gearBox");
     var hd = document.getElementById("cG");
+    var titleEl = box && box.parentNode &&
+      box.parentNode.querySelector(".panel-hd h2");
+    var sec = document.querySelector("#vAnalyse .analyse-sec");
     if (!box) return;
-    if (!c || !(c.gear || []).length) {
+    var hasGear = !!(c && (c.gear || []).length);
+    var cardsHtml = c ? skillCardsHtml(c) : "";
+    var hasCards = !!cardsHtml;
+    if (sec) sec.classList.toggle("cols-2", !hasGear && !hasCards);
+    if (titleEl) {
+      titleEl.textContent = hasGear && hasCards ? "AUSRÜSTUNG & KARTEN"
+        : hasCards && !hasGear ? "SKILL CARDS"
+        : "AUSRÜSTUNG";
+    }
+    if (!c || (!hasGear && !hasCards)) {
       if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
-      box.innerHTML = '<div class="empty">Keine Ausrüstung im Export — im Addon ' +
-        "Gear einschalten (<code>/bs gear</code>) und neu kopieren.</div>";
+      box.innerHTML = '<div class="empty">Keine Ausrüstung und keine Skill Cards ' +
+        "im Export. Gear im Addon mit <code>/bs gear</code> einschalten und " +
+        "neu kopieren — Karten kommen mit Wildcard-Export (Addon 1.5+).</div>";
       return;
     }
+    var bits = [];
+    if (hasGear) {
+      if (c.ilvl) bits.push(c.ilvl.toFixed(1) + " ilvl");
+      bits.push(c.gear.length + " Slots");
+    }
+    if (hasCards && c.scard) {
+      var nFill = c.scard.filter(function (s) { return !s.blocked; }).length;
+      bits.push(nFill + " Karten");
+    }
     if (hd) {
-      hd.textContent = (c.ilvl ? c.ilvl.toFixed(1) + " ilvl · " : "") +
-        c.gear.length + " Slots";
+      hd.textContent = bits.join(" · ") || "—";
       hd.className = "cnt ok";
     }
     var note = "";
-    if (c.ilvl && c.level && ILB) {
+    if (!hasGear) {
+      note = '<div class="ilvlnote muted"><b>Ausrüstung aus</b> — im Addon ' +
+        "<code>/bs gear</code> und neu exportieren, wenn du Paperdoll und " +
+        "ilvl hier sehen willst. Skill Cards unten trotzdem aus dem Export.</div>";
+    } else if (c.ilvl && c.level && ILB) {
       var ib = ilvlBandAt(c.level);
       var verd = bandVerdict(c.ilvl, ib && ib.ilvl, "ilvl");
-      note = '<div class="ilvlnote"><b>' + frameLabel() + '-ilvl</b> Import ' +
-        c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
-        bandLabel(verd, ib && ib.ilvl, "ilvl") +
-        (isEndgameFrame()
-          ? ". ItemStat-Band Stufe 60 — Anhalt fürs Endgame, kein Raid-BiS."
-          : ". Band aus ItemStat — Anhalt für den Levelrun.") +
-        "</div>";
+      if (typeof isEndgameLevel === "function" && isEndgameLevel(c.level)) {
+        note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> Import ' +
+          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+          bandLabel(verd, ib && ib.ilvl, "ilvl") +
+          ". ItemStat-Bänder enden bei 59 — Vergleich nur Anhalt, kein Raid-BiS.</div>";
+      } else {
+        note = '<div class="ilvlnote"><b>Levelrun-ilvl</b> Import ' +
+          c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+          bandLabel(verd, ib && ib.ilvl, "ilvl") +
+          ". Band aus ItemStat (Skalierungsitems) — Anhalt, kein Raid-Ziel.</div>";
+      }
     } else if (c.ilvl && !ILB) {
       note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> ' +
         c.ilvl.toFixed(1) +
         " — Stufenband nicht eingebettet (<code>ilvlbands.json</code>).</div>";
     }
-    box.innerHTML = note + renderGearPaperdoll(c.gear);
+    box.innerHTML = note +
+      (hasGear ? renderGearPaperdoll(c.gear) : "") +
+      (hasCards ? '<div class="gearwrap scard-panel">' + cardsHtml + "</div>" : "");
   }
+
 
   // Stufe ≥ 60 = Endgame-Auto. Rahmen-Toggle kann Levelrun/Endgame erzwingen.
   function isEndgameLevel(level) {
@@ -2294,6 +2349,9 @@
       push("ok", "Wildcard" + (modeLabel(c) ? " (" + esc(modeLabel(c)) + ")" : ""),
         (nSlot ? " " + nSlot + " Skill-Card-Slots belegt." : "") +
         (nCard ? " " + nCard + " Zauber auf Karten — Vorschläge bevorzugen diese." : "") +
+        (nSlot || nCard
+          ? " Die Karten siehst du rechts unter Ausrüstung / Skill Cards."
+          : "") +
         wcNote);
     }
 
@@ -3770,7 +3828,7 @@
       (isEndgameFrame()
         ? "<b>Endgame</b>: Stufe-60-Fähigkeiten sind gültig " +
           "(bei importierter Stufe)."
-        : "<b>Levelrun</b>: Bewertung fürs Leveln 10–59.") +
+        : "<b>Levelrun</b>: Bewertung fürs Leveln 10–60.") +
       (CHAR ? "" : " <strong>Ohne importierten Charakter kennt der Generator " +
        "weder deine Stufe noch dein Budget</strong> — dann sind die " +
        "Vorschläge theoretisch.") + "</div>");

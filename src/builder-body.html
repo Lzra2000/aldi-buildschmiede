@@ -6,7 +6,7 @@
       <span class="btext">
         <em class="bguild">Aldi Ehrfürchtig</em>
         <b>Buildschmiede</b>
-        <i>Season 10 Wildcard · Level 10–59</i>
+        <i id="brandFrame">Season 10 Wildcard · Level 10–60</i>
       </span>
     </div>
 
@@ -41,7 +41,7 @@
 <aside class="startrow" aria-label="Erste Schritte">
   <div class="startin">
     <p class="shd">Erste Schritte</p>
-    <p>Für Level 10–59: Addon laden, im Spiel <code>/bs</code> kopieren, unter Werkzeuge einfügen — dann Befund und Path lesen. Synergien erklären Dubletten und Modifier.</p>
+    <p>Addon laden, im Spiel <code>/bs</code> kopieren, unter Werkzeuge einfügen — Befund und Path lesen. Der Befund nutzt Path, Essence, Budget und Skill Cards aus dem Import; für Levelrun und L60. Synergien erklären Dubletten und Modifier.</p>
     <div class="slinks">
       <a href="#t=vTools">Import</a>
       <a href="#t=rAddon">Addon</a>
@@ -117,6 +117,16 @@
     <div class="analyse">
       <div class="panel analyse-lead">
         <div class="panel-hd"><h2>BEFUND</h2><span class="cnt" id="cI2">—</span></div>
+        <div class="framectl" role="group" aria-label="Auswertungsrahmen">
+          <span class="framelbl">Rahmen</span>
+          <button type="button" class="frameb" data-frame="auto" id="frameAuto"
+            title="Endgame ab Stufe 60, sonst Levelrun">Auto</button>
+          <button type="button" class="frameb" data-frame="levelrun" id="frameLevelrun"
+            title="Levelrun 10–60">Levelrun</button>
+          <button type="button" class="frameb" data-frame="endgame" id="frameEndgame"
+            title="Endgame Stufe 60">Endgame</button>
+          <span class="framehint" id="frameHint"></span>
+        </div>
         <div id="issues"></div>
       </div>
       <div class="analyse-sec">
@@ -588,9 +598,9 @@
         erscheint als Lücke — nicht als Schätzwert. Details:
         <code>pipeline/README-methods.md</code>.
       </div>
-      <div class="flag syn"><b>Levelrun vor Endgame</b>
-        Tempo und Hitze sind für Level 10–59 gedacht. Ein hoher Score sagt
-        „oft und messbar“, nicht „Raid-BiS“.</div>
+      <div class="flag syn"><b>Levelrun und Endgame</b>
+        Tempo und Hitze decken Level 10–60 ab (Rahmen unter Auswertung).
+        Ein hoher Score sagt „oft und messbar“, nicht „Raid-BiS“.</div>
       <div id="methRoot">
         <p class="srcnote">Methoden-Daten werden geladen…</p>
       </div>
