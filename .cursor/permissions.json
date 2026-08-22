@@ -37,8 +37,9 @@
       "Allow copying the addon folder to the live Ascension AddOns path AscBuildschmiede and rebuilding AscBuildschmiede.zip from addon/.",
       "Allow read-only inspection of local Ascension client extracts (DBC, Interface) for API research.",
       "Allow starting a local python -m http.server for page verification.",
-      "Allow git add / git commit / git push -u origin HEAD (or push current branch) after meaningful shipped work — user mandate: always auto-push for this repo.",
-      "Allow non-destructive git status/diff/log used to prepare that commit+push."
+      "Allow git add / git commit / git push -u origin HEAD (or push current branch) after every meaningful ship — user mandate: always auto-push; keep lzra2000/aldi-buildschmiede and GitHub Pages up to date.",
+      "Allow non-destructive git status/diff/log used to prepare that commit+push.",
+      "When committing a ship that rebuilt pages or the addon zip, include index.html, synergien.html, and AscBuildschmiede.zip in the same commit."
     ],
     "block_instructions": [
       "Never auto-approve git push --force, git push --force-with-lease, git reset --hard, or other destructive/irreversible git.",
@@ -51,7 +52,7 @@
   "autoReview": {
     "allow_instructions": [
       "Allow pipeline runs, assemble.py, luac -p, live AddOns sync + zip rebuild, read-only DBC/Interface research, and local http.server.",
-      "Allow normal (non-force) git commit and git push after meaningful ship for GitHub Pages — user requested always auto-push.",
+      "Allow normal (non-force) git commit and git push after every meaningful ship so GitHub Pages stays current — Pages deploys from pushed index.html / synergien.html; user requested always auto-push and GitHub always up to date.",
       "Prefer allowlist auto-run for Ascension-parity tooling in this repo; do not require confirmation for those allowlisted commands."
     ],
     "block_instructions": [

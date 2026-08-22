@@ -1,5 +1,16 @@
--- Export-Fenster: Ascension PortraitFrame-Chrome (wie Character Advancement /
--- Prestige / Skill Cards). Texturen nur als Client-Pfade — nichts gerippt.
+-- Export-Fenster: Ascension-Panel-Chrome.
+--
+-- Matched (engine templates / shared texture paths — nothing copied into repo):
+--   Outer: PortraitFrameTemplate + PortraitFrame_SetTitle / SetIcon
+--          (PrestigeModeUI, SkillCardsFrame, EnchantCollection, Ascension CharacterFrame)
+--   Fallback outer: UI-DialogBox-Background + UI-DialogBox-Border + UI-DialogBox-Header
+--          (AscFastRoll / RaidInfo / StaticPopup family)
+--   Text inset: InsetFrameTemplate + UI-Background-Marble when present
+--          (CA / SharedXML Inset); else MacroFrameTextBackground tooltip backdrop
+--          (UI-Tooltip-Background + UI-Tooltip-Border + TOOLTIP_DEFAULT_*)
+--   Controls: UIPanelCloseButton, UIPanelButtonTemplate, UIPanelScrollFrameTemplate,
+--             InputBoxTemplate, GameFontNormal / Highlight / HighlightSmall / DisableSmall
+--
 -- Eigenen Build und Fremd-Inspect teilen sich den Frame.
 
 local BS = AscBuildschmiede
@@ -7,11 +18,10 @@ local BS = AscBuildschmiede
 local FRAME_W, FRAME_H = 600, 480
 local PAD = 16
 
--- Icons wie CharacterAdvancement.lua (CA / Wildcard).
+-- Portrait-Icons wie CharacterAdvancement / Wildcard (client icon paths).
 local ICON_OWN = "Interface\\Icons\\trade_archaeology_draenei_tome"
 local ICON_FOREIGN = "Interface\\Icons\\misc_rune_pvp_random"
 
--- Fallback, falls PortraitFrameTemplate auf einem Realm fehlt.
 local DIALOG_BACKDROP = {
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -19,27 +29,12 @@ local DIALOG_BACKDROP = {
     insets = { left = 11, right = 12, top = 12, bottom = 11 },
 }
 
-local INSET_BACKDROP = {
-    bgFile = "Interface\\FrameGeneral\\UI-Background-Marble",
+-- MacroFrameTextBackground (Blizzard_MacroUI) — dark, readable for export text.
+local MACRO_INSET_BACKDROP = {
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
     tile = true, tileSize = 16, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 },
-}
-
--- Metal-NineSlice-TexCoords aus AtlasInfo (UIFrameMetal*), ohne SetAtlas.
-local METAL = {
-    file = "Interface\\FrameGeneral\\UIFrameMetal",
-    hfile = "Interface\\FrameGeneral\\UIFrameMetalHorizontal",
-    vfile = "Interface\\FrameGeneral\\UIFrameMetalVertical",
-    -- corner: left, right, top, bottom  (132x132 in atlas sheet)
-    portraitTL = { 0.263672, 0.521484, 0.263672, 0.521484 },
-    topRight   = { 0.00195312, 0.259766, 0.263672, 0.521484 },
-    botLeft    = { 0.00195312, 0.259766, 0.00195312, 0.259766 },
-    botRight   = { 0.263672, 0.521484, 0.00195312, 0.259766 },
-    edgeTop    = { 0, 1, 0.263672, 0.521484 },
-    edgeBot    = { 0, 1, 0.00195312, 0.259766 },
-    edgeLeft   = { 0.00195312, 0.259766, 0, 1 },
-    edgeRight  = { 0.263672, 0.521484, 0, 1 },
+    insets = { left = 5, right = 5, top = 5, bottom = 5 },
 }
 
 local frame
@@ -51,8 +46,8 @@ end
 
 local function setTitle(f, text)
     if type(PortraitFrame_SetTitle) == "function" then
-        PortraitFrame_SetTitle(f, text)
-        return
+        pcall(PortraitFrame_SetTitle, f, text)
+        if f.TitleText or f.title then return end
     end
     if f.TitleText and f.TitleText.SetText then
         f.TitleText:SetText(text)
@@ -76,143 +71,52 @@ local function setPortraitIcon(f, icon)
     end
 end
 
-local function tryAtlas(tex, atlas)
-    if not tex or not atlas then return false end
-    if type(tex.SetAtlas) ~= "function" then return false end
-    -- IgnoreAtlasSize-Aequivalent: zweites Arg true = useAtlasSize auf manchen Clients.
-    local ok = pcall(tex.SetAtlas, tex, atlas, true)
-    if ok then return true end
-    return pcall(tex.SetAtlas, tex, atlas)
-end
-
-local function texCorner(parent, point, path, mirrorH, mirrorV, size)
-    local t = parent:CreateTexture(nil, "OVERLAY")
-    t:SetTexture(path)
-    t:SetWidth(size or 16)
-    t:SetHeight(size or 16)
-    t:SetPoint(point, parent, point, 0, 0)
-    local l, r, to, bo = 0, 1, 0, 1
-    if mirrorH then l, r = 1, 0 end
-    if mirrorV then to, bo = 1, 0 end
-    t:SetTexCoord(l, r, to, bo)
-    return t
-end
-
--- Goldrahmen-Akzent wie COMMON/GoldBorder-Atlanten (CA-Sidebar-Flair).
-local function decorateGoldCorners(parent)
-    local path = "Interface\\COMMON\\GoldBorder-Corner-TL"
-    texCorner(parent, "TOPLEFT", path, false, false, 14)
-    texCorner(parent, "TOPRIGHT", path, true, false, 14)
-    texCorner(parent, "BOTTOMLEFT", path, false, true, 14)
-    texCorner(parent, "BOTTOMRIGHT", path, true, true, 14)
-end
-
--- CA-Ecken zusaetzlich (klein, Ascension-spezifisch).
-local function decorateCACorners(parent)
-    local path = "Interface\\CharacterAdvancement\\caCorner"
-    local size = 22
-    local offsets = {
-        { "TOPLEFT", 2, -2, false, false },
-        { "TOPRIGHT", -2, -2, true, false },
-        { "BOTTOMLEFT", 2, 2, false, true },
-        { "BOTTOMRIGHT", -2, 2, true, true },
-    }
-    for i = 1, #offsets do
-        local o = offsets[i]
-        local t = parent:CreateTexture(nil, "OVERLAY")
-        t:SetTexture(path)
-        t:SetWidth(size)
-        t:SetHeight(size)
-        t:SetPoint(o[1], parent, o[1], o[2], o[3])
-        local l, r, to, bo = 0, 1, 0, 1
-        if o[4] then l, r = 1, 0 end
-        if o[5] then to, bo = 1, 0 end
-        t:SetTexCoord(l, r, to, bo)
-        t:SetVertexColor(1, 0.85, 0.45, 0.95)
+local function tooltipColors()
+    local br, bg, bb = 0.5, 0.5, 0.5
+    local cr, cg, cb, ca = 0.09, 0.09, 0.11, 1
+    if TOOLTIP_DEFAULT_COLOR then
+        br = TOOLTIP_DEFAULT_COLOR.r or br
+        bg = TOOLTIP_DEFAULT_COLOR.g or bg
+        bb = TOOLTIP_DEFAULT_COLOR.b or bb
     end
+    if TOOLTIP_DEFAULT_BACKGROUND_COLOR then
+        cr = TOOLTIP_DEFAULT_BACKGROUND_COLOR.r or cr
+        cg = TOOLTIP_DEFAULT_BACKGROUND_COLOR.g or cg
+        cb = TOOLTIP_DEFAULT_BACKGROUND_COLOR.b or cb
+    end
+    return cr, cg, cb, ca, br, bg, bb
 end
 
-local function addMetalPiece(parent, layer, file, w, h, point, x, y, coords)
-    local t = parent:CreateTexture(nil, layer or "OVERLAY")
-    t:SetTexture(file)
-    t:SetWidth(w)
-    t:SetHeight(h)
-    t:SetPoint(point, parent, point, x or 0, y or 0)
-    if coords then
-        t:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+-- Classic DialogBox chrome (RaidInfo / AscFastRoll) when PortraitFrameTemplate missing.
+local function applyClassicDialogChrome(f)
+    f:SetBackdrop(DIALOG_BACKDROP)
+    if f.SetBackdropColor then
+        f:SetBackdropColor(0, 0, 0, 1)
     end
-    return t
-end
-
--- Manuelles Portrait-/Metal-Chrome, wenn das XML-Template fehlt.
-local function applyManualMetalChrome(f)
-    local bg = f:CreateTexture(nil, "BACKGROUND")
-    bg:SetTexture("Interface\\FrameGeneral\\UI-Background-Rock")
-    bg:SetPoint("TOPLEFT", 6, -22)
-    bg:SetPoint("BOTTOMRIGHT", -6, 6)
-    if bg.SetHorizTile then
-        bg:SetHorizTile(true)
-        bg:SetVertTile(true)
+    if f.SetBackdropBorderColor then
+        f:SetBackdropBorderColor(1, 1, 1, 1)
     end
-    f.Bg = bg
 
-    local corner = 36
-    addMetalPiece(f, "OVERLAY", METAL.file, corner, corner, "TOPLEFT", -8, 10, METAL.portraitTL)
-    addMetalPiece(f, "OVERLAY", METAL.file, corner, corner, "TOPRIGHT", 2, 10, METAL.topRight)
-    addMetalPiece(f, "OVERLAY", METAL.file, corner, corner, "BOTTOMLEFT", -8, -2, METAL.botLeft)
-    addMetalPiece(f, "OVERLAY", METAL.file, corner, corner, "BOTTOMRIGHT", 2, -2, METAL.botRight)
+    local header = f:CreateTexture(nil, "ARTWORK")
+    header:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
+    header:SetWidth(360)
+    header:SetHeight(64)
+    header:SetPoint("TOP", 0, 12)
 
-    local top = f:CreateTexture(nil, "BORDER")
-    top:SetTexture(METAL.hfile)
-    top:SetHeight(28)
-    top:SetPoint("TOPLEFT", f, "TOPLEFT", corner - 8, 10)
-    top:SetPoint("TOPRIGHT", f, "TOPRIGHT", -(corner - 2), 10)
-    top:SetTexCoord(METAL.edgeTop[1], METAL.edgeTop[2], METAL.edgeTop[3], METAL.edgeTop[4])
-
-    local bot = f:CreateTexture(nil, "BORDER")
-    bot:SetTexture(METAL.hfile)
-    bot:SetHeight(28)
-    bot:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", corner - 8, -2)
-    bot:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -(corner - 2), -2)
-    bot:SetTexCoord(METAL.edgeBot[1], METAL.edgeBot[2], METAL.edgeBot[3], METAL.edgeBot[4])
-
-    local left = f:CreateTexture(nil, "BORDER")
-    left:SetTexture(METAL.vfile)
-    left:SetWidth(28)
-    left:SetPoint("TOPLEFT", f, "TOPLEFT", -8, -(corner - 10))
-    left:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", -8, corner - 2)
-    left:SetTexCoord(METAL.edgeLeft[1], METAL.edgeLeft[2], METAL.edgeLeft[3], METAL.edgeLeft[4])
-
-    local right = f:CreateTexture(nil, "BORDER")
-    right:SetTexture(METAL.vfile)
-    right:SetWidth(28)
-    right:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, -(corner - 10))
-    right:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 2, corner - 2)
-    right:SetTexCoord(METAL.edgeRight[1], METAL.edgeRight[2], METAL.edgeRight[3], METAL.edgeRight[4])
-
-    local portrait = f:CreateTexture(nil, "ARTWORK")
-    portrait:SetWidth(56)
-    portrait:SetHeight(56)
-    portrait:SetPoint("TOPLEFT", 4, -2)
-    portrait:SetTexture(ICON_OWN)
-    f.portrait = portrait
-
-    local ring = f:CreateTexture(nil, "OVERLAY")
-    ring:SetTexture("Interface\\COMMON\\WhiteIconFrame")
-    ring:SetWidth(60)
-    ring:SetHeight(60)
-    ring:SetPoint("CENTER", portrait, "CENTER", 0, 0)
+    local corner = f:CreateTexture(nil, "OVERLAY")
+    corner:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Corner")
+    corner:SetWidth(32)
+    corner:SetHeight(32)
+    corner:SetPoint("TOPRIGHT", -6, -7)
 
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("TOP", 0, -4)
-    title:SetPoint("LEFT", portrait, "RIGHT", 10, 0)
-    title:SetPoint("RIGHT", -36, 0)
-    title:SetJustifyH("LEFT")
+    title:SetPoint("TOP", header, "TOP", 0, -14)
+    title:SetText("Buildschmiede Export")
     f.TitleText = title
     f.title = title
 
     local closeX = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-    closeX:SetPoint("TOPRIGHT", 2, 2)
+    closeX:SetPoint("TOPRIGHT", -4, -4)
     closeX:SetScript("OnClick", function() f:Hide() end)
     f.CloseButton = closeX
 end
@@ -228,9 +132,8 @@ local function createRootFrame()
     end
 
     f = CreateFrame("Frame", "AscBuildschmiedeFrame", UIParent)
-    f._ascChrome = "manual"
-    f:SetBackdrop(DIALOG_BACKDROP)
-    applyManualMetalChrome(f)
+    f._ascChrome = "dialog"
+    applyClassicDialogChrome(f)
     return f
 end
 
@@ -247,29 +150,23 @@ local function createInset(parent)
                 inset.Bg:SetVertTile(true)
             end
         end
-        -- CA-Header-Streifen oben im Inset (Atlas oder TexCoord-Fallback).
-        local header = inset:CreateTexture(nil, "ARTWORK")
-        header:SetHeight(36)
-        header:SetPoint("TOPLEFT", 2, -2)
-        header:SetPoint("TOPRIGHT", -2, -2)
-        if not tryAtlas(header, "ca-background-header") then
-            header:SetTexture("Interface\\CharacterAdvancement\\CharacterAdvancementBackgrounds")
-            -- ca-background-header TexCoords aus AtlasInfo
-            header:SetTexCoord(0.001953125, 0.38916015625, 0.82568359375, 0.96142578125)
-        end
-        header:SetVertexColor(1, 1, 1, 0.85)
-        inset._caHeader = header
-        decorateGoldCorners(inset)
-        inset._decorated = true
+        -- Dark text well on top of marble (MacroFrame readability).
+        local well = CreateFrame("Frame", nil, inset)
+        well:SetPoint("TOPLEFT", 4, -4)
+        well:SetPoint("BOTTOMRIGHT", -4, 4)
+        well:SetBackdrop(MACRO_INSET_BACKDROP)
+        local cr, cg, cb, ca, br, bg, bb = tooltipColors()
+        well:SetBackdropColor(cr, cg, cb, ca)
+        well:SetBackdropBorderColor(br, bg, bb, 1)
+        inset._textWell = well
         return inset
     end
 
     inset = CreateFrame("Frame", nil, parent)
-    inset:SetBackdrop(INSET_BACKDROP)
-    inset:SetBackdropColor(0.12, 0.11, 0.1, 0.95)
-    inset:SetBackdropBorderColor(0.55, 0.48, 0.3, 1)
-    decorateCACorners(inset)
-    inset._decorated = true
+    inset:SetBackdrop(MACRO_INSET_BACKDROP)
+    local cr, cg, cb, ca, br, bg, bb = tooltipColors()
+    inset:SetBackdropColor(cr, cg, cb, ca)
+    inset:SetBackdropBorderColor(br, bg, bb, 1)
     return inset
 end
 
@@ -424,7 +321,6 @@ local function makeFrame()
     setTitle(f, "Buildschmiede Export")
     setPortraitIcon(f, ICON_OWN)
 
-    -- CloseButton vom Template nutzen; sonst bereits in applyManualMetalChrome.
     if f.CloseButton and f.CloseButton.SetScript then
         f.CloseButton:SetScript("OnClick", function() f:Hide() end)
     elseif not f.CloseButton then
@@ -434,24 +330,11 @@ local function makeFrame()
         f.CloseButton = closeX
     end
 
-    -- TitleText vom Template als f.title spiegeln (Status/Modus).
     f.title = f.TitleText or f.title
 
-    -- Leichter CA-Hintergrund hinter dem Inhalt (Atlas wenn verfuegbar).
-    local bodyBg = f:CreateTexture(nil, "BACKGROUND")
-    bodyBg:SetPoint("TOPLEFT", 8, -28)
-    bodyBg:SetPoint("BOTTOMRIGHT", -8, 8)
-    if not tryAtlas(bodyBg, "ca-background-browser") then
-        bodyBg:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble")
-        if bodyBg.SetHorizTile then
-            bodyBg:SetHorizTile(true)
-            bodyBg:SetVertTile(true)
-        end
-    end
-    bodyBg:SetVertexColor(0.85, 0.85, 0.9, 0.55)
-    f.bodyBg = bodyBg
+    -- PortraitFrame title strip sits under the metal top; DialogBox uses header banner.
+    local topY = (f._ascChrome == "portrait") and -58 or -36
 
-    local topY = -58
     local subtitle = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     subtitle:SetPoint("TOPLEFT", PAD + 4, topY)
     subtitle:SetPoint("TOPRIGHT", -(PAD + 28), topY)
@@ -490,18 +373,24 @@ local function makeFrame()
     end)
     f.url = url
 
+    -- Soft gold rule under the URL row (AscFastRoll separator idiom).
+    local sep = f:CreateTexture(nil, "ARTWORK")
+    sep:SetTexture("Interface\\Buttons\\WHITE8X8")
+    sep:SetHeight(1)
+    sep:SetPoint("TOPLEFT", PAD + 4, topY - 74)
+    sep:SetPoint("TOPRIGHT", -(PAD + 4), topY - 74)
+    sep:SetVertexColor(0.6, 0.5, 0.3, 0.45)
+
     local inset = createInset(f)
-    inset:SetPoint("TOPLEFT", PAD, topY - 78)
+    inset:SetPoint("TOPLEFT", PAD, topY - 82)
     inset:SetPoint("BOTTOMRIGHT", -(PAD + 4), 78)
     f.inset = inset
-    if not inset._decorated then
-        decorateCACorners(inset)
-    end
 
-    local scroll = CreateFrame("ScrollFrame", "AscBuildschmiedeScroll", inset,
+    local scrollParent = inset._textWell or inset
+    local scroll = CreateFrame("ScrollFrame", "AscBuildschmiedeScroll", scrollParent,
         "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 8, -8)
-    scroll:SetPoint("BOTTOMRIGHT", -28, 8)
+    scroll:SetPoint("TOPLEFT", 6, -6)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 6)
     f.scroll = scroll
 
     local edit = CreateFrame("EditBox", "AscBuildschmiedeEdit", scroll)

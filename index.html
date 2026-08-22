@@ -1399,6 +1399,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
   var ITEMICONS = D.iic || D.itemicons || D.iico || null;
   var TAGN = D.tagn || null;   // SpellTagTypes Namen + bySpell
   var SSUG = D.ssug || null;   // SpellStatSuggestions path-codes (≠ PrimaryStat-IDs)
+  var SSUGSP = D.ssugsp || null; // SpellSpellSuggestions related-graph (optional)
 
   // SpellTag-Index: Katalogindex → {facets[], schools[], tagCount}
   var STAG_BY_I = {};
@@ -1423,6 +1424,34 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
   function ssugPathLabel(i) {
     if (!SSUG || !SSUG.path) return "";
     return SSUG.path[i] || "";
+  }
+  // Related-Spell-Graph (SpellSpellSuggestions) — flat [idx, weight, …], keine Kanten erfinden.
+  function ssugspPairs(i) {
+    if (!SSUGSP || !SSUGSP.rel) return [];
+    var flat = SSUGSP.rel[i];
+    if (!flat || !flat.length) return [];
+    var out = [];
+    for (var k = 0; k + 1 < flat.length; k += 2) {
+      var j = +flat[k], w = +flat[k + 1] || 0;
+      if (j >= 0 && j < CAT.length && CAT[j]) out.push({ j: j, w: w });
+    }
+    return out;
+  }
+  function verwandteHtml(i, lim) {
+    var pairs = ssugspPairs(i);
+    if (!pairs.length) return "";
+    lim = lim || 4;
+    var chips = pairs.slice(0, lim).map(function (p) {
+      return '<span class="bdg" data-add="' + p.j +
+        '" title="Verwandt (SpellSpellSuggestions, Gewicht ' + p.w +
+        ') — klicken zum Hinzufügen">' + esc(CAT[p.j][0]) + "</span>";
+    }).join("");
+    return '<span class="bdgs">' +
+      '<span class="meta">Verwandte</span>' + chips +
+      (pairs.length > lim
+        ? '<span class="meta">+' + (pairs.length - lim) + "</span>"
+        : "") +
+      "</span>";
   }
 
   // Facetten-Gewichte wie pipeline/_method_spelltags.py (Levelrun 10–59).
@@ -1615,6 +1644,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
           esc(sug) + "</span>"
         : "") +
       '<span class="ds">' + esc(r[5]) + "</span>" + badges(i) +
+      verwandteHtml(i, 4) +
       (DES && !isDesireEligIdx(i)
         ? '<span class="bdg r" title="Nicht auf dem Wildcard-Desire-Board / Rapid Roll">kein Desire</span>'
         : "") +
@@ -1625,11 +1655,14 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
   }
 
   el.list.addEventListener("click", function (e) {
+    // Verwandte-Chips (data-add) nicht als Katalogzeilen-Toggle werten.
+    if (e.target.closest("[data-add]")) return;
     var t = e.target.closest(".row");
     if (t) toggle(+t.dataset.i);
   });
   el.list.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.target.closest("[data-add]")) return;
     var t = e.target.closest(".row");
     if (t) { e.preventDefault(); toggle(+t.dataset.i); }
   });
@@ -1981,6 +2014,22 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
     if (notes.length) {
       o.push('<div class="pnotes"><b>Was ' + esc(P.n) + " mit deinen Auswahlen macht</b>" +
         notes.join("") + "</div>");
+    }
+    // SpellStatSuggestions-Path-Codes im Build (DBC 0/1/3/4 → Namen, nicht PrimaryStat-IDs)
+    if (SSUG && SSUG.path) {
+      var sugCount = {};
+      ids.forEach(function (i) {
+        var lab = ssugPathLabel(i);
+        if (lab) sugCount[lab] = (sugCount[lab] || 0) + 1;
+      });
+      var sugKeys = Object.keys(sugCount);
+      if (sugKeys.length) {
+        o.push('<div class="wepline"><b>DBC-Path-Codes</b> ' +
+          sugKeys.map(function (k) {
+            return esc(k) + " ×" + sugCount[k];
+          }).join(" · ") +
+          ' <span class="gid" title="SpellStatSuggestions: Codes 0/1/3/4 = Strength/Agility/Intelligence/Healing — nicht PrimaryStat-IDs">(SpellStatSuggestions)</span></div>');
+      }
     }
     box.innerHTML = o.join("");
   }
@@ -2825,25 +2874,32 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         var wcBits = [];
         var wcKeys = ["CanRoll", "Starting", "WillStart", "WillFirst",
           "MaxRapid", "CanRapid", "AwaitTalent",
-          "RRPhase", "RRStop", "RRLearned", "RRDesired", "RRCanStart"];
+          "RRPhase", "RRStop", "RRLearned", "RRDesired", "RRCanStart",
+          "RRAbi", "RRTal", "RepurchAbi", "RepurchTal", "CanRepurch"];
+        function wcFmt(k, v) {
+          if (v && typeof v === "object" && v.raw !== undefined) {
+            return k + " " + v.cur + "/" + v.req +
+              (v.next ? "→" + v.next : "");
+          }
+          if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
+              (v === 0 || v === 1) && k.indexOf("RR") !== 0 &&
+              k !== "MaxRapid" && k !== "RepurchAbi" && k !== "RepurchTal" &&
+              k !== "RRLearned") {
+            if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
+                k === "CanRoll" || k === "Starting" || k === "WillStart" ||
+                k === "WillFirst" || k === "CanRapid" || k === "AwaitTalent") {
+              return k + (v ? " ja" : " nein");
+            }
+          }
+          return k + " " + v;
+        }
         wcKeys.forEach(function (k) {
           if (c.wc[k] === undefined) return;
-          var v = c.wc[k];
-          if (k.indexOf("RR") === 0) {
-            if (k === "RRDesired" || k === "RRCanStart") {
-              wcBits.push(k + (v ? " ja" : " nein"));
-            } else {
-              wcBits.push(k + " " + v);
-            }
-          } else if (v === 0 || v === 1) {
-            wcBits.push(k + (v ? " ja" : " nein"));
-          } else {
-            wcBits.push(k + " " + v);
-          }
+          wcBits.push(wcFmt(k, c.wc[k]));
         });
         Object.keys(c.wc).forEach(function (k) {
           if (wcKeys.indexOf(k) >= 0) return;
-          wcBits.push(k + " " + c.wc[k]);
+          wcBits.push(wcFmt(k, c.wc[k]));
         });
         if (wcBits.length) {
           o.push('<div class="wepline"><b>WC</b> ' + esc(wcBits.join(" · ")) +
@@ -3779,6 +3835,16 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       (REL[i][2] || []).forEach(function (j) { if (!have[j]) wanted[j] = (wanted[j] || 0) + 1; });
     });
 
+    // SpellSpellSuggestions: stärkste Verwandten-Kante Build → Kandidat (Gewicht aus DBC).
+    var fromRel = {};
+    ids.forEach(function (src) {
+      ssugspPairs(src).forEach(function (p) {
+        if (have[p.j]) return;
+        var cur = fromRel[p.j];
+        if (!cur || p.w > cur.w) fromRel[p.j] = { src: src, w: p.w };
+      });
+    });
+
     // Welcher Archetyp dominiert?
     var acount = {};
     ids.forEach(function (i) {
@@ -3827,6 +3893,12 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         why = why || ("nennt <b>" + esc(CAT[refs[0]][0]) + "</b> aus deinem Build");
       }
 
+      // d) Verwandt laut SpellSpellSuggestions (D.ssugsp) — Gewicht nicht neu rechnen
+      if (fromRel[i]) {
+        score += 4 + Math.min(Math.floor(fromRel[i].w / 50), 3);
+        why = why || ("verwandt mit <b>" + esc(CAT[fromRel[i].src][0]) + "</b>");
+      }
+
       if (!score) continue;
 
       // Abwertungen: was im Spiel gar nicht ginge
@@ -3873,9 +3945,10 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       return;
     }
     box.innerHTML =
-      '<div class="qhint">Aus den Tooltip-Verweisen deiner Auswahl abgeleitet. ' +
-      "Dubletten, zu hohe Stufen, gesperrte Paths und volles Seltenheits-Budget " +
-      "sind schon aussortiert.</div>" +
+      '<div class="qhint">Aus Tooltip-Verweisen' +
+      (SSUGSP ? " und SpellSpellSuggestions (Verwandte)" : "") +
+      " deiner Auswahl abgeleitet. Dubletten, zu hohe Stufen, gesperrte Paths " +
+      "und volles Seltenheits-Budget sind schon aussortiert.</div>" +
       list.map(function (x) {
         return '<div class="sug" data-add="' + x.i + '" role="button" tabindex="0">' +
           '<span class="icon" style="width:26px;height:26px;flex:0 0 26px;' +
@@ -5629,7 +5702,12 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       + (STAGS.catalogSize || CAT.length)
       + " Katalogeinträge getaggt</b> · "
       + stagFacetList().length + " Facetten. Schulen und Rollen nur, "
-      + "wenn der Client sie setzt.</div>");
+      + "wenn der Client sie setzt.");
+    if (TAGN && TAGN.types) {
+      o.push(" · <code>D.tagn</code>: "
+        + Object.keys(TAGN.types).length + " SpellTagTypes-Namen");
+    }
+    o.push("</div>");
     o.push('<div class="staggrid wissen">');
     stagFacetList().forEach(function (f) {
       o.push('<div class="stag ok"><span class="stagnam">'

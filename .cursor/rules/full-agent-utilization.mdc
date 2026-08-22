@@ -1,5 +1,5 @@
 ---
-description: Full agent utilization, auto-allow safe Ascension tooling, auto-commit+push after ship; hard AGENTS.md guardrails
+description: Full agent utilization, auto-allow tooling, always commit+push so GitHub/Pages stay current; hard AGENTS.md guardrails
 alwaysApply: true
 ---
 
@@ -33,18 +33,20 @@ Prefer running without stopping for permission:
 - Live AddOns sync to `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\` + rebuild `AscBuildschmiede.zip` from `addon/`
 - **Read-only** AscensionDBC / Interface extracts (API/DBC research)
 - Local `python -m http.server` for verify
-- **`git add` / `git commit` / `git push -u origin HEAD`** after meaningful shipped work (user mandate: always auto-push)
+- **`git add` / `git commit` / `git push -u origin HEAD`** after every meaningful ship (user mandate: always auto-push; GitHub always up to date)
 
 Project Auto-Run: `.cursor/permissions.json` (`approvalMode: allowlist`).
 
 ## Ship → commit → push (user mandate)
 
-After meaningful shipped work (feature, fix, data/pipeline update, assemble artifacts, docs that belong in the repo):
+**Goal:** keep `lzra2000/aldi-buildschmiede` and **GitHub Pages** current. Pages deploys from the **pushed built files** (`index.html`, `synergien.html`) on the remote — a local assemble without push does not update the live site.
 
-1. Verify as in `AGENTS.md` (assemble / syntax / spot-check as applicable).
-2. `git add` only relevant shippable paths (see allowlist below).
+After every meaningful ship (feature, fix, data/pipeline update, assemble/zip, docs that belong in the repo):
+
+1. Verify as in `AGENTS.md` (assemble / syntax / spot-check as applicable). Rebuild `index.html` / `synergien.html` via `pipeline/assemble.py` and `AscBuildschmiede.zip` from `addon/` when those surfaces changed.
+2. `git add` only relevant shippable paths (see allowlist below) — **include** rebuilt `index.html`, `synergien.html`, and `AscBuildschmiede.zip` whenever they changed.
 3. Commit with a concise message focused on **why** (follow repo commit style; HEREDOC / `-m` as usual).
-4. `git push -u origin HEAD` (or push the current tracking branch). Do **not** wait for the user to ask.
+4. `git push -u origin HEAD` (or push the current tracking branch). Do **not** wait for the user to ask. Remote must match the shipped work.
 
 ### Do commit
 
@@ -52,7 +54,7 @@ After meaningful shipped work (feature, fix, data/pipeline update, assemble arti
 - `data/*.json` that are embeddable / pipeline outputs (not ignored junk)
 - `addon/`
 - `pipeline/`
-- `index.html`, `synergien.html`, `AscBuildschmiede.zip`
+- Rebuilt artifacts when changed: `index.html`, `synergien.html`, `AscBuildschmiede.zip`
 - `AGENTS.md`, `.cursor/rules/`, `.cursor/permissions.json` when changed as part of the ship
 
 ### Never commit
@@ -84,4 +86,4 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 - Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
 - After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
 - Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict
-- After ship: commit + push so GitHub Pages gets the built files
+- After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
