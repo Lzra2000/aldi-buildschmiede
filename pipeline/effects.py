@@ -3,7 +3,9 @@
 Frage war: laesst sich der Grundschaden zuverlaessiger aus den
 Spelleffekten lesen als per Regex aus dem Beschreibungstext?
 
-Antwort: nein. Gegenprobe ueber 3.071 Eintraege:
+Antwort: nein. Gegenprobe ueber 3.071 Eintraege (siehe auch neuere
+Nachmessung in pipeline/probe_effect_scaling.py und
+NOTES-dbc-ascension.md §12 „Skalierung: Quelle der Wahrheit“):
 
     identisch          7
     abweichend       101
@@ -34,6 +36,7 @@ Technische Notizen fuer den Fall, dass jemand die Felder doch braucht:
    74..76  EffectDieSides[3]    Wuerfelseiten
    80..82  EffectBasePoints[3]  Basiswert, vorzeichenbehaftet lesen
    tatsaechlicher Wert = basePoints + 1 .. basePoints + dieSides
+   → fuer Produkt-Schaden unbrauchbar; ok nur fuer $s-Token in sync_tooltips
 """
 import io
 import json

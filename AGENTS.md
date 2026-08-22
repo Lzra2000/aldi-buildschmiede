@@ -242,13 +242,17 @@ Label-Klasse anlegt, macht es genauso.
 - **`procChance` steht meist auf 101** („immer"). Nur Werte zwischen 1 und
   99 sind echte Proc-Chancen.
 - **`EffectBasePoints` taugt nicht als Schadensquelle.** Schon untersucht,
-  Ergebnis negativ, Details in `pipeline/effects.py`. Kurzfassung: bei
-  eigenständigen Zaubern stimmt die DBC fast mit dem Tooltip überein, bei
-  Schulvarianten („uses X modifiers") ist der DBC-Eintrag ein Stummel —
-  Water Nova zeigt 496 Schaden, in der DBC stehen 14–17, die Werte von
-  Frost Nova Rang 1. Die Faktoren reichen von 0,4× bis 197×, es gibt also
-  keinen Umrechnungsfaktor. **Der Beschreibungstext bleibt die Quelle für
-  Schadenszahlen.** Bitte nicht ein zweites Mal untersuchen.
+  Ergebnis negativ, Details in `pipeline/effects.py` und
+  `pipeline/NOTES-dbc-ascension.md` §12 („Skalierung: Quelle der Wahrheit“).
+  Kurzfassung: bei manchen klassischen Zaubern stimmen Tip und DBC zufällig
+  überein, bei Schulvarianten („uses X modifiers“) und vielen Ascension-Spells
+  ist der DBC-Eintrag ein Stummel — Water Nova zeigt 496 Schaden, in der DBC
+  stehen 14–17. Faktoren 0,4×–465×, kein Umrechnungsfaktor. Waffen-% aus
+  Effect 58 und Float-Felder (RealPointsPerLevel, Multiple, …) liefern
+  **keine** SP/AP-Koeffizienten. SpellAddon/CustomAttr ebenfalls ohne
+  Skalierungs-% (Probe 2026-08-22). **Der Beschreibungstext bleibt die Quelle
+  für Schadens- und Skalierungszahlen.** Bitte nicht ein weiteres Mal
+  untersuchen.
 
 ### Was wo steht
 

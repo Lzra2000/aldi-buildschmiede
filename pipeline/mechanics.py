@@ -21,7 +21,8 @@ Ressourcen-TEILUNG (nicht vermischen):
    42 manaCost          (Wut/Runenmacht: Zehntel → /10)
    44 manaCostPercentage (gemessen, noch kein Produktfeld)
    46 rangeIndex       -> SpellRange.dbc
-   80..82 EffectBasePoints (vorzeichenbehaftet; unbrauchbar fuer Schaden)
+   80..82 EffectBasePoints (vorzeichenbehaftet; unbrauchbar fuer Schaden —
+         siehe NOTES-dbc-ascension.md §12; $s-Token ok in sync_tooltips)
 
 Ascension-Erweiterung (DBFilesClient):
    SpellCharges.dbc + SpellChargesCategory.dbc -> ch (max), chr (Recharge s)

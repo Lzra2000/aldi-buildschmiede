@@ -261,7 +261,16 @@ Nonzero-Raten (Felder mit Signal):
 
 f14-Verteilung (Top): 1×5059, 0×334, 2×135, 6×32, 3×29, 32×13, 96×9, 16×7
 
-Bedeutung der Bit-/Flag-Felder **noch ungeklaert** — keine Produktzahl ohne zweite Evidence.
+### Skalierungs-Probe (2026-08-22, `probe_effect_scaling.py`)
+
+Gegen `scaling.json` (Tooltip-SP%/AP%/Waffen%/flat) und „uses … modifiers“:
+
+- **Kein** Addon-Feld enthält die Tooltip-Prozentzahl (weder roh noch ×100).
+- Katalog-Schnittmenge nur **205** Spells — die meisten mit messbarer Skalierung
+  haben **keine** SpellAddon-Zeile.
+- Keine belastbare Korrelation Feld≠0 ↔ SP/AP/Waffen%/flat (keine Produktflags).
+
+Bedeutung der Bit-/Flag-Felder **weiter offen** — keine Produktzahl ohne zweite Evidence.
 
 ## 6. SpellCustomAttr
 
@@ -274,6 +283,15 @@ Felder 2–6 wirken wie Bitmasken (nz 18–45%). Semantik offen; Stichprobe:
 - `(66, 239, 0, 16, 0, 0, 0, 0, 0, 0, 0)`
 - `(71, 244, 0, 16, 256, 0, 0, 0, 0, 0, 0)`
 - `(72, 245, 0, 16, 256, 0, 0, 0, 0, 0, 0)`
+
+### Skalierungs-Probe (2026-08-22)
+
+- **Kein** CustomAttr-Feld = Tooltip-SP%/AP%/Waffen% (kein Exact-Match).
+- Schwache Häufigkeitsdeltas (z. B. f04-Bit `0x80000` häufiger bei tip-`w`,
+  ~43 % vs ~29 %) — **kein** Koeffizient, Semantik ohne zweite Quelle unklar.
+- SP/spb-Stichprobe n≤2 mit CustomAttr → Rauschen, keine Flags ableiten.
+
+**Kein Embed** von CustomAttr-Bits in `mechanics.json`.
 
 ## 7. Item-Display (Gear-Paperdoll)
 
@@ -302,12 +320,16 @@ Quelle der Ids: alle `data/testexport*.txt` (GEAR/WEAPON) + Seed + Levelrun-Seed
 
 ## 8. Was bewusst nicht Produkt wird
 
-- `Spell.dbc` EffectBasePoints → Schaden (bekannt unbrauchbar).
+- `Spell.dbc` EffectBasePoints / DieSides → **Schadensanzeige** (Schulvarianten +
+  viele Ascension-Spells; siehe §12).
+- `Spell.dbc` EFFECT_WEAPON_PERCENT BasePoints → Waffen-% (tip `w` fast nie gleich).
+- `Spell.dbc` EffectRealPointsPerLevel / vermutetes DmgMultiplier → **kein** SP/AP-%.
 - `Spell.dbc` manaCostPercentage (Feld 44) ohne zweite Evidence.
 - Ressourcen-**Gewinn** aus der DBC erfinden (nur Tooltip → `scaling.gen`).
 - `ch`/`chr` aus Tooltip-„charges“ ohne `SpellCharges`-Zeile.
 - `ch`/`chr` per Namens-Zwilling (andere spellId, gleicher Name) — siehe §2.
-- `SpellAddon` / `SpellCustomAttr` Flag-Semantik ohne zweite Quelle.
+- `SpellAddon` / `SpellCustomAttr` Flag- oder Bit-Semantik ohne zweite Quelle
+  (Skalierungs-Probe: keine %-Treffer, siehe §5–§6).
 - `SpellStatSuggestions` Wert `0` als Agility.
 - `ItemAddon.dbc` (48 Felder, 115 MB) — Name/Stats spaeter, Layout noch nicht vollstaendig kartiert.
 - `SpellEnchantSuggestions` (1 144 863 × 4, Layout wie SpellSpellSuggestions:
@@ -404,6 +426,84 @@ Shocks `crt=6000`). UI: „Geteilter Cooldown“ — **kein** zusätzlicher para
 
 Produkt bereits verdrahtet: Analyse-Flag, Ketten-Zeile „Geteilter CD“, Generator
 überspringt Dubletten über `dupGroup`.
+
+---
+
+## 12. Skalierung: Quelle der Wahrheit
+
+Stand 2026-08-22. Messungen: `pipeline/effects.py`, `pipeline/probe_effect_scaling.py`,
+`pipeline/sync_tooltips.py`. **Kein** erfundener SP/AP-Koeffizient.
+
+### Hierarchie (Produkt)
+
+| Was | Quelle der Wahrheit | Payload |
+|---|---|---|
+| Flat-Schaden / Heilung / Absorb / Waffen-% / genannte SP·AP-% | **Beschreibungstext** (Katalog / synced Tooltip) | `scaling.json` |
+| CD, Cast, Range, Dauer, Proc, Kosten (`cost`/`res`), Charges | **Spell.dbc** (+ SpellCharges*) | `mechanics.json` |
+| Ressourcen-**Gewinn** | nur Tooltip | `scaling.gen` |
+| Effekt-Token `$s`/`$e`/`$b`/`$t`/`$x`/`$q` in DBC-Tooltips | Effect-Felder (nur Token-Auflösung) | `sync_tooltips.py` → Katalogtext |
+
+Ascension schreibt bei Schulvarianten den **echten** Schaden in den Tooltip-Text
+(Server). Die Effect-Zeile in `Spell.dbc` bleibt oft ein Stummel der Basis/Rang-1.
+
+### Spell.dbc Effect-Felder — brauchbar vs. unbrauchbar für Schaden
+
+Layout 3.3.5a / Ascension (234 Felder; Indizes wie in `sync_tooltips.py` /
+`effects.py`, verifiziert über Icon/Name 133/136):
+
+| Felder | Index | Für Produkt-Schaden? | Wofür dann? |
+|---|---:|---|---|
+| `Effect` | 71–73 | **nein** (nur Typ) | Typ 2 School-Damage, 10 Heal, 31/58 Weapon, 6 Aura, … |
+| `EffectDieSides` | 74–76 | **nein** als Anzeige | mit BasePoints → Client-`$s`-Range |
+| `EffectRealPointsPerLevel` | 77–79 float | **nein** (kein SP/AP-%) | klassische Level-Skalierung; Katalog nz ~229 Slots |
+| `EffectBasePoints` | 80–82 signed | **nein** als Anzeigeschaden | `$s`/`$m`-Auflösung; Aura-/Nebenwerte |
+| `EffectMechanic` / Targets / Radius | 83–94 | nein | Mechanik / AoE-Index |
+| `EffectApplyAuraName` | 95–97 | nein | Aura-Typ |
+| `EffectAmplitude` | 98–100 | nein | Tick-Periode → `$t` |
+| `EffectMultipleValue` | 101–103 float | nein | `$e` (z. B. Mana Shield 1.5) |
+| `EffectChainTargets` | 104–106 | nein | `$x` |
+| `EffectMiscValue[B]` | 110–115 | nein | `$q` u. a. |
+| `EffectPointsPerComboPoints` | 119–121 float | nein | `$b` Finisher |
+| `EFFECT_WEAPON_PERCENT` BasePoints | (eff=58) | **nein** | tip-`w`: same=1 / tip-only=247 (Probe) |
+
+Gegenprobe Katalog ∩ `scaling.flat` vs. School-Damage-Range (`base+1…base+sides`):
+
+| | same | diff | nur Tip | nur DBC |
+|---|---:|---:|---:|---:|
+| gesamt | 73 | 150 | 304 | 54 |
+| ohne „uses … modifiers“ | 47 | 98 | 214 | 41 |
+| mit „uses … modifiers“ | 26 | 52 | 90 | 13 |
+
+- Ratio tip/dbc bei Diffs: min **0,36×**, Median **~8,7×**, max **465×** — kein
+  Umrechnungsfaktor (bestätigt `effects.py` / AGENTS).
+- Anker Schulvariante: Water Nova Tip **496**, DBC **14–17** (Frost-Nova-Stummel).
+- Tip-Flat der Variante ≠ Base-Spell-`EffectBasePoints` (match 1 / miss 65) —
+  Ascension kopiert den Basiswert nicht in die Varianten-Anzeige.
+
+„same=73“ enthält viele klassische Stub-Werte (Frostbolt 12–15, Fireball 14–22),
+wo Tip und DBC **gleich niedrig** sind — das ist **kein** Freibrief, DBC als
+Schadensquelle zu nutzen; sobald Ascension den Tip anhebt, bleibt die DBC zurück.
+
+### SP/AP-Koeffizienten in der DBC?
+
+Float-Scan über Effect-Block und Nachbarfelder gegen tip-`sp` / tip-`ap`
+(Prozent und Bruch): **0 Treffer**.  
+`EffectRealPointsPerLevel` / `EffectMultipleValue` / Combo-Floats sind **andere**
+Semantik ($e/$b/Level), keine versteckten Spell-Power-Prozente.
+
+Es gibt in den Extracts **kein** `SpellScaling.dbc`. Fehlende SP/AP-% im Tooltip
+bleiben in der UI ehrlich fehlend (`methods` gaps) — nichts erfinden.
+
+### SpellAddon / SpellCustomAttr
+
+Siehe §5–§6. Kurz: **keine** Skalierungszahlen, **keine** sicheren Mechanics-Flags
+aus dieser Probe. Bestehende Produktfelder (`ch`/`chr`, cost, cd, …) unverändert.
+
+### Wiederholen?
+
+Skript `pipeline/probe_effect_scaling.py` (wie `effects.py`: Untersuchung, kein
+Build-Schritt). Ergebnis hier festhalten — **nicht** ein drittes Mal „ob BasePoints
+diesmal geht“ untersuchen.
 
 ---
 Ende der Probe.
