@@ -64,9 +64,9 @@
             <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
           <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
           <select id="fTree" aria-label="Spec"><option value="">Alle Specs</option></select>
-          <select id="fDesire" aria-label="Desire-Board"><option value="">Desire egal</option>
+          <select id="fDesire" aria-label="Desire-Board"><option value="">Desire egal (alle)</option>
             <option value="1">Desire-fähig</option>
-            <option value="0">nicht Desire-fähig</option></select>
+            <option value="0">Nicht Desire-fähig</option></select>
           <details class="filtmore" id="filtMore">
             <summary>Weitere Filter<span class="filtmore-n" id="filtMoreN" hidden></span></summary>
             <div class="filtmore-in">
@@ -163,7 +163,7 @@
           <span class="cnt" id="cC">—</span></div>
         <div class="pastewrap">
           <p class="pastehint">Im Spiel <code>/bs</code> tippen,
-            <kbd>Strg</kbd>+<kbd>C</kbd>, hier rein. Addon 1.4+ liefert IDs,
+            <kbd>Strg</kbd>+<kbd>C</kbd>, hier einfügen. Addon 1.4+ liefert IDs,
             Essence, Locks und Gear — der Import matcht per spellId.
             Installation unter <em>Wissen</em>.</p>
           <textarea id="pasteBox" rows="4" spellcheck="false"
@@ -213,7 +213,7 @@
             <button id="bClear">Leeren</button>
             <input type="text" id="url" readonly aria-label="Build-Link">
             <div class="offlink" id="official"></div>
-            <p class="aihint">„Für KI kopieren" legt einen fertigen Prompt in die
+            <p class="aihint">„Für KI kopieren“ legt einen fertigen Prompt in die
               Zwischenablage: deine Werte, dein kompletter Build mit allen Zahlen
               und die Ascension-Regeln, die ein Modell sonst nicht kennt.</p>
           </div>
@@ -279,7 +279,7 @@
           <h3>Path of Duality</h3>
           <span class="mult">Spell Power ×1,75</span>
           <p>Der Hybrid-Path. Du bekommst Attack Power in Höhe deines besseren Attributs
-            — Strength oder Agility, je nachdem was höher ist. <strong>Intellect gibt hier Melee-Crit, Agility gibt
+            — Strength oder Agility, je nachdem, was höher ist. <strong>Intellect gibt hier Melee-Crit, Agility gibt
             Spell-Crit.</strong> Zaubern setzt deinen Autoangriff nicht mehr zurück.</p>
           <dl>
             <dt>Einhand — Twin Flurry</dt><dd>Spell-, Ranged- und Melee-Haste +10 %.</dd>
@@ -356,7 +356,7 @@
       <p class="srcnote">Die Path-Empfehlung oben im Builder wendet genau diese Regeln auf
         deine Auswahl an. Sie zählt, wie viele deiner Einträge Waffenschaden, eine
         Magieschule, beides oder Heilung nennen, und nennt dir die Skills beim Namen.
-        Klick in der Rangliste auf einen anderen Path, dann siehst du, was <em>der</em>
+        Klicke in der Rangliste auf einen anderen Path, dann siehst du, was <em>der</em>
         mit deinem Build machen würde.</p></div>
       <div class="tabp" id="rStats">
       <div class="headline">
@@ -454,7 +454,7 @@
       <div class="flag pre"><b>Strength ist auf einem Intelligence-Path fast tot</b>
         1,71 Attack Power pro Punkt sind 0,12 Waffen-DPS. Dasselbe Item mit Spell Power gibt
         dir pro Punkt das Vierzehnfache — und den vollen Zauberschaden obendrauf.
-        Str-Items nur nehmen, wenn nichts anderes da ist. Der Grund steht im Path-Tooltip: Path of Intelligence gibt Bonus auf Spell Power, Intellect und Spirit — Stärke und Agility gehen leer aus.</div>
+        Str-Items nur nehmen, wenn nichts anderes da ist. Der Grund steht im Path-Tooltip: Path of Intelligence gibt Bonus auf Spell Power, Intellect und Spirit — Strength und Agility gehen leer aus.</div>
 
       <div class="flag syn"><b>Stat-Prio in einem Satz</b>
         Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
@@ -541,7 +541,7 @@
             <tr><td class="num">/bs gear</td>
               <td>Gear im Export an- oder abschalten. Aus, wenn dir der Block zu lang ist.</td></tr>
             <tr><td class="num">/bs stats</td>
-              <td>Stats und Waffe an- oder abschalten.</td></tr>
+              <td>Stats und Waffen an- oder abschalten.</td></tr>
             <tr><td class="num">/bs help</td><td>Kurzhilfe im Chat.</td></tr>
           </tbody>
         </table>

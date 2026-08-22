@@ -5,7 +5,7 @@
 [**Synergien**](https://lzra2000.github.io/aldi-buildschmiede/synergien.html) ·
 [**Addon-Zip**](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip)
 
-Deutsch · Project Ascension · Season 10 Wildcard · fürs **Leveln 10–59** (nicht Raid-Endgame).  
+Deutsch · Project Ascension · Season 10 Wildcard · fürs Leveln von **10–59** (nicht Raid-Endgame).
 Im Spiel **`/bs`** → Text kopieren → auf der Seite einfügen.
 
 ---

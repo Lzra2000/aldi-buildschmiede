@@ -3,7 +3,7 @@
 
   var D = JSON.parse(document.getElementById("data").textContent);
   var CAT = D.cat;          // [name, kind, class, quality, level, desc]
-  var REL = D.rel;          // [baseIdx, needsIdx, refs[], dupGroup]
+  var REL = D.rel;          // [baseIdx, needsIdx, refs[], dupGroup, gate, cdGroup]
   var ARCH = D.arch;        // archetyp -> [idx]
   var SPR = D.spr;          // {cols, tile, idx[]}
   var CDG = D.cdg || [];    // Namen der Shared-Cooldown-Gruppen
@@ -389,7 +389,7 @@
     var have = {}; ids.forEach(function (i) { have[i] = 1; });
     var out = [];
 
-    // 1. Doppeltn
+    // 1. Dubletten = derselbe GCD-Slot (nicht parallel stapelbar)
     var groups = {};
     ids.forEach(function (i) {
       var g = REL[i][3];
@@ -397,10 +397,11 @@
     });
     Object.keys(groups).forEach(function (g) {
       if (groups[g].length > 1) {
-        out.push('<div class="flag dup"><b>Doppelt</b> — ' +
+        out.push('<div class="flag dup"><b>Gleicher GCD</b> — ' +
           groups[g].map(function (i) { return esc(CAT[i][0]); }).join(" · ") +
-          " machen dasselbe, nur in einer anderen Schadensschule. Einer reicht — die " +
-          "anderen kosten dich nur Plätze.</div>");
+          " sind Schulvarianten derselben Fähigkeit und teilen sich <b>einen</b> GCD. " +
+          "Zwei davon zu nehmen verdoppelt deinen Takt nicht — du hast nur " +
+          "verschiedene Schulen auf demselben Slot. Nimm eine.</div>");
       }
     });
 
@@ -433,7 +434,7 @@
         out.push('<div class="flag pre"><b>Skaliert gerade nicht</b> — ' + esc(CAT[i][0]) +
           " erbt <b>" + esc(CAT[base][0]) + "</b>-Modifikatoren, aber du hast kein Talent " +
           "gewählt, das " + esc(CAT[base][0]) + " verbessert. " +
-          "Infrage kämen: " + sug + ".</div>");
+          "In Frage kämen: " + sug + ".</div>");
       } else {
         out.push('<div class="flag syn"><b>Vererbung</b> — ' + esc(CAT[i][0]) +
           " nutzt " + esc(CAT[base][0]) + "-Modifikatoren. Für diese Basis gibt es im " +
@@ -516,8 +517,8 @@
       twoH: "Heavy Swings — Zweihand: physische Melee- und Ranged-Fähigkeiten " +
             "machen 10 % mehr Schaden.",
       good: "Rein physische Waffen-Builds. Schwere Einzeltreffer, Plattenträger.",
-      bad: "Kein Spell-Power-Multiplikator. Jeder Zauber in deinem Build läuft " +
-           "hier ungeboostet mit."
+      bad: "Kein Spell-Power-Multiplikator — Zauber in deinem Build skalieren " +
+           "hier nur mit dem Rohwert."
     },
     {
       k: "agi", n: "Path of Agility", sp: 1,
@@ -533,7 +534,7 @@
     {
       k: "dua", n: "Path of Duality", sp: 1.75,
       core: "Attack Power in Höhe deines besseren Attributs — Strength oder Agility, " +
-            "je nachdem was höher ist. Spell Power aus Items und Effekten ×1,75. " +
+            "je nachdem, was höher ist. Spell Power aus Items und Effekten ×1,75. " +
             "Intellect gibt hier Melee-Crit, Agility gibt Spell-Crit. " +
             "Zaubern setzt deinen Autoangriff nicht mehr zurück.",
       oneH: "Twin Flurry — Einhand: Spell-, Ranged- und Melee-Haste +10 %.",
@@ -663,10 +664,10 @@
     });
     o.push("</div>");
 
-    // Was der Path konkret mit deinen Auswahlen macht
+    // Was der Path konkret mit deiner Auswahl macht
     var notes = pathNotes(ids, P, p);
     if (notes.length) {
-      o.push('<div class="pnotes"><b>Was ' + esc(P.n) + " mit deinen Auswahlen macht</b>" +
+      o.push('<div class="pnotes"><b>Was ' + esc(P.n) + " mit deiner Auswahl macht</b>" +
         notes.join("") + "</div>");
     }
     // SpellStatSuggestions-Path-Codes im Build (DBC 0/1/3/4 → Namen, nicht PrimaryStat-IDs)
@@ -1410,7 +1411,7 @@
     var html = row("AE", c.essA, c.essASpent, c.essAExpect) +
       row("TE", c.essT, c.essTSpent, c.essTExpect);
     if (!html) return "";
-    return '<div class="essbox"><div class="geartitle">Essence</div>' + html + "</div>";
+    return '<div class="essbox"><div class="geartitle">ESSENCE</div>' + html + "</div>";
   }
 
   function renderChar() {
@@ -1520,7 +1521,7 @@
         (c.startChoice && c.startChoice.length) ||
         (c.wc && Object.keys(c.wc).length) ||
         (c.scardPend !== undefined && c.scardPend > 0)) {
-      o.push('<div class="wcbox"><div class="geartitle">Wildcard</div>');
+      o.push('<div class="wcbox"><div class="geartitle">WILDCARD</div>');
       if (ml) {
         o.push('<div class="wepline"><b>Modus</b> ' + esc(ml) +
           (isDraftChar(c) ? ' <span class="gid">Draft</span>' : "") +
@@ -1703,7 +1704,7 @@
         " über " + (c.gear || []).length + " Slots</div>");
     }
     if ((c.gear || []).length) {
-      o.push('<div class="gearwrap"><div class="geartitle">Ausrüstung</div>' +
+      o.push('<div class="gearwrap"><div class="geartitle">AUSRÜSTUNG</div>' +
         renderGearPaperdoll(c.gear) + "</div>");
     }
     box.innerHTML = o.join("");
@@ -1717,7 +1718,7 @@
     if (!c || !(c.gear || []).length) {
       if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
       box.innerHTML = '<div class="empty">Keine Ausrüstung im Export — im Addon ' +
-        "Gear mitnehmen und neu kopieren.</div>";
+        "Gear einschalten (<code>/bs gear</code>) und neu kopieren.</div>";
       return;
     }
     if (hd) {
@@ -1789,7 +1790,7 @@
     }
     if (isDraftChar(c)) {
       push("info", "Draft-Modus aktiv",
-        " Build ist Draft — Auswahlen können noch begrenzt sein.");
+        " Build ist Draft — die Auswahl kann noch begrenzt sein.");
     }
     if (c.scardPend !== undefined && c.scardPend > 0) {
       push("info", c.scardPend + " Skill Cards ausstehend",
@@ -1806,7 +1807,7 @@
       }
       push("ok", "Wildcard" + (modeLabel(c) ? " (" + esc(modeLabel(c)) + ")" : ""),
         (nSlot ? " " + nSlot + " Skill-Card-Slots belegt." : "") +
-        (nCard ? " " + nCard + " Spells auf Karten — Vorschläge bevorzugen die." : "") +
+        (nCard ? " " + nCard + " Spells auf Karten — Vorschläge bevorzugen diese." : "") +
         wcNote);
     }
 
@@ -1822,8 +1823,8 @@
       push("krit", "Über dem Seltenheits-Budget",
         " " + over.join(", ") + ". Ascension begrenzt nicht nur die Plätze, " +
         "sondern auch, wie viel Seltenheit ein Build tragen darf — im Spiel " +
-        "ließe sich das so nicht lernen. Tausch die überzähligen gegen " +
-        "niedrigere Stufen.");
+        "ließe sich das so nicht lernen. Tausche die überzähligen gegen " +
+        "niedrigere Qualitäten.");
     }
 
     // 2. Path gegen Build.
@@ -1852,7 +1853,7 @@
         esc(best ? best.why : "") + ".");
     } else if (c.path) {
       push("fix", "Path nicht erkannt",
-        " Das Addon meldet „" + esc(c.path) + "“. Kann ich keinem der fünf Paths " +
+        " Das Addon meldet „" + esc(c.path) + "“. Das lässt sich keinem der fünf Paths " +
         "zuordnen — die Empfehlung oben ignoriert deinen aktuellen Path deshalb.");
     }
 
@@ -1931,10 +1932,11 @@
       push("krit", dry.join(" und ") + " ohne Generator",
         " Dein Build gibt " + dry.map(function (r) {
           return pools[r] + "× " + r;
-        }).join(" und ") + " aus, hat aber nichts, das " +
-        (dry.length === 1 ? "sie" : "sie") + " auffüllt. " +
-        dry.join(" und ") + " regeneriert nicht von selbst — ohne " +
-        "Generator stehst du nach den ersten Sekunden mit leerer Leiste da.");
+        }).join(" und ") + " aus, hat aber nichts, das sie auffüllt. " +
+        dry.join(" und ") +
+        (dry.length === 1 ? " regeneriert" : " regenerieren") +
+        " nicht von selbst — ohne Generator stehst du nach den ersten Sekunden " +
+        "mit leerer Leiste da.");
     }
 
     if (pn.length > 1) {
@@ -2677,7 +2679,7 @@
     },
     {
       k: "cast", n: "Zauberwirker",
-      d: "Reine Sprüche ohne Waffenanteil. Der Pfad mit dem stärksten " +
+      d: "Reine Sprüche ohne Waffenanteil. Der Path mit dem stärksten " +
          "Spell-Power-Multiplikator.",
       score: function (i) {
         var t = TAG[i] || 0, s = SC[i] || {};
@@ -3244,7 +3246,7 @@
     if (aiBusy) return;
     var cfg = aiCfg();
     if (!cfg.key) {
-      aiOut('<div class="aiwarn">Kein Schlüssel hinterlegt. Trag oben einen ' +
+      aiOut('<div class="aiwarn">Kein Schlüssel hinterlegt. Trage oben einen ' +
         "ein — er bleibt in deinem Browser.</div>");
       return;
     }
@@ -3263,7 +3265,7 @@
       if (!res.ok) {
         var msg = (res.j && res.j.error && (res.j.error.message || res.j.error.type))
           || ("HTTP " + res.s);
-        aiOut('<div class="aiwarn"><b>Der Anbieter hat abgelehnt</b>' +
+        aiOut('<div class="aiwarn"><b>Der Anbieter hat abgelehnt</b>: ' +
           esc(msg) + (res.s === 401 ? " — der Schlüssel stimmt nicht." :
             res.s === 429 ? " — zu viele Anfragen oder kein Guthaben." : "") +
           "</div>");
@@ -3272,11 +3274,11 @@
       var txt = P.read(res.j) || "(leere Antwort)";
       aiOut('<div class="aitext"><p>' + mdLite(txt) + "</p></div>" +
         '<div class="qhint">Antwort eines Sprachmodells. Es sieht nur, was ' +
-        "im Prompt steht — prüf die Vorschläge gegen den Katalog, bevor du " +
+        "im Prompt steht — prüfe die Vorschläge gegen den Katalog, bevor du " +
         "Essence ausgibst.</div>");
     }).catch(function (e) {
       aiBusy = false;
-      aiOut('<div class="aiwarn"><b>Kein Zugriff auf den Anbieter</b>' +
+      aiOut('<div class="aiwarn"><b>Kein Zugriff auf den Anbieter</b>: ' +
         esc(e.message || String(e)) +
         ". Wenn du die Seite gerade als Claude-Artifact ansiehst: dort sind " +
         "externe Aufrufe gesperrt. Nimm " +
@@ -3579,6 +3581,17 @@
     if (gate) {
       rows.push(["Sperre", '<em>' + esc(gate[0]) + ":</em> " + esc(gate[1])]);
     }
+    var dg = REL[i][3];
+    if (dg >= 0) {
+      var gcdPeers = Object.keys(have).map(Number).filter(function (k) {
+        return k !== i && REL[k][3] === dg;
+      });
+      if (gcdPeers.length) {
+        rows.push(["Gleicher GCD", "<em>ein Slot</em> " +
+          gcdPeers.map(function (k) { return pill(k, true, false); }).join("")]);
+        dead++;
+      }
+    }
     var cg = REL[i][5];
     if (cg >= 0) {
       var shared = Object.keys(have).map(Number).filter(function (k) {
@@ -3587,6 +3600,7 @@
       if (shared.length) {
         rows.push(["Geteilter CD", '<em>' + esc(CDG[cg] || "gemeinsam") + "</em> " +
           shared.map(function (k) { return pill(k, true, false); }).join("")]);
+        dead++;
       }
     }
 
@@ -3948,8 +3962,8 @@
     // Empfohlener Path je Build - der interessanteste Unterschied
     if (A.path && B.path && A.path.k !== B.path.k) {
       o.push('<div class="flag syn"><b>Andere Ausrichtung</b> ' +
-        "Dein Build spricht für <b>" + esc(PATHBY[A.path.k].n) + "</b>, seiner für <b>" +
-        esc(PATHBY[B.path.k].n) + "</b>. Ihr baut nicht dasselbe — ein direkter " +
+        "Dein Build spricht für <b>" + esc(PATHBY[A.path.k].n) + "</b>, sein Build für <b>" +
+        esc(PATHBY[B.path.k].n) + "</b>. Das sind keine vergleichbaren Builds — ein direkter " +
         "Vergleich der Zahlen oben führt in die Irre.</div>");
     }
 
@@ -4127,7 +4141,7 @@
     box.innerHTML =
       '<div class="qhint">Ein Archetyp ist im Katalog eine <em>reine ' +
       "Fähigkeitsliste</em> — Talente bringt er keine mit, die suchst du " +
-      "danach selbst (der Reiter <em>Vorschläge</em> hilft dabei). Fast alle " +
+      "danach selbst (der Kasten <em>Passt dazu</em> hilft dabei). Fast alle " +
       "bestehen aus Epics, dein Epic-Budget entscheidet also, wie viele du " +
       "wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</div>" +
       '<div class="archgrid">' + names.map(function (n) {
@@ -4357,13 +4371,13 @@
     if (fp.gaps.length) {
       var topGaps = fp.gaps.slice(0, 4);
       var fillers = spellTagFillers(ids, topGaps.map(function (g) { return g.key; }), 10);
-      o.push('<div class="geartitle" style="padding:10px 14px 0">Lücken nach Gewicht</div>');
+      o.push('<div class="geartitle" style="padding:10px 14px 0">LÜCKEN NACH GEWICHT</div>');
       o.push('<div class="wepline">' + topGaps.map(function (g) {
         return esc(g.label) + " (−" + g.w + ")";
       }).join(" · ") + "</div>");
       if (fillers.length) {
         o.push('<div class="geartitle" style="padding:10px 14px 0">'
-          + "Katalog-Filler für diese Lücken</div>");
+          + "KATALOG-FILLER FÜR DIESE LÜCKEN</div>");
         fillers.forEach(function (f) {
           var covers = f.filled.map(stagLabel).join(", ");
           o.push('<div class="sug" data-add="' + f.i + '" role="button" tabindex="0">'
@@ -4443,6 +4457,14 @@
       + " mit DBC-Cooldown</b> · " + t.n
       + " mit messbarem Anteil (Level " + (t.lvl || []).join("–")
       + "). Score = Anteil ÷ CD (sonst GCD " + t.gcd + " s).</div>");
+    if (t.dupGroups && t.dupGroups.nMulti) {
+      html.push('<div class="flag pre"><b>Gleicher GCD — nicht addieren</b> · '
+        + t.dupGroups.nMulti + " Dublettengruppen mit je ≥2 Schulvarianten"
+        + (t.dupGroups.nMembers ? (" (" + t.dupGroups.nMembers + " Einträge)") : "")
+        + ". Varianten derselben Gruppe teilen sich einen GCD; zwei Scores "
+        + "aus einer Gruppe sind kein doppelter Takt. "
+        + "Geteilte Ability-CDs stehen separat in <code>cdgroups</code>.</div>");
+    }
 
     function tempoTable(rows, title) {
       if (!rows || !rows.length) return;
