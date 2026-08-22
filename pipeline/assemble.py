@@ -55,6 +55,7 @@ OPTIONAL_PAYLOAD = [
     ("wpn", "weapons.json"),              # itemId -> ItemStat-Bänder 10–60 (weapons.py)
     ("frm", "formtags.json"),             # Form-Familie aus Katalogtext (formtags.py)
     ("preq", "pathreq.json"),             # harte Path-Requires (pathreq.py) ≠ ssug
+    ("lmeta", "logmeta.json"),            # Darkmoon-Log-Meta (logmeta.py)
 ]
 
 # Sicherheitsnetz: nur einbetten wenn klein genug fuer GitHub Pages.

@@ -110,20 +110,22 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | Skript | erzeugt | Quelle | braucht Client |
 |---|---|---|---|
 | — | `catalog.json` | Season10Builder-Repo | nein |
-| — | `relations.json` | ebd. | nein |
-| — | `archetypes.json`, `cdgroups.json` | ebd. | nein |
+| — | `relations.json` | Season10Builder; `sharedgcd.py` patched nur `[3]`/`[5]` | nein |
+| — | `archetypes.json`, `cdgroups.json` | ebd. (cdg-Indizes stabil, nicht umsortieren) | nein |
+| `sharedgcd.py` | `relations.json` (`dupGroup` / `cdGroup`) | catalog + relations + `cdgroups.json` | nein |
 | `modifiers.py` | `basemods.json`, `usesbase.json` | `catalog.json` + `relations.json` (+ Text „uses X modifiers“) | nein |
-| `pathtags.py` | `pathtags.json` | `catalog.json` | nein |
 | `scaling.py` | `scaling.json` | `catalog.json` | nein |
+| `pathtags.py` | `pathtags.json` | `catalog.json` + `scaling.json` (`w`/`sch`/`fsch` → WEAPON+MAGIC) | nein |
 | `spellids.py` | `spellids.json` | `data/CatalogData.lua` | nein |
 | `mechanics.py` | `mechanics.json` | `Spell.dbc` + `spellids.json` (+ optional `SpellCharges*` → `ch`/`chr`) | **ja** |
 | `methods.py` | `methods.json` | catalog + scaling + mechanics + basemods + relations (+ CatalogData rollgate) | nein |
 | `statsuggest.py` | `statsuggest.json` | `SpellStatSuggestions.dbc` ∩ Katalog | nein |
 | `spellsuggest.py` | `spellsuggest.json` | `SpellSpellSuggestions.dbc` ∩ Katalog (Top-N) | nein |
 | `desireelig.py` | `desireelig.json` | `CatalogData.lua` (`desiredEligible`) | nein |
+| `formtags.py` | `formtags.json` | `catalog.json` (Name + Beschreibung) | nein |
 | `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (Testexport- + Seed-/Levelrun-ItemIds) | **ja** |
 | `ilvlbands.py` | `ilvlbands.json` | `ItemStat.dbc` ∩ `Item.dbc` (Mid-Schaden / ilvl / Rüstung p25–p75 je Stufe 10–60) | **ja** |
-| `weapons.py` | `weapons.json` | Seed-/Export-Waffen: Name/ilvl/dmg(+Stufen) aus ItemAddon+ItemStat | **ja** |
+| `weapons.py` | `weapons.json` | Seed-/Export-Waffen: ItemStat-Bänder 10–60 (`f1`=itemId; kein ItemAddon-Name) | **ja** |
 | `dbcicons.py`, `mksprite.py` | `sprite.webp`, `spriteindex.json` | `Spell.dbc`, `SpellIcon.dbc`, BLP-Icons | **ja** |
 
 Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
@@ -135,7 +137,9 @@ Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
 Testexport- + Seed-/Levelrun-Ids; Einbettung nur wenn Datei ≤ 512 KB —
 kein Vollscan von Item.dbc),
 `ilb` ← `ilvlbands.json` (Stufen-Perzentilbänder 10–60 — `pipeline/NOTES-ilvl.md`),
-`wpn` ← `weapons.json` (kompakte Waffen-Evidence je Seed-itemId; ergänzt `ilb`).
+`wpn` ← `weapons.json` (ItemStat-Bänder 10–60 je Seed-itemId; ergänzt `ilb`),
+`frm` ← `formtags.json` (Form-Familie aus Katalogtext — `pipeline/NOTES-formtags.md`;
+Einbettung nur wenn Datei ≤ 64 KB; Generator: `formInfo()` liest `D.frm`).
 
 Kern-Payload zusätzlich: `bm` ← `basemods.json`, `ub` ← `usesbase.json`
 (Variante→Basis aus Katalogtext „uses X modifiers“ — `pipeline/NOTES-basemods.md`).

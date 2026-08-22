@@ -19,7 +19,7 @@
   var SID = D.sid || [];    // Katalogindex -> spellId (Addon-Export)
   var EID = D.eid || [];    // Katalogindex -> entryId (Addon-Export)
   var ITEMICONS = D.iic || D.itemicons || D.iico || null;
-  var WPN = D.wpn || null;  // itemId -> {n,q,ilvl,dmg,b} aus weapons.py
+  var WPN = D.wpn || null;  // itemId -> {b: {stufe: [min,max]}} aus weapons.py
   var ILB = D.ilb || null;  // ItemStat-Stufenbänder (ilvl / w1h / w2h / armor)
   var TAGN = D.tagn || null;   // SpellTagTypes Namen + bySpell
   var SSUG = D.ssug || null;   // SpellStatSuggestions path-codes (≠ PrimaryStat-IDs)
@@ -70,6 +70,14 @@
     var g = REL[a] && REL[a][3];
     return g >= 0 && REL[b] && REL[b][3] === g;
   }
+  // Ein Token je Shared-GCD (dupGroup) oder geteiltem Ability-CD (cdGroup).
+  function gcdToken(i) {
+    var r = REL[i];
+    if (!r) return "i:" + i;
+    if (r[3] >= 0) return "d:" + r[3];
+    if (r[5] >= 0) return "c:" + r[5];
+    return "i:" + i;
+  }
   // Basis selbst oder eine Schulvariante davon steht im Build.
   function haveInherited(have, base) {
     if (base === null || base === undefined) return false;
@@ -114,11 +122,86 @@
     heal: "Healing", dua: "Duality"
   };
   function pathReqKeys(i) {
-    if (!PREQ || !PREQ.req) return [];
-    var s = PREQ.req[i];
-    if (s === undefined || s === null) s = PREQ.req[String(i)];
-    if (!s) return [];
-    return String(s).split("+").filter(Boolean);
+    var keys = [];
+    if (PREQ && PREQ.req) {
+      var s = PREQ.req[i];
+      if (s === undefined || s === null) s = PREQ.req[String(i)];
+      if (s) keys = String(s).split("+").filter(Boolean);
+    }
+    // relations.gate „Pfad“ wenn pathreq.json den Index nicht führt.
+    if (!keys.length && REL[i] && REL[i][4]) {
+      var g = REL[i][4];
+      if (g[0] === "Pfad" || g[0] === "Path") {
+        var nk = normPath(g[1]);
+        if (nk) keys = [nk];
+      }
+    }
+    return keys;
+  }
+  function activePathKey() {
+    return forcedPath || (CHAR ? normPath(CHAR.path) : "") || "";
+  }
+  function pathReqOk(i, mine) {
+    var keys = pathReqKeys(i);
+    if (!keys.length) return true;
+    if (!mine) return true;
+    return keys.indexOf(mine) >= 0;
+  }
+  function gateKind(g) {
+    if (!g) return "";
+    var k = String(g[0] || "");
+    if (k === "Pfad" || k === "Path") return "path";
+    if (k === "Waffe") return "wpn";
+    if (k === "Item") return "item";
+    if (k === "Stat") return "stat";
+    if (k === "Rang") return "rank";
+    return "other";
+  }
+  // "met" | "miss" | "unk" — unk = nicht aus dem Import belegbar.
+  function gateCheck(g) {
+    if (!g) return "unk";
+    var kind = gateKind(g), need = String(g[1] || "");
+    if (kind === "path") {
+      var want = normPath(need);
+      var haveP = activePathKey();
+      if (!want) return "unk";
+      if (!haveP) return "miss";
+      return haveP === want ? "met" : "miss";
+    }
+    if (kind === "wpn") {
+      var mh = mhFromChar(CHAR);
+      if (!mh) {
+        return (CHAR && ((CHAR.weapons && CHAR.weapons.length) ||
+          (CHAR.gear && CHAR.gear.length))) ? "miss" : "unk";
+      }
+      if (/two-handed melee/i.test(need)) return weaponIs2H(mh) ? "met" : "miss";
+      if (/dagger/i.test(need)) {
+        return (/dagger/i.test(mh.sub || "") || /dagger/i.test(mh.name || ""))
+          ? "met" : "miss";
+      }
+      return "unk";
+    }
+    if (kind === "item") {
+      if (!CHAR || !(CHAR.gear && CHAR.gear.length)) return "unk";
+      var rx = need.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var re = new RegExp(rx, "i");
+      return CHAR.gear.some(function (x) {
+        return x && re.test(x.name || "");
+      }) ? "met" : "miss";
+    }
+    if (kind === "stat") {
+      var sp = /agility/i.test(need) ? "agi" : /strength/i.test(need) ? "str" : "";
+      if (!sp) return "unk";
+      var haveS = activePathKey();
+      if (!haveS) return "unk";
+      return haveS === sp ? "met" : "miss";
+    }
+    if (kind === "rank") {
+      var idx = BYNAME[need.toLowerCase()];
+      if (idx === undefined) return "unk";
+      return picked[idx] ? "met" : "miss";
+    }
+    return "unk";
   }
   function pathReqRaw(i) {
     if (!PREQ || !PREQ.raw) return "";
@@ -148,11 +231,16 @@
     var pairs = ssugspPairs(i);
     if (!pairs.length) return "";
     lim = lim || 4;
-    var chips = pairs.slice(0, lim).map(function (p) {
+    var mineRel = activePathKey();
+    var legalPairs = pairs.filter(function (p) {
+      return pathReqOk(p.j, mineRel);
+    });
+    var chips = legalPairs.slice(0, lim).map(function (p) {
       return '<span class="bdg" data-add="' + p.j +
         '" title="Verwandt (SpellSpellSuggestions, Gewicht ' + p.w +
         ') — klicken zum Hinzufügen">' + esc(CAT[p.j][0]) + "</span>";
     }).join("");
+    pairs = legalPairs;
     var rest = pairs.length > lim
       ? '<span class="meta">+' + (pairs.length - lim) + "</span>"
       : "";
@@ -285,6 +373,65 @@
     return '<details class="more"><summary>' + esc(label) + "</summary>" +
       '<div class="more-body">' + html + "</div></details>";
   }
+
+  var LMETA_PATH_DE = {
+    int: "Intelligence", dua: "Duality", str: "Strength",
+    agi: "Agility", heal: "Healing", unk: "ungeklärt"
+  };
+  function logmetaPathDe(k) {
+    return LMETA_PATH_DE[k] || k;
+  }
+  function logmetaPathRows(rows) {
+    if (!rows || !rows.length) return "";
+    return rows.map(function (r) {
+      return '<div class="wepline"><b>' + esc(logmetaPathDe(r.k)) +
+        "</b> " + (r.pct != null ? r.pct + " %" : "") +
+        (r.n != null ? " · " + r.n : "") + "</div>";
+    }).join("");
+  }
+  function logmetaHintForTheme(themeKey) {
+    if (!LMETA || !LMETA.themeHint) return "";
+    var pk = LMETA.themeHint[themeKey];
+    if (!pk) return "";
+    return "Auf Darkmoon-Logs passt diese Ausrichtung oft zu Path of " +
+      logmetaPathDe(pk) + " — Meta, kein Override.";
+  }
+  function logmetaDetails(extra) {
+    if (!LMETA || !LMETA.dps) return "";
+    var phase = (LMETA.phase && LMETA.phase.name) || "aktuelle Phase";
+    var html = "<p>Öffentliche Top-Parses auf Darkmoon (" + esc(phase) +
+      "). Wer loggt, steht vorn — das ist kein Levelrun-Durchschnitt " +
+      "und keine Schadensformel.</p>";
+    html += '<div class="wepline"><b>DPS-Board</b> ' +
+      (LMETA.dps.parses || 0) + " Parses · " +
+      (LMETA.dps.chars || 0) + " Charaktere</div>";
+    html += logmetaPathRows(LMETA.dps.paths);
+    if (LMETA.hps && LMETA.hps.paths) {
+      html += '<div class="wepline"><b>HPS-Board</b> Healing trägt ' +
+        "primary_stat spirit (Path of Healing).</div>";
+      html += logmetaPathRows(LMETA.hps.paths.filter(function (r) {
+        return r.k === "heal" || (r.pct || 0) >= 8;
+      }));
+    }
+    if (LMETA.mplus && LMETA.mplus.characters) {
+      html += '<div class="wepline"><b>Mythic+</b> ' +
+        LMETA.mplus.characters + " Charaktere, Klasse Hero, Key bis " +
+        (LMETA.mplus.highestKey || "?") +
+        ". Spec dort oft ohne Path.</div>";
+    }
+    if (extra) html += extra;
+    return wrapDetails(html, "Log-Meta (Darkmoon, Rankings)");
+  }
+  function renderLogMetaWissen() {
+    var box = document.getElementById("logmetabox");
+    if (!box) return;
+    if (!LMETA) { box.innerHTML = ""; return; }
+    box.innerHTML = logmetaDetails(
+      "<p>Die Path-Wertung der Schmiede ändert sich dadurch nicht. " +
+      "Duality in den Top-Parses bestätigt Waffen-als-Element, " +
+      "Intelligence bestätigt reine Zauber — beides stand schon in den Daten.</p>"
+    );
+  }
   function toast(msg) {
     el.toast.textContent = msg;
     el.toast.classList.add("on");
@@ -394,13 +541,13 @@
     renderTimer = setTimeout(render, 110);
   }
   el.q.addEventListener("input", renderSoon);
-  ["fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort"].forEach(function (id) {
+  ["fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort", "fPathReq"].forEach(function (id) {
     if (el[id]) el[id].addEventListener("input", render);
   });
 
   // Weitere Filter: aktive Nebenfilter sichtbar halten, auch wenn details zu ist.
   function syncFiltMore() {
-    var ids = ["fSort", "fScale", "fQual"];
+    var ids = ["fSort", "fScale", "fQual", "fPathReq"];
     var n = 0;
     ids.forEach(function (id) {
       if (el[id] && el[id].value) n++;
@@ -556,10 +703,34 @@
 
     // 4b. Harte Voraussetzungen (Path / Item / Waffe / Stat / Rang)
     ids.forEach(function (i) {
+      var keys = pathReqKeys(i);
+      if (keys.length) {
+        var mineP = activePathKey();
+        if (mineP && keys.indexOf(mineP) < 0) {
+          out.push('<div class="flag pre"><b>Path fehlt</b> — ' + esc(CAT[i][0]) +
+            " braucht <b>" + esc(pathReqLabel(keys)) +
+            "</b>. Auf deinem Path bleibt der Eintrag tot.</div>");
+        }
+        return;
+      }
       var g = REL[i][4];
       if (!g) return;
-      out.push('<div class="flag pre"><b>' + esc(g[0]) + ' nötig</b> — ' + esc(CAT[i][0]) +
-        " setzt <b>" + esc(g[1]) + "</b> voraus. Fehlt das, passiert nichts.</div>");
+      if (gateKind(g) === "path") return;
+      var st = gateCheck(g);
+      if (st === "met") {
+        out.push('<div class="flag syn"><b>' + esc(g[0]) + " erfüllt</b> — " +
+          esc(CAT[i][0]) + " braucht <b>" + esc(g[1]) + "</b>.</div>");
+        return;
+      }
+      if (st === "unk") {
+        out.push('<div class="flag pre"><b>' + esc(g[0]) + " nötig</b> — " +
+          esc(CAT[i][0]) + " setzt <b>" + esc(g[1]) + "</b> voraus. " +
+          "Im Import nicht prüfbar.</div>");
+        return;
+      }
+      out.push('<div class="flag pre"><b>' + esc(g[0]) + " fehlt</b> — " +
+        esc(CAT[i][0]) + " setzt <b>" + esc(g[1]) +
+        "</b> voraus. Fehlt das, passiert nichts.</div>");
     });
 
     // 4c. Geteilte Cooldowns
@@ -714,50 +885,116 @@
     // Ohne gemessene Schule bleibt Tag-MAGIC: Frost Strike / Flameshred
     // haben „as Frost/Firestrike“ im Text, scaling zieht die Schule nicht immer.
     if (sc.w && school && !isMagicSchool(school)) isM = false;
-    var isH = !!(t & T_HEAL) || !!sc.heal;
-    // Heil-Hauptjob nur bei gemessener Tooltip-Heilung — nicht bei
-    // „healing reduced“ / Bleed-Schnipseln, und nicht auf Waffen-Hybriden.
-    var healPrimary = !!sc.heal && !sc.w && !(isW && isM);
+    var hasHealNum = !!sc.heal || !!sc.healpct;
+    var hasDamage = !!sc.w || !!sc.flat;
+    var sug = ssugPathLabel(i);
+    // Echte Heil-Identität: DBC-Healing, Prozentheilung ohne Schaden,
+    // oder Flat-Heilung ohne Schadenszahl. heal+flat ohne Healing-Code
+    // (Holy Supernova, Leech) bleibt Nebenheilung.
+    var healId = sug === "Healing" ||
+      (!!sc.healpct && !hasDamage) ||
+      (!!sc.heal && !hasDamage);
+    var isH = !!(t & T_HEAL) || hasHealNum;
+    var healPrimary = healId && !sc.w && !(isW && isM);
+    var name = (CAT[i] && CAT[i][0]) || "";
+    var bleedAgi = /^(Rake|Rip|Shred)$/i.test(name) ||
+      (String(school).toLowerCase() === "bleed" && sug === "Agility");
+    var phys = !!(t & T_PHYS) || (!!sc.w && !isMagicSchool(school) && !isM);
     return {
       w: isW,
       m: isM,
       wm: isW && isM,
       h: isH,
       hPrimary: healPrimary,
-      phys: !!(t & T_PHYS) || (!!sc.w && !isMagicSchool(school) && !isM),
+      phys: phys,
       crit: !!(t & T_CRIT),
-      // Crit-Gewicht nur für Waffen/Phys — Magie-Crit gehört nicht zu Agility.
-      critMelee: !!(t & T_CRIT) && isW && !isM,
-      arpen: !!(t & T_ARPEN)
+      // Waffen- oder Phys-Crit — Magie-Crit gehört nicht zu Agility.
+      critMelee: !!(t & T_CRIT) && (isW || phys) && !isM,
+      arpen: !!(t & T_ARPEN),
+      bleed: bleedAgi
     };
   }
 
   function profile(ids) {
     var p = {
       w: 0, m: 0, h: 0, hPrimary: 0, wm: 0,
-      crit: 0, critMelee: 0, arpen: 0, phys: 0, n: ids.length,
+      crit: 0, critMelee: 0, arpen: 0, phys: 0, bleed: 0, n: 0,
       ssugStr: 0, ssugAgi: 0, ssugInt: 0, ssugHeal: 0
     };
+    var buckets = Object.create(null);
+    var order = [];
     ids.forEach(function (i) {
-      var f = pathFlags(i);
+      if (CAT[i] && CAT[i][1] === 1) return;
+      var tok = gcdToken(i);
+      if (!buckets[tok]) {
+        buckets[tok] = [];
+        order.push(tok);
+      }
+      buckets[tok].push(i);
+    });
+    order.forEach(function (tok) {
+      var f = {
+        w: false, m: false, h: false, hPrimary: false,
+        phys: false, crit: false, critMelee: false, arpen: false, bleed: false
+      };
+      var lab = "";
+      buckets[tok].forEach(function (i) {
+        var fi = pathFlags(i);
+        if (fi.w) f.w = true;
+        if (fi.m) f.m = true;
+        if (fi.h) f.h = true;
+        if (fi.hPrimary) f.hPrimary = true;
+        if (fi.phys) f.phys = true;
+        if (fi.crit) f.crit = true;
+        if (fi.critMelee) f.critMelee = true;
+        if (fi.arpen) f.arpen = true;
+        if (fi.bleed) f.bleed = true;
+        var l = ssugPathLabel(i);
+        if (l && !lab) lab = l;
+      });
       if (f.w) p.w++;
       if (f.m) p.m++;
-      if (f.wm) p.wm++;
+      if (f.w && f.m) p.wm++;
       if (f.h) p.h++;
       if (f.hPrimary) p.hPrimary++;
       if (f.phys) p.phys++;
       if (f.crit) p.crit++;
       if (f.critMelee) p.critMelee++;
       if (f.arpen) p.arpen++;
-      var lab = ssugPathLabel(i);
+      if (f.bleed) p.bleed++;
       if (lab === "Strength") p.ssugStr++;
       else if (lab === "Agility") p.ssugAgi++;
       else if (lab === "Intelligence") p.ssugInt++;
       else if (lab === "Healing") p.ssugHeal++;
+      p.n++;
     });
     p.pw = p.w - p.wm;
     p.pm = p.m - p.wm;
     return p;
+  }
+
+  function healFocus(p) {
+    var n = p.n || 1;
+    return p.hPrimary >= 3 || (p.hPrimary >= 2 && p.hPrimary >= n * 0.3);
+  }
+
+  function pathTieRank(k, p) {
+    var duaCore = p.wm >= 2 && p.wm >= p.pw && p.wm >= p.pm;
+    if (k === "heal") return healFocus(p) ? 5 : 0;
+    if (k === "dua") return duaCore ? 4 : 0;
+    if (k === "int") return p.pm > 0 ? 3 : 1;
+    if (k === "agi") {
+      return ((p.ssugAgi || 0) > (p.ssugStr || 0) || p.bleed || p.critMelee) ? 3 : 1;
+    }
+    if (k === "str") {
+      return ((p.ssugStr || 0) > (p.ssugAgi || 0) || p.arpen) ? 3 : 2;
+    }
+    return 0;
+  }
+
+  function playedPathKey() {
+    if (forcedPath && PATHBY[forcedPath]) return forcedPath;
+    return CHAR ? normPath(CHAR.path) : "";
   }
 
   // Punkte + Begruendung. Bewusst grob: der Builder kennt dein Gear nicht.
@@ -782,28 +1019,38 @@
 
     // Physisch zählt für Strength und Agility gleich — ArPen vs. Waffen-Crit trennt.
     var strV = p.pw * 2 + p.arpen * 3 + p.phys;
-    var agiV = p.pw * 2 + p.critMelee * 2 + p.phys;
+    var agiV = p.pw * 2 + p.critMelee * 2 + p.phys + (p.bleed || 0) * 2;
     // Rein physisch ohne Hybrid: leichter Bonus vs. Duality-Nullscore.
     if (p.wm === 0 && p.pw >= 3 && p.pm === 0) {
       strV += 2;
       agiV += 2;
     }
 
-    // SpellStatSuggestions: weicher Hinweis (max +2), kein Override bei Hybridkern.
+    // Int/Heal: weicher Hinweis (max +2). Str/Agi: gemessene DBC-Codes ohne
+    // Deckel — sonst gewinnt Strength jeden physischen Waffen-Build.
     function ssugHint(n) { return Math.min(n || 0, 2); }
     if (p.wm < 2) intV += ssugHint(p.ssugInt);
     healV += ssugHint(p.ssugHeal);
-    strV += ssugHint(p.ssugStr);
-    agiV += ssugHint(p.ssugAgi);
+    strV += (p.ssugStr || 0);
+    agiV += (p.ssugAgi || 0);
+    // Harte Requires (CatalogData) — Pflicht, nicht Hinweis.
+    healV += (p.preqHeal || 0) * 8;
+    strV += (p.preqStr || 0) * 8;
+    agiV += (p.preqAgi || 0) * 8;
+    intV += (p.preqInt || 0) * 8;
+    duaV += (p.preqDua || 0) * 8;
 
     var s = [
       {
         k: "heal", v: healV,
-        why: p.hPrimary
-          ? p.hPrimary + (p.hPrimary === 1 ? " klarer Heilzauber" : " klare Heilzauber") +
-            " im Build"
-          : (p.h ? "nur Nebenheilung — kein Heiler-Schwerpunkt"
-                 : "nichts Heilendes gewählt")
+        why: p.preqHeal
+          ? p.preqHeal + (p.preqHeal === 1 ? " Eintrag braucht" : " Einträge brauchen") +
+            " Path of Healing"
+          : (p.hPrimary
+            ? p.hPrimary + (p.hPrimary === 1 ? " klarer Heilzauber" : " klare Heilzauber") +
+              " im Build"
+            : (p.h ? "nur Nebenheilung — kein Heiler-Schwerpunkt"
+                   : "nichts Heilendes gewählt"))
       },
       {
         k: "int", v: intV,
@@ -931,6 +1178,23 @@
             return esc(k) + " ×" + sugCount[k];
           }).join(" · ") +
           ' <span class="gid" title="SpellStatSuggestions: Codes 0/1/3/4 = Strength/Agility/Intelligence/Healing — nur Hinweis, kein Override bei Waffenschaden-als-Element">(Hinweis, kein Override)</span></div>');
+      }
+    }
+    if (PREQ && PREQ.req) {
+      var reqCount = {};
+      ids.forEach(function (i) {
+        pathReqKeys(i).forEach(function (k) {
+          var lab = PATH_REQ_DE[k] || k;
+          reqCount[lab] = (reqCount[lab] || 0) + 1;
+        });
+      });
+      var reqLabs = Object.keys(reqCount);
+      if (reqLabs.length) {
+        o.push('<div class="wepline"><b>Path-Sperre</b> ' +
+          reqLabs.map(function (k) {
+            return esc(k) + " ×" + reqCount[k];
+          }).join(" · ") +
+          ' <span class="gid" title="Harte Requires aus CatalogData / Katalogtext — nicht SpellStatSuggestions">(Pflicht, kein Hinweis)</span></div>');
       }
     }
     box.innerHTML = o.join("");
@@ -2022,9 +2286,9 @@
     return '<div class="wcstatus">' + rows.join("") + "</div>";
   }
 
-  // ---------- Waffen-Evidence (WEAPON-Import + D.wpn aus Item-DBCs) ----------
-  // Tempo/DPS kommen aus dem Addon (gemessen mit AP/SP). DBC liefert nur
-  // ilvl/Basis-Schaden/Stufenbänder — kein Tempo, keine erfundenen Koeffizienten.
+  // ---------- Waffen-Evidence (WEAPON-Import + D.wpn ItemStat-Bänder) ----------
+  // Tempo/DPS/Name/ilvl kommen aus dem Addon-Export. D.wpn liefert nur
+  // gemessene min/max-Bänder 10–60 — kein Name, kein ilvl, kein Basis-dmg.
   function wpnLookup(itemId) {
     if (!WPN || !itemId) return null;
     return WPN[itemId] || WPN[String(itemId)] || null;
@@ -2077,28 +2341,16 @@
 
     var db = wpnLookup(w.itemId);
     if (!w.itemId) {
-      bits.push("DBC fehlt (keine itemId)");
-    } else if (!db) {
-      bits.push("DBC fehlt");
+      bits.push("Stufenband fehlt (keine itemId)");
+    } else if (!db || !db.b) {
+      bits.push("Stufenband fehlt");
     } else {
-      if (db.ilvl != null) {
-        bits.push("DBC-ilvl " + db.ilvl +
-          (w.ilvl && db.ilvl !== w.ilvl ? " ≠ Import" : ""));
-      } else {
-        bits.push("DBC-ilvl fehlt");
-      }
       var band = weaponBandAt(db, charLevel);
       if (band) {
         bits.push("Band Stufe " + (charLevel || "?") + ": " +
           formatDmgPair(band) + " (ohne AP/SP)");
-      } else if (db.dmg) {
-        bits.push("DBC-Basis " + formatDmgPair(db.dmg) +
-          " (Band 10–60 fehlt)");
       } else {
-        bits.push("DBC-Schaden fehlt");
-      }
-      if (db.n && w.name && db.n !== w.name) {
-        bits.push("DBC-Name „" + db.n + "“");
+        bits.push("Stufenband für Stufe " + (charLevel || "?") + " fehlt");
       }
     }
     return bits.join(" · ");
@@ -2125,7 +2377,31 @@
     return ILB.levels[L] || ILB.levels[String(L)] || null;
   }
   function weaponIs2H(w) {
-    return !!(w && /2HWEAPON/i.test(String(w.loc || "")));
+    return !!(w && (/2HWEAPON/i.test(String(w.loc || "")) ||
+      /two.?hand|staff|polearm/i.test(String(w.sub || ""))));
+  }
+  // WEAPON-Zeile, sonst GEAR MainHand (/bs gear ohne /bs stats).
+  function mhFromChar(c) {
+    c = c || CHAR;
+    if (!c) return null;
+    var w = (c.weapons || []).filter(function (x) {
+      return x && x.slot === "MH" && x.name && x.name !== "-";
+    })[0];
+    if (w) return w;
+    var g = (c.gear || []).filter(function (x) {
+      return x && (x.slot === "MainHand" || x.slot === "MH") &&
+        x.name && x.name !== "-";
+    })[0];
+    if (!g) return null;
+    var sub = String(g.sub || "");
+    return {
+      slot: "MH",
+      name: g.name,
+      loc: /two.?hand|staff|polearm/i.test(sub)
+        ? "INVTYPE_2HWEAPON" : "INVTYPE_WEAPONMAINHAND",
+      sub: sub,
+      itemId: g.itemId || 0
+    };
   }
   function weaponMidDamage(w) {
     if (!w) return null;
@@ -2176,7 +2452,7 @@
     if (!c || !c.level) return 0;
     var band = ilvlBandAt(c.level);
     if (!band) return 0;
-    var mh = (c.weapons || []).filter(function (w) { return w.slot === "MH"; })[0];
+    var mh = mhFromChar(c);
     if (!mh) return 0;
     var key = weaponBandKey(mh);
     if (!key || !band[key]) return 0;
@@ -2724,6 +3000,32 @@
         "Deine Heilung skaliert dadurch deutlich schlechter als dein Schaden.");
     }
 
+    // Harte Path-Requires gegen importierten / gesetzten Path (jedes Level).
+    if (have) {
+      var lockedWrong = [];
+      var needSet = {};
+      ids.forEach(function (i) {
+        var keys = pathReqKeys(i);
+        if (keys.length && keys.indexOf(have.k) < 0) {
+          lockedWrong.push(i);
+          keys.forEach(function (k) { needSet[k] = 1; });
+        }
+      });
+      if (lockedWrong.length) {
+        var names = lockedWrong.slice(0, 3).map(function (i) {
+          return "<b>" + esc(CAT[i][0]) + "</b>";
+        }).join(", ");
+        push("krit", lockedWrong.length === 1
+            ? "Ein Eintrag braucht einen anderen Path"
+            : lockedWrong.length + " Einträge brauchen einen anderen Path",
+          " " + names +
+          (lockedWrong.length > 3 ? " und " + (lockedWrong.length - 3) + " weitere" : "") +
+          " setzen <b>" + esc(pathReqLabel(Object.keys(needSet))) +
+          "</b> voraus. Auf <b>" + esc(have.n) +
+          "</b> bleiben sie tot — das gilt im Levelrun und auf Stufe 60.");
+      }
+    }
+
     // 4. Attributverteilung gegen den Path
     if (have && s) {
       var str = s.STR || 0, agi = s.AGI || 0, int = s.INT || 0;
@@ -2752,9 +3054,9 @@
     }
 
     // 5. Welchen der beiden Path-Boni bekommst du gerade?
-    var mh = c.weapons.filter(function (w) { return w.slot === "MH"; })[0];
+    var mh = mhFromChar(c);
     if (have && mh) {
-      var twoH = /2HWEAPON/i.test(mh.loc);
+      var twoH = weaponIs2H(mh);
       push("ok", twoH ? "Du trägst Zweihand" : "Du trägst Einhand",
         " Aktiv ist damit: " + (twoH ? have.twoH : have.oneH) +
         " Der andere Bonus wäre: " + (twoH ? have.oneH : have.twoH));
@@ -2910,15 +3212,15 @@
         return w.itemId && !wpnLookup(w.itemId);
       });
       if (missDbc.length && WPN) {
-        push("info", "Waffen-DBC unvollständig",
+        push("info", "Waffen-Stufenband unvollständig",
           " Für " + missDbc.map(function (w) { return w.name; }).map(esc)
             .join(", ") +
-          " fehlt der Eintrag in weapons.json (Seed/Export) — " +
-          "Import-DPS und ilvl bleiben die Quelle.");
+          " fehlt das ItemStat-Band in weapons.json (Seed/Export) — " +
+          "Name, DPS und ilvl kommen nur aus deiner WEAPON-Zeile.");
       } else if (!WPN) {
-        push("info", "Waffen-DBC fehlt",
+        push("info", "Waffen-Stufenband fehlt",
           " data/weapons.json ist nicht eingebettet — nur der WEAPON-Import " +
-          "zählt. pipeline/weapons.py gegen die Item-DBCs laufen lassen.");
+          "zählt. pipeline/weapons.py gegen ItemStat laufen lassen.");
       }
     }
 
@@ -3322,6 +3624,14 @@
       show.push('<span class="bdg r" title="Ohne diese Fähigkeit bleibt der Effekt inaktiv.">' +
         "braucht " + esc(short(CAT[need][0])) + "</span>");
     }
+    var preq = pathReqKeys(i);
+    if (preq.length) {
+      show.push('<span class="bdg r" title="Harte Path-Voraussetzung aus Katalogtext / CatalogData — kein DBC-Hinweis.">' +
+        "braucht " + esc(pathReqLabel(preq)) + "</span>");
+    } else if (pathReqRaw(i)) {
+      more.push('<span class="bdg r" title="Gemessene Stat-Sperre, keinem der fünf Paths zugeordnet.">' +
+        esc(pathReqRaw(i)) + "</span>");
+    }
     if (REL[i] && REL[i][3] >= 0) {
       show.push('<span class="bdg c" title="Schulvarianten derselben Fähigkeit teilen sich einen GCD — nicht parallel stapelbar.">gleicher GCD</span>');
     }
@@ -3457,16 +3767,16 @@
       return avg;
     }
 
-    // 0. Import-Waffe vs. Item-DBC (wpn) + Stufenband (ilb)
+    // 0. Import-Waffe vs. ItemStat-Band (wpn) + Stufen-Perzentile (ilb)
     if (wep || wepOH || wepR) {
-      o.push('<div class="schd">Waffe (Import + DBC)</div>');
+      o.push('<div class="schd">Waffe (Import + Stufenband)</div>');
       if (CHAR && CHAR.level && ILB) {
         o.push('<div class="scsum"><b>Stufenband ' + CHAR.level + "</b>" +
           "Mid = Import-Schaden (min+max)/2 bzw. DPS×Tempo. " +
           "Vergleich gegen ItemStat-Perzentile — ohne AP/SP-Koeffizienten.</div>");
       } else if (!ILB) {
         o.push('<div class="scsum"><b>Stufenband fehlt</b>' +
-          "ilvlbands.json nicht eingebettet — nur Import und Item-DBC.</div>");
+          "ilvlbands.json nicht eingebettet — nur Import und Waffen-Stufenband.</div>");
       }
       [wep, wepOH, wepR].forEach(function (w) {
         if (!w) return;
@@ -3791,7 +4101,7 @@
       return acount[b] - acount[a];
     })[0];
 
-    var mine = CHAR ? normPath(CHAR.path) : "";
+    var mine = activePathKey();
     var dupHave = {};
     ids.forEach(function (i) { if (REL[i][3] >= 0) dupHave[REL[i][3]] = 1; });
 
@@ -3841,9 +4151,10 @@
       if (REL[i][3] >= 0 && dupHave[REL[i][3]]) continue;      // Dublette
       if (tooHigh(i)) continue;                                 // Level zu hoch
       if (overBudget(i)) continue;                              // Budget voll
+      if (!pathReqLegal(i, mine)) continue;
       var gate = REL[i][4];
-      if (gate && gate[0] === "Path" && mine &&
-          normPath(gate[1]) && normPath(gate[1]) !== mine) continue;
+      if (gate && (gateKind(gate) === "wpn" || gateKind(gate) === "item") &&
+          gateCheck(gate) === "miss") continue;
 
       if (topArch && archOf[i] === topArch) score += 1;
       if (CAT[i][3] >= 3) score += 1;                           // Epic+ etwas hoeher
@@ -4059,9 +4370,40 @@
     };
   }
 
-  // Eine Familie aus D.frm (formtags.py), sonst Name+Beschreibung.
-  // Mehrfach erlaubt (Mangle = Katze+Bär) landet in allow[]; family ist
-  // der stabile Vertreter. ushift = nutzbar in der gewählten Kampf-Form.
+  function formNameGrant(name) {
+    var n = String(name || "").replace(/\s+/g, " ").trim();
+    if (FORM_OTHER_RX.test(n) || !FORM_GRANT_RX.test(n)) return "";
+    var gi;
+    for (gi = 0; gi < FORM_PATS.length; gi++) {
+      if (FORM_PATS[gi].rx.test(n)) return formNormWarrior(FORM_PATS[gi].f);
+    }
+    return "";
+  }
+  function formPickFamily(allow, grantFamily) {
+    if (grantFamily && allow.indexOf(grantFamily) >= 0) return grantFamily;
+    if (allow.length === 1) return allow[0];
+    if (allow.length > 1) {
+      var pref = ["bear", "cat", "moonkin", "tree", "worgen", "meta",
+        "shadowform", "presence_blood", "presence_frost", "presence_unholy",
+        "warrior_stance", "ghostwolf", "travel"];
+      var pr;
+      for (pr = 0; pr < pref.length; pr++) {
+        if (allow.indexOf(pref[pr]) >= 0) return pref[pr];
+      }
+      return allow[0];
+    }
+    return grantFamily || "humanoid";
+  }
+  function formFinish(info, grantFamily) {
+    info.family = formPickFamily(info.allow, grantFamily);
+    info.utility = formIsUtility(info.family);
+    info.stanceGroup = FORM_STANCE_GROUP[info.family] || null;
+    return info;
+  }
+
+  // D.frm (formtags.py) zuerst — gemessener Code ist exklusiv.
+  // Leerer Slot: Name+Beschreibung, ohne Verneinung / Form-Abbruch zu raten.
+  // ushift = nutzbar in der gewählten Kampf-Form. (Feral) = bear+cat.
   function formInfo(i) {
     if (FORM_CACHE[i]) return FORM_CACHE[i];
     if (FORM_BUSY[i]) return emptyFormInfo();
@@ -4076,34 +4418,17 @@
     var name = String(rec[0] || "");
     var desc = String(rec[5] || "");
     var blob = name + "\n" + desc;
-    var req = [];
-    var mention = [];
-    var rawAllow = [];
-    var grantFamily = "";
+    var nameN = name.replace(/\s+/g, " ").trim();
+    var grantFamily = formNameGrant(name);
 
-    info.shapeshiftOk = FORM_SHAPE_OK_RX.test(blob);
-
-    function pushReq(f) {
-      formPushAllow(req, f);
-      info.require = true;
-      info.strong = true;
-    }
-    function pushMention(f) {
-      formPushAllow(mention, f);
-      info.strong = true;
-    }
-
-    // D.frm ist die primäre Familienquelle (formtags.py). Leer = Fallback.
+    // Gemessenes D.frm[i]: keine Text-Familien dazu erfinden.
     var tagStr = (i < FRM.length && FRM[i]) ? String(FRM[i]) : "";
-    var tagged = tagStr.length > 0;
-    var tagFams = [];
-    var tagRaw = [];
-    if (tagged) {
+    if (tagStr) {
       var parts = tagStr.split("+");
-      var tp, tcode, tmapped;
+      var tp, tcode, tmapped, tagRaw = [];
       for (tp = 0; tp < parts.length; tp++) {
         tcode = parts[tp];
-        if (!tcode) continue;
+        if (!tcode || !FORM_KNOWN[tcode]) continue;
         if (tcode === "ushift") {
           info.shapeshiftOk = true;
           continue;
@@ -4115,9 +4440,51 @@
         tmapped = formNormTag(tcode);
         if (!tmapped || tmapped === "ushift" || tmapped === "humanoid") continue;
         tagRaw.push(tmapped);
-        formPushAllow(tagFams, tmapped);
+        formPushAllow(info.allow, tmapped);
       }
-      if (tagFams.length) info.humanoidOnly = false;
+      if (info.allow.length) {
+        info.require = true;
+        info.strong = true;
+      }
+      if (grantFamily && rec[1] === 0 && info.allow.indexOf(grantFamily) >= 0) {
+        info.grants = true;
+      }
+      if (tagRaw.length) {
+        var tr, tv;
+        for (tr = 0; tr < tagRaw.length; tr++) {
+          tv = formWarriorVariant(tagRaw[tr]);
+          if (tv) { info.variant = tv; break; }
+        }
+      }
+      formFinish(info, info.grants ? grantFamily : "");
+      FORM_CACHE[i] = info;
+      FORM_BUSY[i] = 0;
+      return info;
+    }
+
+    // Leerer Slot: Text-Fallback. Verneinung und Abbruch setzen keine Familie.
+    var scan = blob.replace(FORM_NEG_RX, " ").replace(FORM_CANCEL_RX, " ");
+    info.shapeshiftOk = FORM_SHAPE_OK_RX.test(scan);
+    if (FORM_OTHER_RX.test(nameN)) {
+      info.shapeshiftOk = true;
+      formFinish(info, "");
+      FORM_CACHE[i] = info;
+      FORM_BUSY[i] = 0;
+      return info;
+    }
+
+    var req = [];
+    var mention = [];
+    var rawAllow = [];
+
+    function pushReq(f) {
+      formPushAllow(req, f);
+      info.require = true;
+      info.strong = true;
+    }
+    function pushMention(f) {
+      formPushAllow(mention, f);
+      info.strong = true;
     }
 
     var paren = /\((cat|bear|feral)(?:\s+form)?\)/i.exec(name);
@@ -4131,18 +4498,12 @@
       }
     }
 
-    if (FORM_GRANT_RX.test(name.replace(/\s+/g, " ").trim())) {
-      var gi, gf;
-      for (gi = 0; gi < FORM_PATS.length; gi++) {
-        if (FORM_PATS[gi].rx.test(name)) {
-          gf = formNormWarrior(FORM_PATS[gi].f);
-          pushReq(gf);
-          rawAllow.push(FORM_PATS[gi].f);
-          grantFamily = gf;
-          info.grants = rec[1] === 0;
-          break;
-        }
-      }
+    if (grantFamily) {
+      pushReq(grantFamily);
+      rawAllow.push(grantFamily);
+      info.grants = rec[1] === 0;
+    } else if (/^owlkin frenzy$/i.test(nameN)) {
+      pushReq("moonkin");
     } else {
       var nj, nf;
       for (nj = 0; nj < FORM_PATS.length; nj++) {
@@ -4155,11 +4516,10 @@
     }
 
     // Pflicht nur bei „only usable“ oder „can be used in A or B“ (Mangle).
-    // „Usable in Bear Form“ (Conduit) ist ein Bonus, kein Zwang.
-    var only = /only usable while in ([^.]+)/i.exec(desc);
-    var canUseOr = /can be used in ([^.]+)/i.exec(desc);
-    var usableIn = /usable in ([^.]+)/i.exec(desc);
-    var whileIn = /usable while in ([^.]+)/i.exec(desc);
+    var only = /only usable while in ([^.]+)/i.exec(scan);
+    var canUseOr = /can be used in ([^.]+)/i.exec(scan);
+    var usableIn = /usable in ([^.]+)/i.exec(scan);
+    var whileIn = /usable while in ([^.]+)/i.exec(scan);
     function absorbPhrase(phrase, asRequire) {
       if (!phrase) return;
       var pi;
@@ -4176,11 +4536,10 @@
     absorbPhrase(whileIn && whileIn[1], false);
     var bi;
     for (bi = 0; bi < FORM_PATS.length; bi++) {
-      if (FORM_PATS[bi].rx.test(blob)) pushMention(FORM_PATS[bi].f);
+      if (FORM_PATS[bi].rx.test(scan)) pushMention(FORM_PATS[bi].f);
     }
 
-    // Stems nur wenn D.frm keine konkrete Familie nennt (Rake/Rip/…).
-    if (!tagFams.length && !req.length) {
+    if (!req.length) {
       var si, sj, stemHits;
       for (si = 0; si < FORM_STEMS.length; si++) {
         if (FORM_STEMS[si].rx.test(name)) {
@@ -4190,8 +4549,12 @@
       }
     }
 
+    if (FORM_HUMANOID_RX.test(scan) && !FORM_SKIP_HUM_RX.test(blob)) {
+      info.humanoidOnly = true;
+    }
+
     // Form-Identität ≠ Talentvererbung: inheritBase nur ohne D.frm-Tag.
-    if (!tagged && !req.length && !mention.length) {
+    if (!req.length && !mention.length && !info.humanoidOnly && !info.shapeshiftOk) {
       var base = inheritBase(i);
       if (base !== null && base !== undefined && base !== i) {
         var parent = formInfo(base);
@@ -4202,48 +4565,23 @@
             else pushMention(parent.allow[pa]);
           }
           if (parent.shapeshiftOk) info.shapeshiftOk = true;
-          if (parent.humanoidOnly && !tagFams.length) info.humanoidOnly = true;
+          if (parent.humanoidOnly) info.humanoidOnly = true;
         }
       }
     }
 
-    var allow = tagFams.length
-      ? tagFams.slice()
-      : (req.length ? req.slice() : mention.slice());
-    info.allow = allow;
-    if (grantFamily) info.family = grantFamily;
-    else if (allow.length === 1) info.family = allow[0];
-    else if (allow.length > 1) {
-      var pref = ["bear", "cat", "moonkin", "tree", "worgen", "serpent", "meta",
-        "shadowform", "presence_blood", "presence_frost", "presence_unholy",
-        "warrior_stance", "ghostwolf", "travel"];
-      var pr;
-      info.family = allow[0];
-      for (pr = 0; pr < pref.length; pr++) {
-        if (allow.indexOf(pref[pr]) >= 0) { info.family = pref[pr]; break; }
-      }
-    }
-    info.utility = formIsUtility(info.family);
-    info.stanceGroup = FORM_STANCE_GROUP[info.family] || null;
-    if (tagRaw.length) {
-      var tr, tv;
-      for (tr = 0; tr < tagRaw.length; tr++) {
-        tv = formWarriorVariant(tagRaw[tr]);
-        if (tv) { info.variant = tv; break; }
-      }
-    }
-    if (!info.variant && rawAllow.length) {
-      info.variant = formWarriorVariant(rawAllow[0]);
-    } else if (!info.variant && info.family === "warrior_stance") {
+    info.allow = req.length ? req.slice() : mention.slice();
+    if (rawAllow.length) info.variant = formWarriorVariant(rawAllow[0]);
+    if (!info.variant) {
       var wv;
       for (wv = 0; wv < FORM_PATS.length; wv++) {
-        if (/warrior_/.test(FORM_PATS[wv].f) && FORM_PATS[wv].rx.test(blob)) {
+        if (/warrior_/.test(FORM_PATS[wv].f) && FORM_PATS[wv].rx.test(scan)) {
           info.variant = formWarriorVariant(FORM_PATS[wv].f);
           break;
         }
       }
     }
-
+    formFinish(info, info.grants ? grantFamily : "");
     FORM_CACHE[i] = info;
     FORM_BUSY[i] = 0;
     return info;
@@ -4337,6 +4675,7 @@
         if (f.hPrimary) v += 9;
         else if (f.h) v += 3;
         if (s.heal) v += 4;
+        if (pathReqKeys(i).indexOf("heal") >= 0) v += 6;
         return v;
       }
     },
@@ -4378,16 +4717,18 @@
     if (cg >= 0) {
       for (var k2 in sel) { if (REL[k2][5] === cg) return false; }
     }
+    var mine = activePathKey();
+    if (!pathReqOk(i, mine)) return false;
     var gate = REL[i][4];
-    var mine = CHAR ? normPath(CHAR.path) : "";
-    if (gate && gate[0] === "Path" && mine && normPath(gate[1]) &&
-        normPath(gate[1]) !== mine) return false;
+    if (gate && (gateKind(gate) === "wpn" || gateKind(gate) === "item") &&
+        gateCheck(gate) === "miss") return false;
     return true;
   }
 
   function generateBuild(themeKey) {
     var th = THEMEBY[themeKey];
     if (!th) return null;
+    genLegal.themeKey = themeKey;
 
     var sel = Object.create(null);
     var use = [0, 0, 0, 0, 0];
@@ -4460,6 +4801,7 @@
             break;
           }
         }
+        if (!ok && info.humanoidOnly && !formIsCombat(primary)) ok = true;
         if (!ok && !(info.shapeshiftOk && !info.require)) {
           var need = info.allow.map(formDe).join(" / ");
           return "braucht " + need + ", passt nicht zu " + formDe(primary);
@@ -4472,11 +4814,13 @@
       var info = formInfo(i);
       if (formConflict(i)) return -1000;
       if (info.shapeshiftOk && primary && formIsCombat(primary)) v += 1.8;
-      if (primary && info.allow.indexOf(primary) >= 0) {
+      var matchPri = primary && info.allow.some(function (f) {
+        return f === primary || formCompat(primary, f);
+      });
+      if (matchPri) {
         v += info.require ? 3 : (info.strong ? 1.5 : 0.4);
       }
-      if (primary && info.strong && info.allow.length &&
-          info.allow.indexOf(primary) < 0 &&
+      if (primary && info.strong && info.allow.length && !matchPri &&
           info.allow.some(function (f) { return formIsCombat(f) || FORM_STANCE_GROUP[f]; })) {
         v -= 25;
       }
@@ -4564,6 +4908,7 @@
     for (var i = 0; i < CAT.length; i++) {
       if (CAT[i][1] !== 0) continue;
       if (isUndesiredIdx(i)) continue;
+      if (!pathReqLegal(i, activePathKey(), themeKey)) continue;
       var v = th.score(i);
       if (isCardedIdx(i)) v += 4; // Skill-Card-Spells bevorzugen
       if (isDesiredIdx(i)) v += 3;
@@ -5220,6 +5565,7 @@
     for (var i = 0; i < CAT.length; i++) {
       if (tooHigh(i)) continue;
       if (isUndesiredIdx(i)) continue;
+      if (!pathReqLegal(i, activePathKey(), themeKey)) continue;
       var v = CAT[i][1] === 0 ? th.score(i) : 0;
       if (CAT[i][1] === 1) {
         ((SC[i] || {}).inc || []).forEach(function (x) {
@@ -5735,6 +6081,7 @@
     if (!root) return;
     tutState = tutLoad();
     if (tutWantHash()) tutState.done = false;
+    else if (!localStorage.getItem(TUTSTORE)) tutState.done = true;
     tutShow(!tutState.done);
     renderTutorial();
     tutSave();
@@ -6617,11 +6964,11 @@
     }
 
     box.innerHTML =
-      '<div class="qhint">Ein Archetyp ist im Katalog eine <em>reine ' +
-      "Fähigkeitsliste</em> — Talente bringt er keine mit, die suchst du " +
-      "danach selbst (der Kasten <em>Passt dazu</em> hilft dabei). Fast alle " +
-      "bestehen aus Epics, dein Epic-Budget entscheidet also, wie viele du " +
-      "wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</div>" +
+      emptyHint(
+        "Ein Archetyp ist eine reine Fähigkeitsliste — ohne Talente.",
+        "<p>Talente suchst du danach selbst (der Kasten <em>Passt dazu</em> hilft). " +
+          "Fast alle bestehen aus Epics, dein Epic-Budget entscheidet also, " +
+          "wie viele du wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</p>") +
       '<div class="archgrid">' + names.map(function (n) {
         var f = fits(n);
         return '<button class="archb" data-arch="' + esc(n) + '" title="' +
