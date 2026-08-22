@@ -51,7 +51,7 @@ OPTIONAL_PAYLOAD = [
     ("ssug", "statsuggest.json"),         # Path aus SpellStatSuggestions.dbc
     ("ssugsp", "spellsuggest.json"),      # Related-Spell-Graph (SpellSpellSuggestions)
     ("iic", "itemicons.json"),            # itemId -> iconName (itemicons.py, kompakt)
-    ("ilb", "ilvlbands.json"),            # Levelrun ilvl/Waffen-Bänder (ilvlbands.py)
+    ("ilb", "ilvlbands.json"),            # ilvl/Waffen-Bänder 10–60 (ilvlbands.py)
     ("wpn", "weapons.json"),              # itemId -> ilvl/dmg/Bänder (weapons.py)
 ]
 

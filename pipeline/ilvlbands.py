@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Gegenstandsstufe- / Waffen-Bänder für Levelrun 10–59 aus ItemStat.dbc.
+"""Gegenstandsstufe- / Waffen-Bänder für Level 10–60 aus ItemStat.dbc.
 
+Levelrun (10–59) und Endgame (Stufe 60) — gleiche ItemStat-Evidence.
 Ethical RE: nur gemessene DBC-Felder, keine erfundenen Spell-Koeffizienten.
 
 Ascension-Layout (gemessen, siehe pipeline/NOTES-ilvl.md):
@@ -56,7 +57,7 @@ DBC_STAT = os.path.join(DBC_DIR, "ItemStat.dbc")
 INV_1H = frozenset((13, 21, 22))
 INV_2H = frozenset((17,))
 
-LEVEL_LO, LEVEL_HI = 10, 59
+LEVEL_LO, LEVEL_HI = 10, 60
 
 
 def f32(u):
@@ -197,7 +198,8 @@ def main():
             "w1h/w2h = (dmgMin+dmgMax)/2 aus ItemStat-Skalierungszeilen. "
             "Export-Vergleich: mid ≈ DPS × Tempo. "
             "Nur Items mit ItemStat-Zeilen; feste Klassik-Items ohne Skalierung "
-            "fehlen hier — Band ist Anhalt für Levelrun, kein L60-Raid-Ziel."
+            "fehlen hier — Band ist Anhalt für Levelrun und L60-Endgame, "
+            "kein Raid-BiS."
         ),
         "levels": levels,
     }

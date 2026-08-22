@@ -48,7 +48,7 @@ DBC_STAT = os.path.join(DBC_DIR, "ItemStat.dbc")
 sys.path.insert(0, HERE)
 from itemicons import collect_export_item_ids  # noqa: E402
 
-LEVEL_LO, LEVEL_HI = 10, 59
+LEVEL_LO, LEVEL_HI = 10, 60
 
 # Inventory-Typen die echte Waffen-Slots sind (3.3.5a).
 WEAPON_INV = frozenset({13, 14, 15, 17, 21, 22, 25, 26})
@@ -139,7 +139,7 @@ def load_addon_meta(weapon_ids):
 
 
 def load_stat_damage(weapon_ids):
-    """Primaer-dmg + Stufenbaender 10-59 aus ItemStat.dbc."""
+    """Primaer-dmg + Stufenbaender 10-60 aus ItemStat.dbc."""
     rc, fc, rs, data, _ = read_dbc(DBC_STAT)
     if fc < 25:
         raise SystemExit("ItemStat.dbc: zu wenige Felder (%d)" % fc)
@@ -208,7 +208,7 @@ def build():
     kb = os.path.getsize(dest) / 1024.0
     print("Geschrieben: %s (%.1f KB, %d Items)" % (dest, kb, len(out)))
     print("  mit ilvl:", with_ilvl, "| mit Basis-dmg:", with_dmg,
-          "| mit Baendern 10-59:", with_bands)
+          "| mit Baendern 10-60:", with_bands)
     return 0
 
 

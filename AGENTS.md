@@ -116,7 +116,7 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | `spellsuggest.py` | `spellsuggest.json` | `SpellSpellSuggestions.dbc` ∩ Katalog (Top-N) | nein |
 | `desireelig.py` | `desireelig.json` | `CatalogData.lua` (`desiredEligible`) | nein |
 | `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (Testexport- + Seed-/Levelrun-ItemIds) | **ja** |
-| `ilvlbands.py` | `ilvlbands.json` | `ItemStat.dbc` ∩ `Item.dbc` (Mid-Schaden / ilvl / Rüstung p25–p75 je Stufe 10–59) | **ja** |
+| `ilvlbands.py` | `ilvlbands.json` | `ItemStat.dbc` ∩ `Item.dbc` (Mid-Schaden / ilvl / Rüstung p25–p75 je Stufe 10–60) | **ja** |
 | `weapons.py` | `weapons.json` | Seed-/Export-Waffen: Name/ilvl/dmg(+Stufen) aus ItemAddon+ItemStat | **ja** |
 | `dbcicons.py`, `mksprite.py` | `sprite.webp`, `spriteindex.json` | `Spell.dbc`, `SpellIcon.dbc`, BLP-Icons | **ja** |
 
@@ -128,7 +128,7 @@ Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
 `iic` ← `itemicons.json` (flach `itemId → {i,cls,sub,inv[,url]}` oder Legacy-String;
 Testexport- + Seed-/Levelrun-Ids; Einbettung nur wenn Datei ≤ 512 KB —
 kein Vollscan von Item.dbc),
-`ilb` ← `ilvlbands.json` (Stufen-Perzentilbänder — `pipeline/NOTES-ilvl.md`),
+`ilb` ← `ilvlbands.json` (Stufen-Perzentilbänder 10–60 — `pipeline/NOTES-ilvl.md`),
 `wpn` ← `weapons.json` (kompakte Waffen-Evidence je Seed-itemId; ergänzt `ilb`).
 
 Kern-Payload zusätzlich: `bm` ← `basemods.json`, `ub` ← `usesbase.json`
@@ -442,6 +442,12 @@ Additive Schlüssel ab Addon 1.5.0 / 1.5.1 / 1.5.2 (FORMAT bleibt 1):
 | `SCARDPEND` | `n` | Ausstehende Skill Cards |
 | `SPEC` | `…\|CHR:id` | CoA-Spec (`GetActiveChrSpec`, ab 1.5.1) |
 | `TRAIT` | `entryId;…` | Draft-Traits (`IsTrait`, ab 1.5.1) |
+
+Additive Schlüssel ab Addon 1.5.7 (FORMAT bleibt 1):
+
+| Zeile | Format | Bedeutung |
+|---|---|---|
+| `SCARD` | `…:sSPELLID` | Spell der Karte — Seite löst Namen über Katalog (`nameBySid`), nicht über `cardId` |
 
 Wer das Format erweitert: neues Schlüsselwort in `parseExport` ergänzen,
 Version `BS.FORMAT` nur erhöhen, wenn alte Exporte **nicht** mehr lesbar

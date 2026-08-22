@@ -5,7 +5,7 @@
 [**Synergien**](https://lzra2000.github.io/aldi-buildschmiede/synergien.html) ·
 [**Addon-Zip**](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip)
 
-Deutsch · Project Ascension · Season 10 Wildcard · fürs Leveln von **10–59** (nicht Raid-Endgame).
+Deutsch · Project Ascension · Season 10 Wildcard · **Levelrun (10–59)** und **Endgame (Stufe 60)**.
 Im Spiel **`/bs`** → Text kopieren → auf der Seite einfügen.
 
 ---
@@ -77,7 +77,7 @@ Im Repo liegt **keine `LICENSE`-Datei**. Eigenen Code und Mitwirkung bitte vor W
 
 ## English (short)
 
-Leveling tools (10–59) for Ascension Season 10 Wildcard.  
+Levelrun (10–59) and Endgame (60) tools for Ascension Season 10 Wildcard.  
 Live: [Builder](https://lzra2000.github.io/aldi-buildschmiede/) · [Synergies](https://lzra2000.github.io/aldi-buildschmiede/synergien.html) · [Addon zip](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip).  
 In-game `/bs` exports your character for paste-into-site. No invented spell numbers.  
 Package map: `src/`, `pipeline/`, `data/`, `addon/`, `scripts/`, `tests/`; built root ships `index.html`, `synergien.html`, `AscBuildschmiede.zip`. See [docs/PACKAGE.md](docs/PACKAGE.md). No `LICENSE` file in the repo yet.
