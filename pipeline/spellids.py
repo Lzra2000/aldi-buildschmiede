@@ -11,7 +11,7 @@ Die Quelle hat die ID die ganze Zeit mitgeliefert:
                    quality, castMs, minRange, maxRange, passive, level, ...
 
 Ausgabe spellids.json: Katalogindex -> [spellId, castMs, minRange, maxRange,
-passive] - nur belegte Felder, Rest 0/false.
+passive, entryId] - nur belegte Felder, Rest 0/false.
 """
 import io
 import json
@@ -106,10 +106,10 @@ def main():
         if rows:
             r = rows[0]
             out.append([r["spellId"], r["cast"], r["rmin"], r["rmax"],
-                        1 if r["passive"] else 0])
+                        1 if r["passive"] else 0, r["entryId"]])
             hit += 1
         else:
-            out.append([0, 0, 0, 0, 0])
+            out.append([0, 0, 0, 0, 0, 0])
             miss += 1
 
     io.open(os.path.join(DATA, "spellids.json"), "w", encoding="utf-8").write(
@@ -120,10 +120,12 @@ def main():
     print("mit echter spellId:", withid)
     print("mit castMs:", sum(1 for o in out if o[1]))
     print("passiv:", sum(1 for o in out if o[4]))
+    print("mit entryId:", sum(1 for o in out if o[5]))
     print("\nStichprobe:")
     for i in (0, 1, 393):
-        print("  %-22s id=%-9d cast=%-5d range=%d-%d passive=%d"
-              % (cat[i][0][:22], out[i][0], out[i][1], out[i][2], out[i][3], out[i][4]))
+        print("  %-22s id=%-9d entry=%-9d cast=%-5d range=%d-%d passive=%d"
+              % (cat[i][0][:22], out[i][0], out[i][5], out[i][1], out[i][2],
+                 out[i][3], out[i][4]))
 
 
 if __name__ == "__main__":

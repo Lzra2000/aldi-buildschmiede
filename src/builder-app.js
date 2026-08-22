@@ -11,7 +11,88 @@
   var TAG = D.tag || [];    // Bitmaske: woraus zieht ein Eintrag seinen Wert
   var SC = D.sc || [];      // aus den Tooltips gelesene Skalierungszahlen
   var MC = D.mc || [];      // Cooldown, Castzeit, Kosten aus Spell.dbc
+  var METH = D.meth || null; // pipeline/methods.py → Tempo/Hitze/Lücken/Resmap
+  var TREE = D.tree || [];  // Spec-/Schul-Tab (DataMiner), "" wenn unbekannt
+  var DES = D.des || null;  // 1 = Desire-Board-fähig (CatalogData)
+  var STAGS = D.stags || D.spelltags || null; // method-spelltags.json → DBC SpellTags
+  var SID = D.sid || [];    // Katalogindex -> spellId (Addon-Export)
+  var EID = D.eid || [];    // Katalogindex -> entryId (Addon-Export)
+  var ITEMICONS = D.iic || D.itemicons || D.iico || null;
+  var TAGN = D.tagn || null;   // SpellTagTypes Namen + bySpell
+  var SSUG = D.ssug || null;   // SpellStatSuggestions path-codes (≠ PrimaryStat-IDs)
+  var SSUGSP = D.ssugsp || null; // SpellSpellSuggestions related-graph (optional)
 
+  // SpellTag-Index: Katalogindex → {facets[], schools[], tagCount}
+  var STAG_BY_I = {};
+  if (STAGS && STAGS.entries) {
+    STAGS.entries.forEach(function (e) {
+      if (e && e.i !== undefined) STAG_BY_I[e.i] = e;
+    });
+  }
+
+  function tagTypeName(id) {
+    if (!TAGN || !TAGN.types) return "";
+    var t = TAGN.types[id] || TAGN.types[String(id)];
+    return t ? (t.name || t.cat || "") : "";
+  }
+  function spellTagIds(i) {
+    if (!TAGN || !TAGN.bySpell) return [];
+    var sid = SID[i];
+    if (!sid) return [];
+    return TAGN.bySpell[sid] || TAGN.bySpell[String(sid)] || [];
+  }
+  // DBC-Path-Code-Label (SpellStatSuggestions) — Codes 0/1/3/4, nicht PrimaryStat-IDs.
+  function ssugPathLabel(i) {
+    if (!SSUG || !SSUG.path) return "";
+    return SSUG.path[i] || "";
+  }
+
+  // Facetten-Gewichte wie pipeline/_method_spelltags.py (Levelrun 10–59).
+  var STAG_WEIGHT = {
+    mobility: 12, interrupt: 14, hard_cc: 8, soft_cc: 10,
+    defensive: 9, direct_heal: 7, hot: 4, absorb: 5,
+    dot: 3, aoe: 6, cleave: 4, single: 2,
+    melee: 1, magic: 1, ranged: 1, dispel: 6,
+    raid_buff: 5, taunt: 3
+  };
+  var STAG_LABEL_DE = {
+    mobility: "Mobilität", interrupt: "Interrupt", hard_cc: "Hard-CC",
+    soft_cc: "Soft-CC", defensive: "Defensiv", direct_heal: "Direkte Heilung",
+    hot: "HoT", absorb: "Absorb", dot: "DoT", aoe: "AoE",
+    cleave: "Cleave", single: "Einzelziel", melee: "Nahkampf",
+    magic: "Magie", ranged: "Distanz", dispel: "Dispel",
+    raid_buff: "Raid-/Gruppenbuff", taunt: "Spott"
+  };
+  var SCHOOL_DE = {
+    Physical: "Physisch", Fire: "Feuer", Frost: "Frost", Nature: "Natur",
+    Holy: "Heilig", Shadow: "Schatten", Arcane: "Arkan"
+  };
+
+  function stagFacetList() {
+    if (STAGS && STAGS.facets && STAGS.facets.length) return STAGS.facets;
+    return Object.keys(STAG_WEIGHT).map(function (k) {
+      return { key: k, label: STAG_LABEL_DE[k] || k, weight: STAG_WEIGHT[k] };
+    });
+  }
+  function stagLabel(key) {
+    if (STAG_LABEL_DE[key]) return STAG_LABEL_DE[key];
+    var facets = STAGS && STAGS.facets;
+    if (facets) {
+      for (var fi = 0; fi < facets.length; fi++) {
+        if (facets[fi].key === key) return facets[fi].label || key;
+      }
+    }
+    return key;
+  }
+  function stagWeight(f) {
+    if (f && typeof f === "object") {
+      if (f.weight != null) return +f.weight || 1;
+      if (STAG_WEIGHT[f.key] != null) return STAG_WEIGHT[f.key];
+      return 1;
+    }
+    if (typeof f === "string" && STAG_WEIGHT[f] != null) return STAG_WEIGHT[f];
+    return 1;
+  }
   var QN = ["Normal", "Uncommon", "Rare", "Epic", "Legendary"];
   var MAX_A = 30, MAX_T = 25;
 
@@ -21,12 +102,41 @@
     ARCH[k].forEach(function (i) { archOf[i] = k; });
   });
 
+  // ID-Indizes: first wins — gleiche Spell-ID kann bei Varianten mehrfach
+  // vorkommen; der erste Katalogtreffer reicht fuer den Import.
+  var BYSID = {}, BYEID = {};
+  SID.forEach(function (id, i) {
+    if (id && BYSID[id] === undefined) BYSID[id] = i;
+  });
+  EID.forEach(function (id, i) {
+    if (id && BYEID[id] === undefined) BYEID[id] = i;
+  });
+
   var picked = Object.create(null);   // idx -> true
   var el = {};
-  ["q", "fKind", "fClass", "fQual", "fScale", "fSort", "list", "hits", "slotsA", "slotsT",
+  ["q", "fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort", "list", "hits", "slotsA", "slotsT",
    "cA", "cT", "cF", "flags", "url", "toast"].forEach(function (id) {
     el[id] = document.getElementById(id);
   });
+
+  function treeLabel(t) {
+    if (!t) return "";
+    return t === "BeastMastery" ? "Beast Mastery" : t;
+  }
+
+  // CatalogData.desiredEligible — Rapid-Roll / Desire-Board, nicht die
+  // persoenliche Wunschliste aus dem Addon-Export (isDesiredIdx).
+  // D.meth.rollgate.blocked deckt dieselbe Menge ab (Fallback ohne D.des).
+  var ROLLGATE_BLOCK = Object.create(null);
+  if (METH && METH.rollgate && METH.rollgate.blocked) {
+    METH.rollgate.blocked.forEach(function (b) {
+      if (b && b.i !== undefined) ROLLGATE_BLOCK[b.i] = 1;
+    });
+  }
+  function isDesireEligIdx(i) {
+    if (ROLLGATE_BLOCK[i]) return false;
+    return !DES || DES[i] !== 0;
+  }
 
   // ---------- Hilfen ----------
   // Der Versatz im Sprite haengt von der ANGEZEIGTEN Kachelgroesse ab,
@@ -58,7 +168,7 @@
     return { a: a, t: t };
   }
 
-  // ---------- Klassenfilter füllen ----------
+  // ---------- Klassen- und Spec-Filter füllen ----------
   (function () {
     var cs = {};
     CAT.forEach(function (r) { cs[r[2]] = 1; });
@@ -67,6 +177,15 @@
       o.value = c; o.textContent = c;
       el.fClass.appendChild(o);
     });
+    if (el.fTree) {
+      var ts = {};
+      TREE.forEach(function (t) { if (t) ts[t] = 1; });
+      Object.keys(ts).sort().forEach(function (t) {
+        var o = document.createElement("option");
+        o.value = t; o.textContent = treeLabel(t);
+        el.fTree.appendChild(o);
+      });
+    }
   })();
 
   // ---------- Katalogliste ----------
@@ -74,13 +193,17 @@
   function render() {
     var q = el.q.value.trim().toLowerCase();
     var fk = el.fKind.value, fc = el.fClass.value, fq = el.fQual.value;
+    var ft = el.fTree ? el.fTree.value : "";
+    var fd = el.fDesire ? el.fDesire.value : "";
     var fs = el.fScale.value;
     var hit = [], CAP = 300;
     for (var i = 0; i < CAT.length; i++) {
       var r = CAT[i];
       if (fk !== "" && String(r[1]) !== fk) continue;
       if (fc !== "" && r[2] !== fc) continue;
+      if (ft !== "" && TREE[i] !== ft) continue;
       if (fq !== "" && String(r[3]) !== fq) continue;
+      if (fd !== "" && String(isDesireEligIdx(i) ? 1 : 0) !== fd) continue;
       if (!scaleMatch(i, fs)) continue;
       if (q && r[0].toLowerCase().indexOf(q) < 0 && r[5].toLowerCase().indexOf(q) < 0) continue;
       hit.push(i);
@@ -101,12 +224,23 @@
 
   function row(i, r) {
     var a = archOf[i];
+    var tr = treeLabel(TREE[i]);
+    var sug = ssugPathLabel(i);
     var block = tooHigh(i) ? " lock" : (overBudget(i) && !picked[i] ? " lock" : "");
     return '<div class="row' + (picked[i] ? " picked" : block) + '" data-i="' + i + '" role="button" tabindex="0">' +
-      '<span class="icon" style="width:32px;height:32px;flex:0 0 32px;' + iconStyle(i) + '"></span>' +
+      '<span class="icon qf' + r[3] + '" style="width:32px;height:32px;flex:0 0 32px;' + iconStyle(i) + '"></span>' +
       '<span class="body"><span class="nm" style="color:var(--q' + r[3] + ')">' + esc(r[0]) + "</span>" +
       (a ? ' <span class="meta" style="color:var(--accent)">' + esc(a) + "</span>" : "") +
-      '<span class="ds">' + esc(r[5]) + "</span>" + badges(i) + "</span>" +
+      (tr ? ' <span class="meta">' + esc(tr) + "</span>" : "") +
+      (sug
+        ? ' <span class="bdg s" title="SpellStatSuggestions-Path-Code (DBC 0/1/3/4 → Strength/Agility/Intelligence/Healing; nicht PrimaryStat-ID)">' +
+          esc(sug) + "</span>"
+        : "") +
+      '<span class="ds">' + esc(r[5]) + "</span>" + badges(i) +
+      (DES && !isDesireEligIdx(i)
+        ? '<span class="bdg r" title="Nicht auf dem Wildcard-Desire-Board / Rapid Roll">kein Desire</span>'
+        : "") +
+      "</span>" +
       '<span class="meta">' + (r[1] ? "TAL" : "ABI") + "<br>" + esc(r[2]) +
       "<br>" + (tooHigh(i) ? '<span class="lvlbad">lvl' + r[4] + "</span>" : "lvl" + r[4]) +
       "</span></div>";
@@ -128,8 +262,8 @@
     renderTimer = setTimeout(render, 110);
   }
   el.q.addEventListener("input", renderSoon);
-  ["fKind", "fClass", "fQual", "fScale", "fSort"].forEach(function (id) {
-    el[id].addEventListener("input", render);
+  ["fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort"].forEach(function (id) {
+    if (el[id]) el[id].addEventListener("input", render);
   });
 
   function toggle(i) {
@@ -144,7 +278,7 @@
         return;
       }
       if (overBudget(i)) {
-        toast(QN[CAT[i][3]] + "-Budget ist voll (" + qualityLimit(CAT[i][3]) + ")");
+        toast(QN[entryQual(i)] + "-Budget ist voll (" + qualityLimit(entryQual(i)) + ")");
         return;
       }
       picked[i] = true;
@@ -172,7 +306,8 @@
   }
   function slotRow(i) {
     var r = CAT[i];
-    return '<div class="slot"><span class="icon" style="width:20px;height:20px;flex:0 0 20px;' +
+    return '<div class="slot"><span class="icon qf' + r[3] +
+      '" style="width:20px;height:20px;flex:0 0 20px;' +
       iconStyle(i, 20) + '"></span>' +
       '<span class="nm" style="color:var(--q' + r[3] + ')" title="' + esc(r[5]) + '">' +
       esc(r[0]) + "</span>" +
@@ -469,6 +604,22 @@
       o.push('<div class="pnotes"><b>Was ' + esc(P.n) + " mit deinen Auswahlen macht</b>" +
         notes.join("") + "</div>");
     }
+    // SpellStatSuggestions-Path-Codes im Build (DBC 0/1/3/4 → Namen, nicht PrimaryStat-IDs)
+    if (SSUG && SSUG.path) {
+      var sugCount = {};
+      ids.forEach(function (i) {
+        var lab = ssugPathLabel(i);
+        if (lab) sugCount[lab] = (sugCount[lab] || 0) + 1;
+      });
+      var sugKeys = Object.keys(sugCount);
+      if (sugKeys.length) {
+        o.push('<div class="wepline"><b>DBC-Path-Codes</b> ' +
+          sugKeys.map(function (k) {
+            return esc(k) + " ×" + sugCount[k];
+          }).join(" · ") +
+          ' <span class="gid" title="SpellStatSuggestions: Codes 0/1/3/4 = Strength/Agility/Intelligence/Healing — nicht PrimaryStat-IDs">(SpellStatSuggestions)</span></div>');
+      }
+    }
     box.innerHTML = o.join("");
   }
 
@@ -584,8 +735,62 @@
     if (BYNAME[k] === undefined) BYNAME[k] = i;
   });
 
+  // ABI: Name[#spellId][@entryId]  TAL: Name:rank[#spellId][@entryId]
+  // Reihenfolge der Suffixe ist fest (# vor @); alte Name-only Exporte bleiben ok.
+  function stripIds(raw) {
+    var s = String(raw || ""), eid = 0, id = 0;
+    var at = s.lastIndexOf("@");
+    if (at > 0) {
+      eid = parseInt(s.slice(at + 1), 10) || 0;
+      s = s.slice(0, at);
+    }
+    var hash = s.lastIndexOf("#");
+    if (hash > 0) {
+      id = parseInt(s.slice(hash + 1), 10) || 0;
+      s = s.slice(0, hash);
+    }
+    return { body: s, id: id, eid: eid };
+  }
+
+  function parseAbiToken(t) {
+    var x = stripIds(t);
+    return { n: x.body, id: x.id || null, eid: x.eid || null };
+  }
+
+  function parseTalToken(t) {
+    var x = stripIds(t), body = x.body, r = 1, n = body;
+    var i = body.lastIndexOf(":");
+    if (i > 0) {
+      n = body.slice(0, i);
+      r = +body.slice(i + 1) || 1;
+    }
+    return { n: n, r: r, id: x.id || null, eid: x.eid || null };
+  }
+
+  // Season10-Stil: entryId vor spellId vor Name — loest Vengeance & Co.
+  function resolveTok(tok) {
+    if (tok.eid && BYEID[tok.eid] !== undefined) return { i: BYEID[tok.eid], how: "eid" };
+    if (tok.id && BYSID[tok.id] !== undefined) return { i: BYSID[tok.id], how: "sid" };
+    var i = BYNAME[String(tok.n || "").toLowerCase().trim()];
+    if (i !== undefined) return { i: i, how: "name" };
+    return null;
+  }
+
+  // Additive Item-Link-Felder ab Index `from`: itemId[|ench|g1|g2|g3|g4]
+  function parseLinkTail(parts, from) {
+    var out = { itemId: +parts[from] || 0 };
+    if (parts.length > from + 1) {
+      out.ench = +parts[from + 1] || 0;
+      out.gems = [
+        +parts[from + 2] || 0, +parts[from + 3] || 0,
+        +parts[from + 4] || 0, +parts[from + 5] || 0
+      ];
+    }
+    return out;
+  }
+
   function parseExport(text) {
-    var d = { stats: {}, gear: [], weapons: [], abi: [], tal: [] };
+    var d = { stats: {}, gear: [], weapons: [], abi: [], tal: [], resist: {} };
     var seen = false;
     String(text || "").split(/\r?\n/).forEach(function (raw) {
       var line = raw.trim();
@@ -597,16 +802,75 @@
           seen = true;
           d.name = parts[0]; d.level = +parts[1] || 0;
           d.race = parts[2]; d.cls = parts[3];
+          // Additive optionale Felder (Addon darf spaeter mehr anhaengen).
+          if (parts[4]) d.gender = parts[4];
+          if (parts[5]) d.realm = parts[5];
+          break;
+        case "ADDON":
+          d.addon = (parts[0] || "").trim();
           break;
         case "PATH":
           seen = true;
           d.path = (parts[0] || "").trim();
           break;
+        case "SPEC":
+          // SPEC|id|name|CHR:n — CHR additiv ab 1.5.1
+          d.spec = +parts[0] || 0;
+          d.specName = (parts[1] || "").trim();
+          parts.slice(2).forEach(function (p) {
+            var m = String(p || "").split(":");
+            var k = (m[0] || "").toUpperCase();
+            if (k === "CHR") d.chrSpec = +m[1] || 0;
+          });
+          break;
+        case "SPECS":
+          // Freigeschaltete Specs (Inspect): SPECS|1;2;3
+          d.specs = (parts[0] || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "MODE":
+          // MODE|WILDCARD|DRAFT|… — mehrere Tags; mode bleibt erstes Tag
+          d.modes = parts.map(function (p) {
+            return String(p || "").trim().toUpperCase();
+          }).filter(Boolean);
+          d.mode = d.modes[0] || "";
+          d.draft = d.modes.indexOf("DRAFT") >= 0 ||
+            d.modes.indexOf("BUILDDRAFT") >= 0;
+          break;
+        case "LOCK":
+        case "LOCKED":
+          d.locked = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
         case "ESSENCE":
+          // ESSENCE|A:rem|T:rem|AS:spent|TS:spent
           parts.forEach(function (p) {
             var m = p.split(":");
-            if (m[0] === "A") d.essA = +m[1] || 0;
-            if (m[0] === "T") d.essT = +m[1] || 0;
+            var k = (m[0] || "").toUpperCase();
+            var v = +m[1] || 0;
+            if (k === "A") d.essA = v;
+            else if (k === "T") d.essT = v;
+            else if (k === "AS") d.essASpent = v;
+            else if (k === "TS") d.essTSpent = v;
+            else if (k === "AX") d.essAExpect = v;
+            else if (k === "TX") d.essTExpect = v;
+          });
+          break;
+        case "SPENT":
+          parts.forEach(function (p) {
+            var m = p.split(":");
+            var k = (m[0] || "").toUpperCase();
+            var v = +m[1] || 0;
+            if (k === "A" || k === "AE" || k === "AS") d.essASpent = v;
+            if (k === "T" || k === "TE" || k === "TS") d.essTSpent = v;
+          });
+          break;
+        case "RESIST":
+          parts.forEach(function (p) {
+            var m = p.split(":");
+            if (m.length === 2 && m[0]) d.resist[m[0].toUpperCase()] = parseFloat(m[1]);
           });
           break;
         case "STAT":
@@ -616,34 +880,177 @@
           });
           break;
         case "WEAPON":
-          d.weapons.push({
+          // WEAPON|tag|name|ilvlN|speedN|lo-hi|dpsN|loc|sub|itemId[|ench|g1|g2|g3|g4]
+          d.weapons.push(Object.assign({
             slot: parts[0], name: parts[1],
             ilvl: +(parts[2] || "").replace("ilvl", "") || 0,
             speed: parseFloat((parts[3] || "").replace("speed", "")) || 0,
             dmg: parts[4] || "",
             dps: parseFloat((parts[5] || "").replace("dps", "")) || 0,
             loc: parts[6] || "", sub: parts[7] || ""
-          });
+          }, parseLinkTail(parts, 8)));
           break;
         case "ILVL":
           d.ilvl = parseFloat(parts[0]) || 0;
           break;
         case "GEAR":
-          d.gear.push({ slot: parts[0], name: parts[1], ilvl: +parts[2] || 0,
-                        q: +parts[3] || 0, sub: parts[4] || "" });
+          // GEAR|Slot|Name|ilvl|quality|subtype|itemId[|ench|g1|g2|g3|g4]
+          d.gear.push(Object.assign({
+            slot: parts[0], name: parts[1], ilvl: +parts[2] || 0,
+            q: +parts[3] || 0, sub: parts[4] || ""
+          }, parseLinkTail(parts, 5)));
+          break;
+        case "ECOST":
+          // ECOST|sid:a:t;… — Essence-Kosten pro Spell, nur gemessene Werte
+          d.ecost = d.ecost || {};
+          (parts.join("|") || "").split(";").filter(Boolean).forEach(function (p) {
+            var m = p.split(":");
+            var sid = +m[0] || 0;
+            if (sid) d.ecost[sid] = { a: +m[1] || 0, t: +m[2] || 0 };
+          });
+          break;
+        case "MAST":
+          d.mast = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "INVEST":
+          // INVEST|AE:n|TE:n|CP:n|TAB:class:spec:n|…  (TAB auch per ;)
+          d.invest = d.invest || {};
+          parts.forEach(function (p) {
+            String(p || "").split(";").filter(Boolean).forEach(function (chunk) {
+              var m = chunk.split(":");
+              var k = (m[0] || "").toUpperCase();
+              if (k === "TAB" && m.length >= 4) {
+                d.investTabs = d.investTabs || [];
+                d.investTabs.push({
+                  cls: +m[1] || 0, spec: +m[2] || 0, n: +m[3] || 0
+                });
+              } else if (k) {
+                d.invest[k] = +m[1] || 0;
+              }
+            });
+          });
+          break;
+        case "SCARD":
+          // SCARD|TAG:cardId@index;… optional :qN und/oder :A
+          d.scard = [];
+          (parts.join("|") || "").split(";").filter(Boolean).forEach(function (tok) {
+            var m = String(tok).match(/^([^:]+):([^@]+)@(\d+)(.*)$/);
+            if (!m) return;
+            var blocked = m[2] === "B";
+            var rest = m[4] || "";
+            var qm = rest.match(/:q(\d+)/i);
+            var entry = {
+              tag: m[1],
+              cardId: blocked ? 0 : (+m[2] || 0),
+              blocked: blocked,
+              index: +m[3] || 0,
+              active: /:A(?:$|:)/i.test(rest) || /:A$/i.test(rest)
+            };
+            if (qm) entry.q = +qm[1] || 0;
+            d.scard.push(entry);
+          });
+          break;
+        case "SCARDPEND":
+          d.scardPend = +parts[0] || 0;
+          break;
+        case "WC":
+          // WC|CanRoll:0/1|…|RRAbi:cur/req/next|RRTal:…|RepurchAbi:n|CanRepurch:0/1
+          d.wc = d.wc || {};
+          parts.forEach(function (p) {
+            var m = String(p || "").split(":");
+            var k = (m[0] || "").trim();
+            if (!k) return;
+            var v = m.slice(1).join(":");
+            if ((k === "RRAbi" || k === "RRTal") && v.indexOf("/") >= 0) {
+              var bp = v.split("/");
+              d.wc[k] = {
+                cur: +bp[0] || 0,
+                req: +bp[1] || 0,
+                next: +bp[2] || 0,
+                raw: v
+              };
+            } else if (v === "0" || v === "1") {
+              d.wc[k] = +v;
+            } else if (v !== "" && !isNaN(+v)) {
+              d.wc[k] = +v;
+            } else if (v) {
+              d.wc[k] = v;
+            }
+          });
+          break;
+        case "PATHINFO":
+          // PATHINFO|spellId|icon|name
+          if (parts[0]) {
+            d.pathInfo = {
+              spellId: +parts[0] || 0,
+              icon: (parts[1] || "").trim(),
+              name: (parts[2] || "").trim()
+            };
+          }
+          break;
+        case "PATHENTRY":
+          // PATHENTRY|entryId — PrimaryStat CA-Internal-ID
+          d.pathEntry = +parts[0] || 0;
+          break;
+        case "TRAIT":
+          d.trait = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "STARTCHOICE":
+          d.startChoice = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "SUGGEST":
+          // SUGGEST|Path;Path — grosszuegig: ; | , und Key:Wert
+          d.suggest = d.suggest || [];
+          String(parts.join("|") || "").split(/[|;,]/).forEach(function (tok) {
+            var p = String(tok || "").trim();
+            if (!p) return;
+            var labeled = p.match(/^(?:STAT|PATH|S)[:=](.+)$/i);
+            if (labeled) p = labeled[1].trim();
+            else if (p.indexOf(":") > 0) {
+              var left = p.split(":")[0].trim();
+              if (left && isNaN(+left)) p = left;
+            }
+            if (p && d.suggest.indexOf(p) < 0) d.suggest.push(p);
+          });
+          break;
+        case "CARDED":
+          d.carded = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "DESIRE":
+        case "DESIRED":
+          // DESIRE|entryId;… — persoenliche Wishlist (IsDesiredID), NICHT D.des
+          d.desire = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "UNDESIRE":
+        case "UNDESIRED":
+          // UNDESIRE|entryId;… — IsUndesiredID, nicht Catalog desiredEligible
+          d.undesire = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
+          break;
+        case "PATHAURA":
+          // PATHAURA|spellId  (ggf. mehrere mit ;)
+          d.pathAura = (parts.join("|") || "").split(";").map(function (x) {
+            return parseInt(x, 10) || 0;
+          }).filter(Boolean);
           break;
         case "ABI":
           seen = true;
-          d.abi = (parts[0] || "").split(";").filter(Boolean);
+          d.abi = (parts[0] || "").split(";").filter(Boolean).map(parseAbiToken);
           break;
         case "TAL":
           seen = true;
-          d.tal = (parts[0] || "").split(";").filter(Boolean)
-            .map(function (t) {
-              var i = t.lastIndexOf(":");
-              return i > 0 ? { n: t.slice(0, i), r: +t.slice(i + 1) || 1 }
-                           : { n: t, r: 1 };
-            });
+          d.tal = (parts[0] || "").split(";").filter(Boolean).map(parseTalToken);
           break;
         case "QUALITY":
           d.qlimit = d.qlimit || {}; d.qused = d.qused || {};
@@ -667,6 +1074,21 @@
             if (q && String(m[1]).indexOf("-") < 0) d.qcost[q] = +m[1] || 0;
           });
           break;
+        case "QOWN":
+          d.qown = d.qown || {};
+          (parts[0] || "").split(";").filter(Boolean).forEach(function (p) {
+            var m = p.split(":");
+            var sid = +m[0] || 0;
+            if (sid) d.qown[sid] = { q: +m[1] || 0, cost: +m[2] || 0 };
+          });
+          break;
+        case "COUNT":
+          parts.forEach(function (p) {
+            var m = p.split(":");
+            if (m[0] === "A") d.countA = +m[1] || 0;
+            if (m[0] === "T") d.countT = +m[1] || 0;
+          });
+          break;
         case "INSPECT":
           d.inspect = true;
           break;
@@ -683,71 +1105,561 @@
   function applyImport(d) {
     picked = Object.create(null);
     UNMATCHED = [];
-    var hit = 0;
-    function take(name) {
-      var i = BYNAME[String(name).toLowerCase().trim()];
-      if (i === undefined) { UNMATCHED.push(name); return; }
-      picked[i] = true; hit++;
+    var hit = 0, byId = 0;
+    function take(tok) {
+      var r = resolveTok(tok);
+      if (!r) {
+        UNMATCHED.push(tok.n || "?");
+        return;
+      }
+      picked[r.i] = true;
+      hit++;
+      if (r.how !== "name") byId++;
     }
-    d.abi.forEach(take);
-    d.tal.forEach(function (t) { take(t.n); });
+    (d.abi || []).forEach(function (t) {
+      take(typeof t === "string" ? parseAbiToken(t) : t);
+    });
+    (d.tal || []).forEach(function (t) {
+      take(typeof t === "string" ? parseTalToken(t) : t);
+    });
     CHAR = d;
+    CHAR._idMatched = byId;
+    CHAR._cardedSet = Object.create(null);
+    (CHAR.carded || []).forEach(function (sid) { CHAR._cardedSet[sid] = 1; });
+    CHAR._lockedSet = Object.create(null);
+    (CHAR.locked || []).forEach(function (eid) { CHAR._lockedSet[eid] = 1; });
+    CHAR._desireSet = Object.create(null);
+    (CHAR.desire || []).forEach(function (eid) { CHAR._desireSet[eid] = 1; });
+    CHAR._undesireSet = Object.create(null);
+    (CHAR.undesire || []).forEach(function (eid) { CHAR._undesireSet[eid] = 1; });
     return hit;
   }
 
+  function isCardedIdx(i) {
+    var sid = SID[i];
+    return !!(CHAR && CHAR._cardedSet && sid && CHAR._cardedSet[sid]);
+  }
+  function isLockedIdx(i) {
+    var eid = EID[i];
+    return !!(CHAR && CHAR._lockedSet && eid && CHAR._lockedSet[eid]);
+  }
+  function isDesiredIdx(i) {
+    var eid = EID[i];
+    return !!(CHAR && CHAR._desireSet && eid && CHAR._desireSet[eid]);
+  }
+  function isUndesiredIdx(i) {
+    var eid = EID[i];
+    return !!(CHAR && CHAR._undesireSet && eid && CHAR._undesireSet[eid]);
+  }
+  function hasMode(c, tag) {
+    if (!c || !tag) return false;
+    tag = String(tag).toUpperCase();
+    if (c.modes && c.modes.length) return c.modes.indexOf(tag) >= 0;
+    var m = String(c.mode || "").toUpperCase();
+    if (!m) return false;
+    if (m === tag) return true;
+    return m.split("|").indexOf(tag) >= 0;
+  }
+  function isDraftChar(c) {
+    return !!(c && (c.draft || hasMode(c, "DRAFT") || hasMode(c, "BUILDDRAFT")));
+  }
+  function modeLabel(c) {
+    if (!c) return "";
+    if (c.modes && c.modes.length) return c.modes.join(" · ");
+    return c.mode || "";
+  }
+
+  function nameByEid(eid) {
+    var i = BYEID[eid];
+    return i !== undefined ? CAT[i][0] : ("entry " + eid);
+  }
+  function nameBySid(sid) {
+    var i = BYSID[sid];
+    return i !== undefined ? CAT[i][0] : ("spell " + sid);
+  }
+
   // ---------- Charakterkarte ----------
+  // WoW-Paperdoll-Reihenfolge (Export-Labels aus Collect.lua).
+  // GetItemInfo-Qualität (0–5+) → unsere --q0…--q4-Tokens.
+  var GEAR_SLOTS_UI = [
+    ["Head", "Kopf", "L"], ["Neck", "Hals", "L"], ["Shoulder", "Schulter", "L"],
+    ["Back", "Rücken", "L"], ["Chest", "Brust", "L"], ["Wrist", "Handgelenke", "L"],
+    ["Hands", "Hände", "R"], ["Waist", "Taille", "R"], ["Legs", "Beine", "R"],
+    ["Feet", "Füße", "R"], ["Ring1", "Ring 1", "R"], ["Ring2", "Ring 2", "R"],
+    ["Trinket1", "Schmuck 1", "R"], ["Trinket2", "Schmuck 2", "R"],
+    ["MainHand", "Haupthand", "B"], ["OffHand", "Nebenhand", "B"],
+    ["Ranged", "Distanz", "B"]
+  ];
+  var ALL_GEAR_SLOTS = GEAR_SLOTS_UI.map(function (x) { return x[0]; });
+  var GEAR_LABEL = {};
+  GEAR_SLOTS_UI.forEach(function (x) { GEAR_LABEL[x[0]] = x[1]; });
+
+  function gearQTone(q) {
+    q = +q || 0;
+    if (q >= 5) return 4;
+    if (q === 4) return 3;
+    if (q === 3) return 2;
+    if (q === 2) return 1;
+    return 0;
+  }
+
+  function gearBySlot(list) {
+    var m = {};
+    (list || []).forEach(function (g) { if (g && g.slot) m[g.slot] = g; });
+    return m;
+  }
+
+  // ITEMICONS (D.iic): flach {itemId: iconName} oder Legacy {icon,d}/byItem.
+  function itemIconMeta(itemId) {
+    if (!itemId || !ITEMICONS) return null;
+    var key = String(itemId);
+    if (ITEMICONS.byItem) {
+      var raw = ITEMICONS.byItem[itemId] || ITEMICONS.byItem[key];
+      if (typeof raw === "string") {
+        var d1 = ITEMICONS.itemDisplay
+          ? (+ITEMICONS.itemDisplay[key] || +ITEMICONS.itemDisplay[itemId] || 0)
+          : 0;
+        return { i: raw, d: d1 };
+      }
+      if (raw && typeof raw === "object") return raw;
+    }
+    if (ITEMICONS.itemDisplay && ITEMICONS.byDisplay) {
+      var did = ITEMICONS.itemDisplay[key] || ITEMICONS.itemDisplay[itemId];
+      if (did != null) {
+        var ic = ITEMICONS.byDisplay[String(did)] || ITEMICONS.byDisplay[did];
+        if (ic) return { i: ic, d: +did };
+      }
+    }
+    var leg = ITEMICONS[itemId] || ITEMICONS[key];
+    if (typeof leg === "string") return { i: leg, d: 0 };
+    if (leg && typeof leg === "object") {
+      return {
+        i: leg.i || leg.icon || leg.name || "",
+        d: +leg.d || +leg.display || +leg.displayInfo || 0,
+        url: leg.url || leg.data || leg.src || "",
+        cls: leg.cls,
+        sub: leg.sub,
+        inv: leg.inv
+      };
+    }
+    return null;
+  }
+
+  function itemIconName(itemId) {
+    var meta = itemIconMeta(itemId);
+    if (!meta) return "";
+    if (typeof meta === "string") return meta;
+    return meta.i || meta.icon || meta.name || "";
+  }
+
+  function itemDisplayInfo(itemId) {
+    var meta = itemIconMeta(itemId);
+    if (!meta || typeof meta === "string") return 0;
+    return +meta.d || +meta.display || +meta.displayInfo || 0;
+  }
+
+  // v1: URI wenn vorhanden; sonst Icon-Basename aus D.iic (kein CDN/CSP/BLP).
+  function itemIconHtml(itemId, qTone) {
+    var meta = itemIconMeta(itemId);
+    if (!meta) return "";
+    var name = itemIconName(itemId);
+    var url = (typeof meta === "object")
+      ? (meta.url || meta.data || meta.src || "") : "";
+    if (url) {
+      return '<span class="gico" style="background-image:url(' + esc(url) + ')"' +
+        (name ? ' title="' + esc(name) + '" data-icon="' + esc(name) + '"' : "") +
+        "></span>";
+    }
+    if (!name) return "";
+    var short = name.replace(/^inv[_-]?/i, "").replace(/_/g, " ");
+    if (short.length > 10) short = short.slice(0, 9) + "…";
+    var frame = qTone !== undefined && qTone !== null
+      ? "border:1px solid var(--q" + qTone + ");"
+      : "";
+    return '<span class="gico gico-miss" style="' + frame +
+      'font-size:7px;line-height:1.1;display:inline-flex;align-items:center;' +
+      'justify-content:center;text-align:center;padding:1px;overflow:hidden;' +
+      'color:var(--ink-soft)" title="' + esc(name) +
+      '" data-icon="' + esc(name) + '">' + esc(short) + "</span>";
+  }
+
+  function gearSlotHtml(slot, label, g) {
+    if (!g) {
+      return '<div class="gslot empty"><span class="gsl">' + esc(label) +
+        '</span><span class="gsn">—</span></div>';
+    }
+    var tone = gearQTone(g.q);
+    var tip = [];
+    if (g.sub && g.sub !== "-") tip.push(g.sub);
+    if (g.itemId) tip.push("itemId " + g.itemId);
+    var iname = itemIconName(g.itemId);
+    if (iname) tip.push(iname);
+    if (g.ench) tip.push("ench " + g.ench);
+    var ico = itemIconHtml(g.itemId, tone);
+    return '<div class="gslot' + (ico ? " hasico" : "") +
+      '" style="border-left-color:var(--q' + tone + ')"' +
+      (tip.length ? ' title="' + esc(tip.join(" · ")) + '"' : "") + ">" +
+      ico +
+      '<span class="gsl">' + esc(label) + "</span>" +
+      '<span class="gsn" style="color:var(--q' + tone + ')">' + esc(g.name || "?") +
+      "</span>" +
+      '<span class="gsi">' + (g.ilvl ? "ilvl " + g.ilvl : "") +
+      (g.itemId ? '<span class="gid">#' + g.itemId + "</span>" : "") +
+      "</span></div>";
+  }
+
+  function renderGearPaperdoll(gear) {
+    var by = gearBySlot(gear);
+    var L = [], R = [], B = [];
+    GEAR_SLOTS_UI.forEach(function (def) {
+      var html = gearSlotHtml(def[0], def[1], by[def[0]]);
+      if (def[2] === "L") L.push(html);
+      else if (def[2] === "R") R.push(html);
+      else B.push(html);
+    });
+    return '<div class="gearpd">' +
+      '<div class="gearcols"><div class="gearcol">' + L.join("") + "</div>" +
+      '<div class="gearcol">' + R.join("") + "</div></div>" +
+      '<div class="gearbot">' + B.join("") + "</div></div>";
+  }
+
+  // Essence: Remaining (A/T) vs Spent (AS/TS); AX = erwartet fuer Level.
+  function renderEssenceBar(c) {
+    function row(label, rem, spent, expect) {
+      rem = rem === undefined ? null : +rem || 0;
+      spent = spent === undefined ? null : +spent || 0;
+      expect = expect === undefined ? null : +expect || 0;
+      if (rem === null && spent === null && expect === null) return "";
+      var total = (rem || 0) + (spent || 0);
+      var pctSpent = total > 0 ? Math.round(100 * (spent || 0) / total) : 0;
+      var bits = [];
+      if (spent !== null) bits.push("ausgegeben " + spent);
+      if (rem !== null) bits.push("frei " + rem);
+      if (expect !== null) bits.push("erwartet " + expect);
+      return '<div class="essrow"><span class="esslab">' + esc(label) +
+        "</span><span class=\"essbar\" title=\"" + esc(bits.join(" · ")) +
+        '"><i class="spent" style="width:' + pctSpent + '%"></i></span>' +
+        '<span class="essnum">' + bits.join(" · ") +
+        (total ? " · Σ " + total : "") + "</span></div>";
+    }
+    var html = row("AE", c.essA, c.essASpent, c.essAExpect) +
+      row("TE", c.essT, c.essTSpent, c.essTExpect);
+    if (!html) return "";
+    return '<div class="essbox"><div class="geartitle">Essence</div>' + html + "</div>";
+  }
+
   function renderChar() {
     var box = document.getElementById("charBox");
     var hd = document.getElementById("cC");
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
       box.innerHTML = '<div class="empty">Noch kein Charakter eingelesen.</div>';
+      renderGearBox(null);
       return;
     }
-    var c = CHAR, s = c.stats;
+    var c = CHAR, s = c.stats || {};
     hd.textContent = c.name || "importiert";
     hd.className = "cnt ok";
 
-    var mh = c.weapons.filter(function (w) { return w.slot === "MH"; })[0];
+    var mh = (c.weapons || []).filter(function (w) { return w.slot === "MH"; })[0];
     var twoH = mh && /2HWEAPON/i.test(mh.loc);
 
     var o = [];
-    o.push('<div class="charhd"><b>' + esc(c.name || "?") + "</b> · Stufe " +
-      (c.level || "?") + " " + esc(c.race || "") + " · Path of " +
-      esc(c.path || "?") + (mh ? " · " + (twoH ? "Zweihand" : "Einhand") : "") + "</div>");
+    var headBits = [
+      "<b>" + esc(c.name || "?") + "</b>",
+      "Stufe " + (c.level || "?"),
+      esc(c.race || ""),
+      esc(c.cls || "")
+    ].filter(Boolean);
+    if (c.path) headBits.push("Path of " + esc(c.path));
+    if (c.pathInfo && c.pathInfo.name && c.pathInfo.name !== c.path) {
+      headBits.push(esc(c.pathInfo.name));
+    }
+    if (c.spec || c.specName) {
+      headBits.push("Spec " + (c.specName ? esc(c.specName) :
+        "#" + c.spec) +
+        (c.chrSpec ? " · CHR " + c.chrSpec : ""));
+    }
+    if (c.specs && c.specs.length) {
+      headBits.push("Specs: " + c.specs.join(", "));
+    }
+    var ml = modeLabel(c);
+    if (ml) headBits.push(esc(ml));
+    else if (isDraftChar(c)) headBits.push("Draft");
+    if (mh) headBits.push(twoH ? "Zweihand" : "Einhand");
+    o.push('<div class="charhd">' + headBits.join(" · ") + "</div>");
+
+    if (c.pathInfo && (c.pathInfo.spellId || c.pathInfo.name)) {
+      var piSid = c.pathInfo.spellId || 0;
+      var piIdx = piSid ? BYSID[piSid] : undefined;
+      o.push('<div class="wepline"><b>Path-Info</b> ' +
+        (piIdx !== undefined
+          ? '<span class="icon" style="display:inline-block;vertical-align:-6px;width:20px;height:20px;' +
+            iconStyle(piIdx, 20) + '"></span> '
+          : "") +
+        esc(c.pathInfo.name || nameBySid(piSid) || "?") +
+        (piSid ? ' <span class="gid">#' + piSid + "</span>" : "") +
+        (c.pathEntry ? ' <span class="gid">entry ' + c.pathEntry + "</span>" : "") +
+        "</div>");
+    } else if (c.pathEntry) {
+      o.push('<div class="wepline"><b>Path-Entry</b> ' +
+        esc(nameByEid(c.pathEntry)) +
+        ' <span class="gid">#' + c.pathEntry + "</span></div>");
+    }
+    if (c.suggest && c.suggest.length) {
+      o.push('<div class="wepline"><b>Suggest</b> ' +
+        c.suggest.map(esc).join(", ") + "</div>");
+    }
+
+    var meta = [];
+    if (c.addon) meta.push("Addon v" + esc(c.addon));
+    if (c.essA !== undefined || c.essT !== undefined ||
+        c.essASpent !== undefined || c.essTSpent !== undefined ||
+        c.essAExpect !== undefined || c.essTExpect !== undefined) {
+      o.push(renderEssenceBar(c));
+    }
+    if (c.invest) {
+      var inv = [];
+      if (c.invest.AE !== undefined) inv.push("AE " + c.invest.AE);
+      if (c.invest.TE !== undefined) inv.push("TE " + c.invest.TE);
+      if (c.invest.CP !== undefined) inv.push("CP " + c.invest.CP);
+      if (inv.length) meta.push("Invest " + inv.join(", "));
+    }
+    if (c.investTabs && c.investTabs.length) {
+      meta.push("Tabs " + c.investTabs.slice(0, 6).map(function (t) {
+        return t.cls + "/" + t.spec + ":" + t.n;
+      }).join(", ") + (c.investTabs.length > 6 ? "…" : ""));
+    }
+    if (c.locked && c.locked.length) {
+      meta.push(c.locked.length + " Lock" + (c.locked.length === 1 ? "" : "s"));
+    }
+    if (c.mast && c.mast.length) {
+      meta.push(c.mast.length + " Mastery");
+    }
+    if (c.scardPend !== undefined && c.scardPend > 0) {
+      meta.push(c.scardPend + " Karten ausstehend");
+    }
+    if (meta.length) {
+      o.push('<div class="wepline"><b>Export</b> ' + meta.join(" · ") + "</div>");
+    }
+
+    // Wildcard / Skill Cards / Desire — wenn MODE, SCARD oder Desire-Keys stehen
+    if (hasMode(c, "WILDCARD") || isDraftChar(c) || (c.scard && c.scard.length) ||
+        (c.carded && c.carded.length) ||
+        (c.desire && c.desire.length) ||
+        (c.undesire && c.undesire.length) ||
+        (c.pathAura && c.pathAura.length) ||
+        (c.trait && c.trait.length) ||
+        (c.startChoice && c.startChoice.length) ||
+        (c.wc && Object.keys(c.wc).length) ||
+        (c.scardPend !== undefined && c.scardPend > 0)) {
+      o.push('<div class="wcbox"><div class="geartitle">Wildcard</div>');
+      if (ml) {
+        o.push('<div class="wepline"><b>Modus</b> ' + esc(ml) +
+          (isDraftChar(c) ? ' <span class="gid">Draft</span>' : "") +
+          "</div>");
+      }
+      if (c.wc && Object.keys(c.wc).length) {
+        var wcBits = [];
+        var wcKeys = ["CanRoll", "Starting", "WillStart", "WillFirst",
+          "MaxRapid", "CanRapid", "AwaitTalent",
+          "RRPhase", "RRStop", "RRLearned", "RRDesired", "RRCanStart",
+          "RRAbi", "RRTal", "RepurchAbi", "RepurchTal", "CanRepurch"];
+        function wcFmt(k, v) {
+          if (v && typeof v === "object" && v.raw !== undefined) {
+            return k + " " + v.cur + "/" + v.req +
+              (v.next ? "→" + v.next : "");
+          }
+          if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
+              (v === 0 || v === 1) && k.indexOf("RR") !== 0 &&
+              k !== "MaxRapid" && k !== "RepurchAbi" && k !== "RepurchTal" &&
+              k !== "RRLearned") {
+            if (k === "RRDesired" || k === "RRCanStart" || k === "CanRepurch" ||
+                k === "CanRoll" || k === "Starting" || k === "WillStart" ||
+                k === "WillFirst" || k === "CanRapid" || k === "AwaitTalent") {
+              return k + (v ? " ja" : " nein");
+            }
+          }
+          return k + " " + v;
+        }
+        wcKeys.forEach(function (k) {
+          if (c.wc[k] === undefined) return;
+          wcBits.push(wcFmt(k, c.wc[k]));
+        });
+        Object.keys(c.wc).forEach(function (k) {
+          if (wcKeys.indexOf(k) >= 0) return;
+          wcBits.push(wcFmt(k, c.wc[k]));
+        });
+        if (wcBits.length) {
+          o.push('<div class="wepline"><b>WC</b> ' + esc(wcBits.join(" · ")) +
+            "</div>");
+        }
+      }
+      if (c.startChoice && c.startChoice.length) {
+        o.push('<div class="wepline"><b>Startwahl</b> ' +
+          c.startChoice.slice(0, 8).map(function (eid) {
+            return esc(nameByEid(eid));
+          }).join(", ") +
+          (c.startChoice.length > 8 ? "…" : "") + "</div>");
+      }
+      if (c.trait && c.trait.length) {
+        o.push('<div class="wepline"><b>Traits</b> ' +
+          c.trait.slice(0, 8).map(function (eid) {
+            return esc(nameByEid(eid));
+          }).join(", ") +
+          (c.trait.length > 8 ? "…" : "") + "</div>");
+      }
+      if (c.pathAura && c.pathAura.length) {
+        o.push('<div class="wepline"><b>Path-Aura</b> ' +
+          c.pathAura.map(function (sid) {
+            return esc(nameBySid(sid)) + " <span class=\"gid\">#" + sid + "</span>";
+          }).join(", ") + "</div>");
+      }
+      if (c.locked && c.locked.length) {
+        o.push('<div class="wepline"><b>Locks</b> ' +
+          c.locked.slice(0, 10).map(function (eid) {
+            return esc(nameByEid(eid));
+          }).join(", ") +
+          (c.locked.length > 10 ? "…" : "") +
+          ' <span class="gid">(' + c.locked.length + ")</span></div>");
+      }
+      if (c.desire && c.desire.length) {
+        o.push('<div class="wepline"><b>Desire</b> ' +
+          c.desire.slice(0, 10).map(function (eid) {
+            return esc(nameByEid(eid));
+          }).join(", ") +
+          (c.desire.length > 10 ? "…" : "") + "</div>");
+      }
+      if (c.undesire && c.undesire.length) {
+        o.push('<div class="wepline"><b>Undesire</b> ' +
+          c.undesire.slice(0, 8).map(function (eid) {
+            return esc(nameByEid(eid));
+          }).join(", ") +
+          (c.undesire.length > 8 ? "…" : "") + "</div>");
+      }
+      if (c.scardPend !== undefined && c.scardPend > 0) {
+        o.push('<div class="wepline"><b>Ausstehend</b> ' + c.scardPend +
+          " Skill Card" + (c.scardPend === 1 ? "" : "s") + "</div>");
+      }
+      if (c.scard && c.scard.length) {
+        var filled = c.scard.filter(function (s) { return !s.blocked; }).length;
+        var blocked = c.scard.length - filled;
+        var nActive = c.scard.filter(function (s) { return s.active; }).length;
+        o.push('<div class="wepline"><b>Skill Cards</b> ' + filled + " belegt" +
+          (blocked ? ", " + blocked + " blockiert" : "") +
+          (nActive ? ", " + nActive + " aktiv" : "") + "</div>");
+        o.push('<div class="scardgrid">');
+        c.scard.forEach(function (s) {
+          var tone = s.q !== undefined ? gearQTone(s.q) : null;
+          var cls = "scard" + (s.blocked ? " blocked" : "") +
+            (s.active ? " active" : "");
+          o.push('<div class="' + cls + '"' +
+            (tone !== null
+              ? ' style="border-left:3px solid var(--q' + tone + ')"'
+              : "") + ">" +
+            '<span class="sctag">' + esc(s.tag.replace(/_/g, " ")) +
+            " @" + s.index +
+            (s.active ? " · aktiv" : "") + "</span>" +
+            (s.blocked
+              ? '<span class="scid">blockiert</span>'
+              : '<span class="scid">#' + s.cardId +
+                (s.q !== undefined ? " q" + s.q : "") + "</span>") +
+            "</div>");
+        });
+        o.push("</div>");
+      }
+      if (c.carded && c.carded.length) {
+        var names = c.carded.map(function (sid) { return nameBySid(sid); });
+        o.push('<div class="wepline"><b>Auf Karten</b> ' +
+          names.slice(0, 12).map(esc).join(", ") +
+          (names.length > 12 ? "…" : "") + "</div>");
+      }
+      o.push("</div>");
+    }
 
     var rows = [
-      ["Spell Power", s.SP], ["Attack Power", s.AP], ["Healing", s.HEAL],
+      ["Spell Power", s.SP], ["Attack Power", s.AP], ["Ranged AP", s.RAP],
+      ["Healing", s.HEAL],
       ["Strength", s.STR], ["Agility", s.AGI], ["Intellect", s.INT],
       ["Spirit", s.SPI], ["Stamina", s.STA],
       ["Melee-Crit", s.CRIT, "%"], ["Spell-Crit", s.SCRIT, "%"],
-      ["Hit Rating", s.HITRATING], ["Armor", s.ARMOR]
+      ["Hit Rating", s.HITRATING], ["Hit %", s.HITPCT, "%"],
+      ["Spell Hit %", s.SHITPCT, "%"],
+      ["Haste Rating", s.HASTERATING], ["Haste %", s.HASTE, "%"],
+      ["Crit Rating", s.CRITRATING],
+      ["Expertise", s.EXP], ["Expertise %", s.EXPPCT, "%"],
+      ["Expertise Rating", s.EXPRATING],
+      ["MP5", s.MP5], ["Spell Pen", s.SPECPEN],
+      ["Armor Pen", s.ARPEN, "%"],
+      ["Dodge", s.DODGE, "%"], ["Parry", s.PARRY, "%"],
+      ["Armor", s.ARMOR],
+      ["Holy", s.HOLY], ["Fire", s.FIRE], ["Nature", s.NATURE],
+      ["Frost", s.FROST], ["Shadow", s.SHADOW], ["Arcane", s.ARCANE]
     ].filter(function (r) { return r[1] !== undefined && !isNaN(r[1]); });
 
-    o.push('<div class="statgrid">');
-    rows.forEach(function (r) {
-      o.push("<div><span>" + esc(r[0]) + "</span><b>" +
-        (r[2] ? r[1].toFixed(2) : Math.round(r[1])) + (r[2] || "") + "</b></div>");
+    Object.keys(c.resist || {}).forEach(function (k) {
+      rows.push(["Resist " + k, c.resist[k]]);
     });
-    o.push("</div>");
+
+    if (rows.length) {
+      o.push('<div class="statgrid">');
+      rows.forEach(function (r) {
+        o.push("<div><span>" + esc(r[0]) + "</span><b>" +
+          (r[2] ? (+r[1]).toFixed(2) : Math.round(r[1])) + (r[2] || "") +
+          "</b></div>");
+      });
+      o.push("</div>");
+    }
 
     if (mh) {
-      o.push('<div class="wepline"><b>Waffe</b> ' + esc(mh.name) +
+      o.push('<div class="wepline"><b>Waffe</b> ' +
+        '<span' + (mh.itemId ? ' title="itemId ' + mh.itemId + '"' : "") + ">" +
+        esc(mh.name) + "</span>" +
         " · " + mh.dps.toFixed(1) + " DPS · Tempo " + mh.speed.toFixed(2) +
-        (mh.sub && mh.sub !== "-" ? " · " + esc(mh.sub) : "") + "</div>");
+        (mh.sub && mh.sub !== "-" ? " · " + esc(mh.sub) : "") +
+        (mh.itemId ? ' <span class="gid">#' + mh.itemId + "</span>" : "") +
+        "</div>");
     }
+    (c.weapons || []).filter(function (w) {
+      return w.slot === "OH" || w.slot === "RANGED";
+    }).forEach(function (w) {
+      o.push('<div class="wepline"><b>' +
+        (w.slot === "OH" ? "Nebenhand" : "Distanz") + "</b> " +
+        '<span' + (w.itemId ? ' title="itemId ' + w.itemId + '"' : "") + ">" +
+        esc(w.name) + "</span>" +
+        (w.dps ? " · " + w.dps.toFixed(1) + " DPS" : "") +
+        (w.itemId ? ' <span class="gid">#' + w.itemId + "</span>" : "") +
+        "</div>");
+    });
     if (c.ilvl) {
       o.push('<div class="wepline"><b>Gegenstandsstufe</b> ' + c.ilvl.toFixed(2) +
-        " über " + c.gear.length + " Slots</div>");
+        " über " + (c.gear || []).length + " Slots</div>");
+    }
+    if ((c.gear || []).length) {
+      o.push('<div class="gearwrap"><div class="geartitle">Ausrüstung</div>' +
+        renderGearPaperdoll(c.gear) + "</div>");
     }
     box.innerHTML = o.join("");
+    renderGearBox(c);
   }
 
-  // ---------- Befund: kritisch / verbesserbar ----------
-  // Reihenfolge ist Absicht: was dich Schaden kostet, steht oben.
-  var ALL_GEAR_SLOTS = ["Head", "Neck", "Shoulder", "Back", "Chest", "Wrist",
-    "Hands", "Waist", "Legs", "Feet", "Ring1", "Ring2", "Trinket1", "Trinket2",
-    "MainHand"];
+  function renderGearBox(c) {
+    var box = document.getElementById("gearBox");
+    var hd = document.getElementById("cG");
+    if (!box) return;
+    if (!c || !(c.gear || []).length) {
+      if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
+      box.innerHTML = '<div class="empty">Keine Ausrüstung im Export — im Addon ' +
+        "Gear mitnehmen und neu kopieren.</div>";
+      return;
+    }
+    if (hd) {
+      hd.textContent = (c.ilvl ? c.ilvl.toFixed(1) + " ilvl · " : "") +
+        c.gear.length + " Slots";
+      hd.className = "cnt ok";
+    }
+    box.innerHTML = renderGearPaperdoll(c.gear);
+  }
 
   function charIssues(ids) {
     if (!CHAR) return [];
@@ -768,6 +1680,67 @@
       push("krit", "Du hast " + bits.join(" und ") + " liegen",
         " Das ist Schaden, den du geschenkt bekommst, sobald du sie ausgibst. " +
         "Nichts an deinem Build ist wichtiger als das.");
+    }
+    if (c.essASpent !== undefined || c.essTSpent !== undefined) {
+      push("ok", "Essence ausgegeben: AE " + (c.essASpent || 0) +
+        " · TE " + (c.essTSpent || 0),
+        " Gemessen aus dem Addon (AS/TS). Freie Essence steht darüber.");
+    }
+    if (c.essAExpect !== undefined) {
+      var gotA = (c.essASpent || 0) + (c.essA || 0);
+      if (gotA < c.essAExpect) {
+        push("info", "AE unter Level-Soll",
+          " Erwartet " + c.essAExpect + " für Stufe " + (c.level || "?") +
+          ", gemessen " + gotA + " (ausgegeben + frei).");
+      } else {
+        push("ok", "AE-Soll für Stufe " + (c.level || "?") + ": " + c.essAExpect,
+          " Gemessen " + gotA + " (ausgegeben + frei).");
+      }
+    }
+    if (c.locked && c.locked.length) {
+      push("ok", c.locked.length + " gelockte Einträge",
+        " Die bleiben beim Umskillen liegen — der Generator fasst sie nicht an.");
+    }
+    if (c.desire && c.desire.length) {
+      push("ok", c.desire.length + " Desire-Einträge",
+        " Der Generator nimmt sie bevorzugt.");
+    }
+    if (c.undesire && c.undesire.length) {
+      push("info", c.undesire.length + " Undesire-Einträge",
+        " Der Generator lässt sie aus.");
+    }
+    if (c.suggest && c.suggest.length) {
+      var sug = c.suggest.join(", ");
+      var mineP = normPath(c.path);
+      var sugHit = c.suggest.some(function (x) {
+        return normPath(x) === mineP;
+      });
+      push(sugHit ? "ok" : "info", "Suggest: " + esc(sug),
+        sugHit
+          ? " Dein Path steht in der Addon-Empfehlung."
+          : " Addon empfiehlt andere Paths als den aktuellen.");
+    }
+    if (isDraftChar(c)) {
+      push("info", "Draft-Modus aktiv",
+        " Build ist Draft — Auswahlen können noch begrenzt sein.");
+    }
+    if (c.scardPend !== undefined && c.scardPend > 0) {
+      push("info", c.scardPend + " Skill Cards ausstehend",
+        " Im Spiel noch nicht eingelöst.");
+    }
+    if (hasMode(c, "WILDCARD") || (c.scard && c.scard.length) ||
+        (c.desire && c.desire.length) || (c.wc && Object.keys(c.wc).length)) {
+      var nCard = (c.carded || []).length;
+      var nSlot = (c.scard || []).filter(function (s) { return !s.blocked; }).length;
+      var wcNote = "";
+      if (c.wc) {
+        if (c.wc.CanRoll === 1) wcNote += " Kann rollen.";
+        if (c.wc.AwaitTalent === 1) wcNote += " Talent-Upgrade-Roll steht aus.";
+      }
+      push("ok", "Wildcard" + (modeLabel(c) ? " (" + esc(modeLabel(c)) + ")" : ""),
+        (nSlot ? " " + nSlot + " Skill-Card-Slots belegt." : "") +
+        (nCard ? " " + nCard + " Spells auf Karten — Vorschläge bevorzugen die." : "") +
+        wcNote);
     }
 
     // 1b. Ueber dem Seltenheits-Budget: so ist der Build im Spiel nicht baubar.
@@ -924,7 +1897,9 @@
         push("fix", missing.length +
           (missing.length === 1 ? " leerer Ausrüstungsplatz"
                                 : " leere Ausrüstungsplätze"),
-          " " + missing.join(", ") + ". Jeder davon ist Spell Power oder ein " +
+          " " + missing.map(function (k) {
+            return GEAR_LABEL[k] || k;
+          }).join(", ") + ". Jeder davon ist Spell Power oder ein " +
           "Attribut, das du nicht bekommst.");
       }
     }
@@ -1031,6 +2006,7 @@
     var hit = applyImport(d);
     refresh();
     toast(hit + " Einträge übernommen" +
+      (d._idMatched ? " (" + d._idMatched + " per ID)" : "") +
       (UNMATCHED.length ? ", " + UNMATCHED.length + " unbekannt" : ""));
     document.getElementById("charBox").scrollIntoView({ behavior: "smooth",
       block: "start" });
@@ -1101,17 +2077,19 @@
     // Wenn Grundschaden und Tick dieselbe Zahl sind, ist es dieselbe
     // Information zweimal - dann reicht das Tick-Abzeichen.
     if (o.flat && !(o.tick && o.tick === o.flat[0] && o.flat[0] === o.flat[1])) {
-      b.push('<span class="bdg f">' + o.flat[0] +
-        (o.flat[1] !== o.flat[0] ? "–" + o.flat[1] : "") + "</span>");
+      b.push('<span class="bdg f">' + fmt(o.flat[0]) +
+        (o.flat[1] !== o.flat[0] ? "–" + fmt(o.flat[1]) : "") + "</span>");
     }
     if (o.heal) {
-      b.push('<span class="bdg f">Heil ' + o.heal[0] +
-        (o.heal[1] !== o.heal[0] ? "–" + o.heal[1] : "") + "</span>");
+      b.push('<span class="bdg f">Heil ' + fmt(o.heal[0]) +
+        (o.heal[1] !== o.heal[0] ? "–" + fmt(o.heal[1]) : "") + "</span>");
     }
     if (o.dot) b.push('<span class="bdg d">' + o.dot + " s</span>");
-    if (o.tick) b.push('<span class="bdg d">' + o.tick + "/s</span>");
+    if (o.tick) b.push('<span class="bdg d">' + fmt(o.tick) + "/s</span>");
     if (o.ap) b.push('<span class="bdg w">' + fmt(o.ap) + " % AP</span>");
+    else if (o.apb) b.push('<span class="bdg w">AP</span>');
     if (o.sp) b.push('<span class="bdg w">' + fmt(o.sp) + " % SP</span>");
+    else if (o.spb) b.push('<span class="bdg w">SP</span>');
     (o.inc || []).forEach(function (x) {
       b.push('<span class="bdg m">+' + fmt(x[0]) + " % " + esc(short(x[1])) + "</span>");
     });
@@ -1122,9 +2100,15 @@
       b.push('<span class="bdg g">+' +
         (g[0] < 0 ? -g[0] + " % " : g[0] + " ") + esc(g[1]) + "</span>");
     });
+    // Proc: Text hat Vorrang. DBC-proc nur, wenn der Tooltip schweigt
+    // (viele Spells haben nur dort eine echte 1–99%-Chance).
     if (o.proc) b.push('<span class="bdg p">' + fmt(o.proc) + " % Proc</span>");
+    else if (MC[i] && MC[i].proc) {
+      b.push('<span class="bdg p">' + fmt(MC[i].proc) + " % Proc</span>");
+    }
     // Cooldown kommt aus der DBC, nicht aus dem Text - der Tooltip
-    // nennt ihn fast nie und die DBC immer.
+    // nennt ihn fast nie und die DBC immer. Text-CDs (oft PvP-Klauseln)
+    // werden deshalb hier nicht als Badge gezeigt.
     var mb = mechBadges(i);
     return (b.length || mb) ? '<span class="bdgs">' + b.join("") + mb + "</span>" : "";
   }
@@ -1169,6 +2153,13 @@
     if (m.cd) b.push('<span class="bdg c">CD ' + secs(m.cd) + "</span>");
     if (m.cast) b.push('<span class="bdg c">' + fmt(m.cast) + " s Cast</span>");
     else if (m.cd || m.cost) b.push('<span class="bdg c">instant</span>');
+    if (m.ch) {
+      b.push('<span class="bdg c">' + m.ch + " Ladung" +
+        (m.ch === 1 ? "" : "en") + "</span>");
+    }
+    if (m.chr) {
+      b.push('<span class="bdg c">Aufladung ' + secs(m.chr) + "</span>");
+    }
     if (m.cost) b.push('<span class="bdg r">' + fmt(m.cost) + " " + esc(m.res) + "</span>");
     if (m.range) b.push('<span class="bdg f">' + m.range + " m</span>");
     return b.join("");
@@ -1335,9 +2326,22 @@
 
   var QUAL_KEY = { uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 
+  // QOWN: echte Kosten/Qualität pro spellId; sonst Katalog + Einheits-qcost.
+  function entryQual(i) {
+    var sid = SID[i];
+    var o = CHAR && CHAR.qown && sid && CHAR.qown[sid];
+    if (o && o.q >= 1 && o.q <= 4) return o.q;
+    return CAT[i][3];
+  }
+  function entryCost(i) {
+    var sid = SID[i];
+    var o = CHAR && CHAR.qown && sid && CHAR.qown[sid];
+    if (o && o.cost > 0) return o.cost;
+    return qualityCost(entryQual(i));
+  }
   function qualityUse(ids) {
     var u = [0, 0, 0, 0, 0];
-    ids.forEach(function (i) { u[CAT[i][3]] += qualityCost(CAT[i][3]); });
+    ids.forEach(function (i) { u[entryQual(i)] += entryCost(i); });
     return u;
   }
   // Kosten je Stufe: nur wenn das Addon einen einheitlichen Wert gemessen hat.
@@ -1355,10 +2359,10 @@
     USE = qualityUse(Object.keys(picked).map(Number));
   }
   function overBudget(i) {
-    var q = CAT[i][3];
+    var q = entryQual(i);
     var lim = qualityLimit(q);
     if (!lim) return false;
-    return USE[q] + qualityCost(q) > lim;
+    return USE[q] + entryCost(i) > lim;
   }
 
   function renderBudget() {
@@ -1480,6 +2484,13 @@
 
       if (topArch && archOf[i] === topArch) score += 1;
       if (CAT[i][3] >= 3) score += 1;                           // Epic+ etwas hoeher
+      if (isCardedIdx(i)) score += 3;                           // Skill-Card bevorzugen
+      if (isDesiredIdx(i)) score += 4;                          // Desire bevorzugen
+      if (isUndesiredIdx(i)) continue;                          // Undesire auslassen
+      if (isLockedIdx(i) && !have[i]) score += 5;               // gelockt und fehlt → rein
+      // Desire-Board-fähig (Katalog / rollgate): Rapid-Roll-Kandidaten leicht bevorzugen
+      if (isDesireEligIdx(i)) score += 1;
+      else score -= 2; // kein Desire / rollgate.blocked — nicht vorschlagen priorisieren
 
       out.push({ i: i, s: score, why: why, gate: gate });
     }
@@ -1639,8 +2650,8 @@
     if (isTal && cnt.t >= MAX_T) return false;
     if (!isTal && cnt.a >= MAX_A) return false;
     if (tooHigh(i)) return false;
-    var q = CAT[i][3], lim = qualityLimit(q);
-    if (lim && use[q] + qualityCost(q) > lim) return false;
+    var q = entryQual(i), lim = qualityLimit(q);
+    if (lim && use[q] + entryCost(i) > lim) return false;
     var g = REL[i][3];
     if (g >= 0) {
       for (var k in sel) { if (REL[k][3] === g) return false; }
@@ -1664,16 +2675,41 @@
     function take(i, reason) {
       sel[i] = true;
       why[i] = reason;
-      use[CAT[i][3]] += qualityCost(CAT[i][3]);
+      use[entryQual(i)] += entryCost(i);
       if (CAT[i][1] === 1) cnt.t++; else cnt.a++;
+    }
+
+    // Gelockte Eintraege zuerst behalten — Wildcard-Locks nicht ueberschreiben.
+    if (CHAR && CHAR.locked && CHAR.locked.length) {
+      CHAR.locked.forEach(function (eid) {
+        var li = BYEID[eid];
+        if (li !== undefined && genLegal(li, sel, use, cnt)) {
+          take(li, "gelockt");
+        }
+      });
+    }
+
+    // Desire (Addon 1.5+): Wunschliste vor dem Themen-Pool aufnehmen.
+    if (CHAR && CHAR.desire && CHAR.desire.length) {
+      CHAR.desire.forEach(function (eid) {
+        var di = BYEID[eid];
+        if (di !== undefined && !isUndesiredIdx(di) &&
+            genLegal(di, sel, use, cnt)) {
+          take(di, "Desire");
+        }
+      });
     }
 
     // Runde 1: Faehigkeiten nach Themenpassung.
     var pool = [];
     for (var i = 0; i < CAT.length; i++) {
       if (CAT[i][1] !== 0) continue;
+      if (isUndesiredIdx(i)) continue;
       var v = th.score(i);
-      if (v > 0) pool.push([v + CAT[i][3] * 0.4, i]);
+      if (isCardedIdx(i)) v += 4; // Skill-Card-Spells bevorzugen
+      if (isDesiredIdx(i)) v += 3;
+      if (isDesireEligIdx(i)) v += 1.5; // Rapid-Roll-fähig
+      if (v > 0) pool.push([v + entryQual(i) * 0.4, i]);
     }
     pool.sort(function (a, b) { return b[0] - a[0]; });
     for (var p = 0; p < pool.length && cnt.a < MAX_A; p++) {
@@ -1692,9 +2728,13 @@
     var tpool = [];
     for (var j = 0; j < CAT.length; j++) {
       if (CAT[j][1] !== 1) continue;
+      if (isUndesiredIdx(j)) continue;
       var hits = (MODOF[j] || []).filter(function (b) { return bases[b]; });
       var refs = (REL[j][2] || []).filter(function (r) { return sel[r]; });
       var sc = hits.length * 6 + refs.length * 4;
+      if (isCardedIdx(j)) sc += 3;
+      if (isDesiredIdx(j)) sc += 2;
+      if (isDesireEligIdx(j)) sc += 1;
       // Reine Schadensmultiplikatoren zaehlen auch ohne Namensbezug.
       ((SC[j] || {}).inc || []).forEach(function (x) {
         if (x[2] === "dmg" && themeKey !== "heal") sc += 1.5;
@@ -2329,7 +3369,7 @@
     });
   }
   document.addEventListener("click", function (e) {
-    var b = e.target.closest(".vtab");
+    var b = e.target.closest(".vtab[data-view]");
     if (b) showView(b.dataset.view);
   });
 
@@ -2572,12 +3612,16 @@
 
   function idsFromExport(d) {
     var ids = [], miss = [];
-    function take(name) {
-      var i = BYNAME[String(name).toLowerCase().trim()];
-      if (i === undefined) miss.push(name); else ids.push(i);
+    function take(tok) {
+      var r = resolveTok(tok);
+      if (!r) miss.push(tok.n || "?"); else ids.push(r.i);
     }
-    (d.abi || []).forEach(take);
-    (d.tal || []).forEach(function (t) { take(t.n); });
+    (d.abi || []).forEach(function (t) {
+      take(typeof t === "string" ? parseAbiToken(t) : t);
+    });
+    (d.tal || []).forEach(function (t) {
+      take(typeof t === "string" ? parseTalToken(t) : t);
+    });
     return { ids: ids, miss: miss };
   }
 
@@ -2602,7 +3646,13 @@
     return {
       name: d.name || "Fremder Build", level: d.level, path: d.path,
       cls: d.cls, ids: r.ids, miss: r.miss, stats: d.stats || {},
-      ilvl: d.ilvl, inspect: !!d.inspect, weapons: d.weapons || []
+      ilvl: d.ilvl, inspect: !!d.inspect, weapons: d.weapons || [],
+      gear: d.gear || [],
+      spec: d.spec, specName: d.specName, specs: d.specs || [],
+      mode: d.mode, locked: d.locked || [],
+      essA: d.essA, essT: d.essT,
+      essASpent: d.essASpent, essTSpent: d.essTSpent,
+      scard: d.scard || [], carded: d.carded || []
     };
   }
 
@@ -2673,12 +3723,40 @@
     var o = [];
 
     o.push('<div class="cmphd"><span>' +
-      esc(CHAR && CHAR.name ? CHAR.name : "Dein Build") + "</span>" +
+      esc(CHAR && CHAR.name ? CHAR.name : "Dein Build") +
+      (CHAR && CHAR.specName ? " · " + esc(CHAR.specName) :
+        CHAR && CHAR.spec ? " · Spec #" + CHAR.spec : "") +
+      (CHAR && CHAR.specs && CHAR.specs.length
+        ? " · Specs: " + CHAR.specs.join(", ") : "") +
+      "</span>" +
       '<span class="vs">gegen</span><span>' + esc(RIVAL.name) +
       (RIVAL.level ? " · Stufe " + RIVAL.level : "") +
       (RIVAL.path ? " · Path of " + esc(RIVAL.path) : "") +
+      (RIVAL.specName ? " · " + esc(RIVAL.specName) :
+        RIVAL.spec ? " · Spec #" + RIVAL.spec : "") +
+      (RIVAL.specs && RIVAL.specs.length
+        ? " · Specs: " + RIVAL.specs.join(", ") : "") +
       (RIVAL.inspect ? ' <span class="tagm">inspiziert</span>' : "") +
       "</span></div>");
+
+    var metaBits = [];
+    if (CHAR && (CHAR.essA !== undefined || RIVAL.essA !== undefined)) {
+      metaBits.push("Essence frei du " + (CHAR.essA || 0) + "/" + (CHAR.essT || 0) +
+        " · er " + (RIVAL.essA || 0) + "/" + (RIVAL.essT || 0));
+    }
+    if (CHAR && (CHAR.essASpent !== undefined || RIVAL.essASpent !== undefined)) {
+      metaBits.push("ausgegeben du " + (CHAR.essASpent || 0) + "/" +
+        (CHAR.essTSpent || 0) + " · er " + (RIVAL.essASpent || 0) + "/" +
+        (RIVAL.essTSpent || 0));
+    }
+    if ((CHAR && CHAR.locked && CHAR.locked.length) ||
+        (RIVAL.locked && RIVAL.locked.length)) {
+      metaBits.push("Locks du " + ((CHAR && CHAR.locked) || []).length +
+        " · er " + (RIVAL.locked || []).length);
+    }
+    if (metaBits.length) {
+      o.push('<div class="qhint">' + metaBits.map(esc).join(" · ") + "</div>");
+    }
 
     o.push('<div class="cmpsplit"><span class="c-mine">' + onlyMine.length +
       " nur bei dir</span><span class=\"c-both\">" + both.length +
@@ -2712,6 +3790,33 @@
       '<span class="lg down">orange</span> er liegt vorn. Mehr ist nicht ' +
       "automatisch besser — zwei Legendaries weniger können am Budget liegen, " +
       "nicht an schlechteren Skills.</div>");
+
+    // Gear slot-by-slot, nur was beide Exporte liefern — keine erfundenen Stats
+    if (CHAR && (CHAR.gear || []).length && (RIVAL.gear || []).length) {
+      var myG = gearBySlot(CHAR.gear), hisG = gearBySlot(RIVAL.gear);
+      o.push('<div class="schd">Ausrüstung nach Slot</div>');
+      o.push('<div class="tblwrap"><table class="stat cmp"><thead><tr>' +
+        "<th>Slot</th><th>du</th><th>er</th></tr></thead><tbody>");
+      ALL_GEAR_SLOTS.forEach(function (slot) {
+        var a = myG[slot], b = hisG[slot];
+        if (!a && !b) return;
+        var same = a && b && (
+          (a.itemId && b.itemId && a.itemId === b.itemId) ||
+          (!a.itemId && !b.itemId && a.name === b.name && a.ilvl === b.ilvl)
+        );
+        function cell(g) {
+          if (!g) return "—";
+          var tone = gearQTone(g.q);
+          return '<span style="color:var(--q' + tone + ')">' + esc(g.name) +
+            "</span> <span class=\"meta\">ilvl " + g.ilvl +
+            (g.itemId ? " #" + g.itemId : "") + "</span>";
+        }
+        o.push("<tr" + (same ? "" : ' class="diff"') + "><td>" +
+          esc(GEAR_LABEL[slot] || slot) + "</td><td>" + cell(a) +
+          "</td><td>" + cell(b) + "</td></tr>");
+      });
+      o.push("</tbody></table></div>");
+    }
 
     // Empfohlener Path je Build - der interessanteste Unterschied
     if (A.path && B.path && A.path.k !== B.path.k) {
@@ -2876,10 +3981,10 @@
       if (!any) return null;
       var used = [0, 0, 0, 0, 0], ok = 0;
       ARCH[n].forEach(function (i) {
-        var q = CAT[i][3];
+        var q = entryQual(i);
         if (picked[i]) return;
         if (!qualityLimit(q)) { ok++; return; }
-        if (used[q] + qualityCost(q) <= free[q]) { used[q] += qualityCost(q); ok++; }
+        if (used[q] + entryCost(i) <= free[q]) { used[q] += entryCost(i); ok++; }
       });
       return ok;
     }
@@ -2986,6 +4091,326 @@
     } catch (e) { toast("Kopieren nicht möglich"); }
   });
 
+  // ---------- Methoden (Wissen-Reiter, statisch aus D.meth) ----------
+  // Pipeline: pipeline/methods.py → data/methods.json. Keine Nachrechnung
+  // von Koeffizienten hier — nur Anzeige.
+  var CONF_DE = { high: "hoch", mid: "mittel", low: "niedrig" };
+  var WHY_DE = {
+    schadenstext_ohne_zahl: "Schadenstext, Zahl fehlt",
+    nur_multiplikator_kein_basisschaden: "nur Multiplikator, kein Basisschaden",
+    proc_ohne_schaden: "Proc ohne Schadenszahl",
+    flat_ohne_koeffizient: "Flat ohne SP/AP-Koeffizient"
+  };
+
+  function methName(i) {
+    return (CAT[i] && CAT[i][0]) || ("#" + i);
+  }
+
+  // Build-Fingerprint aus Ascension SpellTags.dbc — nur Tag-Präsenz, keine DPS-Zahlen.
+  function spellTagFingerprint(ids) {
+    var facets = stagFacetList();
+    var covered = {};
+    var schools = {};
+    var tagged = 0;
+    facets.forEach(function (f) { covered[f.key] = false; });
+    (ids || []).forEach(function (i) {
+      var e = STAG_BY_I[i];
+      if (!e) return;
+      tagged++;
+      (e.facets || []).forEach(function (k) { covered[k] = true; });
+      (e.schools || []).forEach(function (s) { schools[s] = 1; });
+    });
+    var score = 0, max = 0, gaps = [];
+    facets.forEach(function (f) {
+      var w = stagWeight(f);
+      max += w;
+      if (covered[f.key]) score += w;
+      else gaps.push({ key: f.key, w: w, label: stagLabel(f.key) });
+    });
+    gaps.sort(function (a, b) { return b.w - a.w; });
+    return {
+      covered: covered,
+      gaps: gaps,
+      score: score,
+      max: max,
+      pct: max ? Math.round(100 * score / max) : 0,
+      tagged: tagged,
+      n: (ids || []).length,
+      schools: Object.keys(schools).sort()
+    };
+  }
+
+  function spellTagFillers(ids, gapKeys, limit) {
+    limit = limit || 10;
+    var have = {};
+    (ids || []).forEach(function (i) { have[i] = 1; });
+    var want = {};
+    (gapKeys || []).forEach(function (k) { want[k] = 1; });
+    var scored = [];
+    Object.keys(STAG_BY_I).forEach(function (ik) {
+      var i = +ik;
+      if (have[i] || !CAT[i]) return;
+      if (tooHigh(i) || overBudget(i)) return;
+      if (isUndesiredIdx(i)) return;
+      var e = STAG_BY_I[i];
+      if (!e || !e.facets || !e.facets.length) return;
+      var filled = e.facets.filter(function (k) { return want[k]; });
+      if (!filled.length) return;
+      var lvl = CAT[i][4] || 0;
+      var kind = CAT[i][1] || 0;
+      var bonus = (10 - Math.min(lvl, 60) / 6) + (kind === 0 ? 2 : 0);
+      if (isDesiredIdx(i) || isLockedIdx(i)) bonus += 3;
+      if (isCardedIdx(i)) bonus += 2;
+      scored.push({
+        i: i,
+        fill: filled.length,
+        filled: filled,
+        s: filled.length * 10 + bonus
+      });
+    });
+    scored.sort(function (a, b) {
+      return b.s - a.s || b.fill - a.fill || (CAT[a.i][4] || 0) - (CAT[b.i][4] || 0);
+    });
+    return scored.slice(0, limit);
+  }
+
+  function renderSpellTagFingerprint(ids) {
+    var box = document.getElementById("methbox");
+    var tab = document.getElementById("methTab");
+    var hd = document.getElementById("cM");
+    if (!box) return;
+
+    var show = !!(STAGS && STAGS.entries && STAGS.entries.length);
+    if (tab) tab.hidden = !show;
+    if (!show) {
+      box.innerHTML = "";
+      if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
+      return;
+    }
+
+    if (!ids || !ids.length) {
+      if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
+      box.innerHTML = '<div class="qhint">Wähle einen Build — dann zeigt dieser Reiter '
+        + "die strukturelle Abdeckung aus Ascension <code>SpellTags.dbc</code> "
+        + "(Mobilität, Interrupt, CC, Schulen …). Tags kommen aus dem Client, "
+        + "nicht aus Heuristiken.</div>";
+      return;
+    }
+
+    var fp = spellTagFingerprint(ids);
+    if (hd) {
+      hd.textContent = fp.pct + "% · " + fp.gaps.length + " Lücken";
+      hd.className = "cnt " + (fp.gaps.length > 4 ? "over" : fp.pct >= 70 ? "ok" : "");
+    }
+
+    var o = [];
+    o.push('<div class="qhint"><b>Tag-Struktur</b> — gewichtete Facetten-Abdeckung '
+      + "für Levelruns. Quelle: <code>SpellTags.dbc</code> ∩ Katalog "
+      + "(" + (STAGS.taggedEntries || Object.keys(STAG_BY_I).length)
+      + " getaggte Einträge). Keine erfundenen Schadenszahlen.</div>");
+    o.push('<div class="stagscore"><b>' + fp.score + " / " + fp.max
+      + "</b> · " + fp.pct + "% · getaggt " + fp.tagged + "/" + fp.n);
+    if (fp.schools.length) {
+      o.push(" · Schulen: " + fp.schools.map(function (s) {
+        return SCHOOL_DE[s] || s;
+      }).map(esc).join(", "));
+    }
+    o.push("</div>");
+
+    o.push('<div class="staggrid">');
+    stagFacetList().forEach(function (f) {
+      var ok = !!fp.covered[f.key];
+      o.push('<div class="stag' + (ok ? " ok" : " gap") + '">'
+        + '<span class="stagmark">' + (ok ? "✓" : "✗") + "</span>"
+        + '<span class="stagnam">' + esc(stagLabel(f.key)) + "</span>"
+        + '<span class="stagw">' + stagWeight(f) + "</span></div>");
+    });
+    o.push("</div>");
+
+    if (fp.gaps.length) {
+      var topGaps = fp.gaps.slice(0, 4);
+      var fillers = spellTagFillers(ids, topGaps.map(function (g) { return g.key; }), 10);
+      o.push('<div class="geartitle" style="padding:10px 14px 0">Lücken nach Gewicht</div>');
+      o.push('<div class="wepline">' + topGaps.map(function (g) {
+        return esc(g.label) + " (−" + g.w + ")";
+      }).join(" · ") + "</div>");
+      if (fillers.length) {
+        o.push('<div class="geartitle" style="padding:10px 14px 0">'
+          + "Katalog-Filler für diese Lücken</div>");
+        fillers.forEach(function (f) {
+          var covers = f.filled.map(stagLabel).join(", ");
+          o.push('<div class="sug" data-add="' + f.i + '" role="button" tabindex="0">'
+            + '<span class="icon" style="width:22px;height:22px;flex:0 0 22px;'
+            + iconStyle(f.i, 22) + '"></span>'
+            + '<div class="sugb"><span class="nm" style="color:var(--q'
+            + CAT[f.i][3] + ')">' + esc(CAT[f.i][0]) + "</span>"
+            + '<span class="sugwhy">schließt ' + f.fill
+            + (f.fill === 1 ? " Lücke" : " Lücken") + ": "
+            + esc(covers) + " · lvl" + (CAT[f.i][4] || "?") + "</span></div>"
+            + '<span class="sugadd">+</span></div>');
+        });
+      }
+    } else {
+      o.push('<div class="flag syn"><b>Alle gewichteten Facetten belegt</b> '
+        + "— laut SpellTags deckt der Build die Levelrun-Checkliste ab.</div>");
+    }
+    box.innerHTML = o.join("");
+  }
+
+  function renderSpellTagsWissen() {
+    var root = document.getElementById("stagsRoot");
+    if (!root) return;
+    if (!STAGS || !STAGS.entries || !STAGS.entries.length) {
+      root.innerHTML = "";
+      return;
+    }
+    var o = [];
+    o.push('<div class="headline"><b>4. SpellTag-Strukturfingerprint</b>');
+    o.push("Offizielle Ascension-Taxonomie aus <code>SpellTags.dbc</code> / "
+      + "<code>SpellTagTypes.dbc</code>. Ergänzt Tempo/Hitze/Lücken — ersetzt sie nicht. "
+      + "Live-Auswertung deines Builds: <em>Auswertung → Tag-Struktur</em>.</div>");
+    o.push('<div class="flag syn"><b>'
+      + (STAGS.taggedEntries || STAGS.entries.length) + " / "
+      + (STAGS.catalogSize || CAT.length)
+      + " Katalogeinträge getaggt</b> · "
+      + stagFacetList().length + " Facetten. Schulen und Rollen nur, "
+      + "wenn der Client sie setzt.</div>");
+    o.push('<div class="staggrid wissen">');
+    stagFacetList().forEach(function (f) {
+      o.push('<div class="stag ok"><span class="stagnam">'
+        + esc(stagLabel(f.key)) + "</span>"
+        + '<span class="stagw">Gew. ' + stagWeight(f)
+        + "</span></div>");
+    });
+    o.push("</div>");
+    o.push('<div class="srcnote">Interrupt und Mobilität wiegen für Levelruns '
+      + "stärker als z.&nbsp;B. Cleave. Fehlende Tags heißen „nicht in der DBC "
+      + "markiert“, nicht „Fähigkeit nutzlos“.</div>");
+    root.innerHTML = o.join("");
+  }
+
+  function renderMethods() {
+    var root = document.getElementById("methRoot");
+    if (!root) return;
+    if (!METH || !METH.tempo) {
+      root.innerHTML = '<p class="srcnote">Keine Methoden-Daten (data/methods.json). '
+        + '<code>python3 pipeline/methods.py</code> ausführen.</p>';
+      renderSpellTagsWissen();
+      return;
+    }
+    var html = [];
+    var t = METH.tempo;
+    var h = METH.modheat;
+    var g = METH.gaps;
+    var r = METH.resmap;
+
+    html.push('<div class="headline"><b>1. Levelrun-Tempo-Score</b>');
+    html.push(esc(t.note || ""));
+    html.push("</div>");
+    html.push('<div class="flag syn"><b>' + (t.nHigh || 0)
+      + " mit DBC-Cooldown</b> · " + t.n
+      + " mit messbarem Anteil (Level " + (t.lvl || []).join("–")
+      + "). Score = Anteil ÷ CD (sonst GCD " + t.gcd + " s).</div>");
+
+    function tempoTable(rows, title) {
+      if (!rows || !rows.length) return;
+      html.push('<div class="headline"><b>' + esc(title) + "</b></div>");
+      html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
+      html.push("<th>Score</th><th>Fähigkeit</th><th>Level</th><th>Anteil</th>"
+        + "<th>CD</th><th>Vertrauen</th></tr></thead><tbody>");
+      rows.slice(0, 25).forEach(function (row) {
+        var part = row.w != null ? (row.w + " % Waffe")
+          : row.ap != null ? (row.ap + " % AP")
+          : row.sp != null ? (row.sp + " % SP") : "—";
+        if (row.sch) part += " · " + row.sch;
+        html.push("<tr><td class=\"num\">" + row.s + "</td><td>"
+          + esc(methName(row.i)) + "</td><td class=\"num\">" + row.lvl
+          + "</td><td>" + esc(part) + "</td><td class=\"num\">"
+          + (row.cd != null ? row.cd + " s" : "GCD")
+          + "</td><td>" + esc(CONF_DE[row.conf] || row.conf)
+          + "</td></tr>");
+      });
+      html.push("</tbody></table></div>");
+    }
+    tempoTable(t.topHigh, "Mit gemessenem Cooldown (Vertrauen hoch)");
+    tempoTable(t.top, "Gesamtrangliste (inkl. GCD-Schätzung)");
+
+    if (t.flatOhneKoeff && t.flatOhneKoeff.length) {
+      html.push('<div class="flag pre"><b>Flat ohne Koeffizient — nicht gerankt</b> ');
+      html.push(t.flatOhneKoeff.slice(0, 12).map(function (row) {
+        return esc(methName(row.i));
+      }).join(", "));
+      if (t.flatOhneKoeff.length > 12) html.push(" …");
+      html.push("</div>");
+    }
+
+    html.push('<div class="headline"><b>2. Modifier-Ketten-Hitze</b>');
+    html.push(esc((h && h.note) || ""));
+    html.push("</div>");
+    if (h && h.talents && h.talents.length) {
+      html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
+      html.push("<th>Hitze</th><th>Talent</th><th>Basis</th>"
+        + "<th>Abilities in der Kette</th></tr></thead><tbody>");
+      h.talents.slice(0, 20).forEach(function (row) {
+        html.push("<tr><td class=\"num\">" + row.h + "</td><td>"
+          + esc(methName(row.i)) + "</td><td>"
+          + esc(methName(row.base)) + "</td><td class=\"num\">"
+          + row.h + "</td></tr>");
+      });
+      html.push("</tbody></table></div>");
+    }
+    if (h && h.bases && h.bases.length) {
+      html.push('<div class="headline"><b>Heißeste Basen (Varianten × Talente)</b></div>');
+      html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
+      html.push("<th>Hitze</th><th>Basis</th><th>Varianten</th>"
+        + "<th>Talente</th></tr></thead><tbody>");
+      h.bases.slice(0, 15).forEach(function (row) {
+        html.push("<tr><td class=\"num\">" + row.h + "</td><td>"
+          + esc(methName(row.i)) + "</td><td class=\"num\">" + row.v
+          + "</td><td class=\"num\">" + row.t + "</td></tr>");
+      });
+      html.push("</tbody></table></div>");
+    }
+
+    html.push('<div class="headline"><b>3. Ehrliche Zahlenlücken</b>');
+    html.push(esc((g && g.note) || ""));
+    html.push("</div>");
+    html.push('<div class="flag pre"><b>' + ((g && g.n) || 0)
+      + " Lücken</b> — Katalog nennt Schaden/Heilung, scaling.json liefert "
+      + "keine messbare Zahl.</div>");
+    if (g && g.items && g.items.length) {
+      html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
+      html.push("<th>Fähigkeit</th><th>Level</th><th>Grund</th></tr></thead><tbody>");
+      g.items.slice(0, 30).forEach(function (row) {
+        html.push("<tr><td>" + esc(methName(row.i))
+          + "</td><td class=\"num\">" + row.lvl + "</td><td>"
+          + esc(WHY_DE[row.why] || row.why) + "</td></tr>");
+      });
+      html.push("</tbody></table></div>");
+    }
+
+    if (r && r.pools) {
+      html.push('<div class="headline"><b>Ressourcenkarte (DBC)</b>');
+      html.push(esc(r.note || ""));
+      html.push("</div>");
+      html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
+      html.push("<th>Pool</th><th>Abilities mit Kosten</th>"
+        + "<th>Stichproben</th></tr></thead><tbody>");
+      Object.keys(r.pools).sort().forEach(function (pool) {
+        var p = r.pools[pool];
+        var samples = (p.samples || []).slice(0, 4).map(function (s) {
+          return methName(s.i) + (s.cost != null ? " (" + s.cost + ")" : "");
+        }).join(", ");
+        html.push("<tr><td>" + esc(pool) + "</td><td class=\"num\">" + p.n
+          + "</td><td>" + esc(samples) + "</td></tr>");
+      });
+      html.push("</tbody></table></div>");
+    }
+
+    root.innerHTML = html.join("");
+    renderSpellTagsWissen();
+  }
+
   document.getElementById("bClear").addEventListener("click", function () {
     picked = Object.create(null);
     location.hash = "";
@@ -3009,6 +4434,7 @@
     refreshOfficial();
     renderArchetypes();
     analyse();
+    renderSpellTagFingerprint(ids);
     render();
     syncHeader();
     save();
@@ -3051,5 +4477,6 @@
   renderArchetypes();
   renderGenerator();
   renderAI();
+  renderMethods();
   refresh();
 })();

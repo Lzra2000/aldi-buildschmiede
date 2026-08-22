@@ -86,7 +86,20 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | `scaling.py` | `scaling.json` | `catalog.json` | nein |
 | `spellids.py` | `spellids.json` | `data/CatalogData.lua` | nein |
 | `mechanics.py` | `mechanics.json` | `Spell.dbc` + `spellids.json` | **ja** |
+| `methods.py` | `methods.json` | catalog + scaling + mechanics + basemods + relations (+ CatalogData rollgate) | nein |
+| `statsuggest.py` | `statsuggest.json` | `SpellStatSuggestions.dbc` ∩ Katalog | nein |
+| `spellsuggest.py` | `spellsuggest.json` | `SpellSpellSuggestions.dbc` ∩ Katalog (Top-N) | nein |
+| `desireelig.py` | `desireelig.json` | `CatalogData.lua` (`desiredEligible`) | nein |
+| `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (nur Testexport-ItemIds) | **ja** |
 | `dbcicons.py`, `mksprite.py` | `sprite.webp`, `spriteindex.json` | `Spell.dbc`, `SpellIcon.dbc`, BLP-Icons | **ja** |
+
+Optional in `assemble.py` (`OPTIONAL_PAYLOAD`, fehlen stillschweigend):
+`meth` ← `methods.json`, `tree` ← `spectags.json`, `des` ← `desireelig.json`,
+`stags` ← `method-spelltags.json`, `tagn` ← `tagnames.json`,
+`ssug` ← `statsuggest.json` (Path-Hints), `ssugsp` ← `spellsuggest.json`
+(Related-Spell-Graph — **nicht** mit `ssug` verwechseln),
+`iic` ← `itemicons.json` (flach `itemId → iconName`, nur Export-/Seed-Ids;
+Einbettung nur wenn Datei ≤ 512 KB — kein Vollscan von Item.dbc).
 
 Die client-abhängigen Schritte laufen nur mit lokal entpackten DBC-Dateien.
 Die Pfade stehen oben in den jeweiligen Skripten. Ohne Client bleiben die
@@ -264,11 +277,10 @@ Regeln fürs Addon:
   ignoriertes Paket ist kein Lua-Fehler. Wenn eine Aktion einen Zustand
   ändern soll, den Zustand danach prüfen.
 
-Nach jeder Änderung:
-
-```bash
-luac5.1 -p addon/AscBuildschmiede/*.lua
-```
+Nach jeder Änderung: `luac5.1 -p addon/AscBuildschmiede/*.lua`, dann **zwingend** nach
+`C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\`
+kopieren (Repo = Quelle) und `AscBuildschmiede.zip` aus `addon/` neu bauen
+(Layout `AscBuildschmiede/...`).
 
 ---
 
@@ -277,26 +289,87 @@ luac5.1 -p addon/AscBuildschmiede/*.lua
 Zeilenbasiert, Felder mit `|`, Listen mit `;`. Der Parser in
 `builder-app.js` (`parseExport`) ist **absichtlich nachsichtig**:
 unbekannte Zeilen werden übersprungen, nicht abgelehnt. Ein neues Feld im
-Addon bricht also keine ältere Seite.
+Addon bricht also keine ältere Seite. `BS.FORMAT` bleibt **1** (additiv);
+Addon-Version aktuell **1.5.2**. Manuelle Testexporte: `data/testexport-*.txt`.
 
 ```
 === BUILDSCHMIEDE v1 ===
+ADDON|1.5.2
 CHAR|Name|Level|Rasse|Klasse
 PATH|Intelligence
-ESSENCE|A:1|T:1
-STAT|STR:69|AGI:51|...|SP:608|CRIT:5.97|...
-WEAPON|MH|Name|ilvl18|speed2.68|287-315|dps115.7|INVTYPE_2HWEAPON|Staff
+PATHINFO|spellId|icon|name
+PATHENTRY|entryId
+PATHAURA|spellId
+SUGGEST|Intelligence;Healing
+ESSENCE|A:1|T:1|AS:42|TS:18|AX:43
+INVEST|AE:42|TE:18|CP:3|TAB:class:spec:n;…
+SPEC|1|Wildcard|CHR:1
+MODE|WILDCARD|DRAFT|…
+DESIRE|entryId;…
+UNDESIRE|entryId;…
+WC|CanRoll:0/1|Starting:0/1|…|RRAbi:cur/req/next|RRTal:cur/req/next|RepurchAbi:n|RepurchTal:n|CanRepurch:0/1
+STARTCHOICE|entryId;…
+STAT|STR:69|…|HITPCT:5.1|SHITPCT:8.2|EXP:12|EXPPCT:3.0|MP5:14|SPECPEN:0|HOLY:0|…
+WEAPON|MH|Name|ilvl18|speed2.68|287-315|dps115.7|INVTYPE_2HWEAPON|Staff|19019|3832|0|0|0|0
 ILVL|18.00
-GEAR|Slot|Name|ilvl|quality|subtype
+GEAR|Slot|Name|ilvl|quality|subtype|itemId[|ench|g1|g2|g3|g4]
 QUALITY|Uncommon:4/12|Rare:3/8|Epic:2/4|Legendary:1/2
 QCOST|Uncommon:1|Rare:1|Epic:1|Legendary:1
-ABI|Name;Name;…
-TAL|Name:Rang;Name:Rang;…
+QOWN|spellId:quality:cost;…
+LOCK|entryId;entryId;…
+ECOST|spellId:ae:te;…
+MAST|spellId;…
+TRAIT|entryId;…
+ABI|Name#spellId@entryId;…
+TAL|Name:Rang#spellId@entryId;…
 COUNT|A:10|T:8
 CODE|<ExportBuild-Code>
+SCARD|DEFAULT_NORMAL:cardId@0:q3:A;…
+CARDED|sid;sid
+SCARDPEND|n
 INSPECT|1            (nur bei /bs target)
+SPECS|1;2            (nur Inspect, wenn unlockedSpecs)
 === ENDE ===
 ```
+
+Additive Schlüssel ab Addon 1.4.0:
+
+| Zeile | Format | Bedeutung |
+|---|---|---|
+| `ESSENCE` | `A:rem\|T:rem\|AS:spent\|TS:spent` | Remaining + ausgegeben (AS/TS) |
+| `INVEST` | `AE:n\|TE:n\|CP:n` | Global AE/TE + Class Points |
+| `SPEC` | `id\|name` | Aktive Spec (`name` optional) |
+| `MODE` | `WILDCARD` | Nur wenn Wildcard-GameMode aktiv |
+| `LOCK` | `entryId;…` | Gesperrte Entry-IDs |
+| `ECOST` | `spellId:ae:te;…` | Essence-Kosten pro Spell |
+| `MAST` | `spellId;…` | Mastery-Spells |
+| `SCARD` | `DEFAULT_NORMAL:cardId@0;…` | Skill-Karten (Deck:Id@Slot) |
+| `CARDED` | `sid;…` | Spell-IDs mit Karte |
+| `GEAR` | `…\|itemId[\|ench\|g1\|g2\|g3\|g4]` | Felder 1–5 unverändert; ench/gems nur wenn ≠0 |
+| `WEAPON` | `…\|itemId[\|ench\|g1…g4]` | wie GEAR, itemId = 9. Feld |
+| `QOWN` | `spellId:quality:cost;…` | Budgetkosten der gelernten Einträge |
+| `SPECS` | `id;…` | Inspect: freigeschaltete Specs |
+
+Additive Schlüssel ab Addon 1.5.0 / 1.5.1 / 1.5.2 (FORMAT bleibt 1):
+
+| Zeile | Format | Bedeutung |
+|---|---|---|
+| `ESSENCE` | `…\|AX:n` | Erwartete AE für aktuelles Level (`GetExpectedAE`) |
+| `INVEST` | `…\|TAB:class:spec:n;…` | TE pro Klasse/Tab (`GetTabTEInvestment`, nur >0) |
+| `SUGGEST` | `Path;Path;…` | Client-Path-Vorschläge (`GetSuggestedStats`) |
+| `PATHINFO` | `spellId\|icon\|name` | PrimaryStat-Info |
+| `PATHENTRY` | `entryId` | CA-Internal-ID des aktiven Path (`GetInternalID`) |
+| `PATHAURA` | `spellId` | Path-Aura zum Abgleich |
+| `MODE` | `WILDCARD\|DRAFT\|…` | Alle aktiven GameModes |
+| `DESIRE` / `UNDESIRE` | `entryId;…` | Wildcard Desire/Undesire |
+| `WC` | `CanRoll:0/1\|…\|RRPhase:s\|RRStop:s\|RRLearned:n\|RRDesired:0/1\|RRCanStart:0/1` | Wildcard-Roll-Status + Rapid-Rolling-Skalare (read-only; RR* nur wenn `GetRapidRollingState` greift) |
+| `WC` | `…\|RRAbi:cur/req/next\|RRTal:cur/req/next` | Rapid-Roll-Breakpoints (ab 1.5.2) |
+| `WC` | `…\|RepurchAbi:n\|RepurchTal:n\|CanRepurch:0/1` | Repurchase-Kontingent (ab 1.5.2; kein Cost) |
+| `STARTCHOICE` | `entryId;…` | Offene Starting-Choice (`GetStartingChoiceEntries`) |
+| `SCARD` | `…:qN` / `:A` / `TAG:B@i` | Qualität, aktiver Slot, blockiert |
+| `SCARDPEND` | `n` | Ausstehende Skill Cards |
+| `SPEC` | `…\|CHR:id` | CoA-Spec (`GetActiveChrSpec`, ab 1.5.1) |
+| `TRAIT` | `entryId;…` | Draft-Traits (`IsTrait`, ab 1.5.1) |
 
 Wer das Format erweitert: neues Schlüsselwort in `parseExport` ergänzen,
 Version `BS.FORMAT` nur erhöhen, wenn alte Exporte **nicht** mehr lesbar

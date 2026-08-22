@@ -1,0 +1,56 @@
+{
+  "approvalMode": "allowlist",
+  "terminalAllowlist": [
+    "python",
+    "python3",
+    "py",
+    "node",
+    "luac",
+    "luac5.1",
+    "Copy-Item",
+    "Copy-Item*",
+    "robocopy",
+    "xcopy",
+    "Compress-Archive",
+    "tar",
+    "zip",
+    "Get-ChildItem",
+    "Get-Content",
+    "Test-Path",
+    "Select-String",
+    "rg",
+    "dir",
+    "ls",
+    "type",
+    "cat",
+    "head",
+    "where",
+    "where.exe"
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Allow pipeline Python scripts under pipeline/ and python/python3 pipeline/assemble.py without asking.",
+      "Allow node one-liners that only syntax-check src/builder-app.js (new Function + readFileSync).",
+      "Allow luac5.1 -p (or luac -p) on addon/AscBuildschmiede/*.lua.",
+      "Allow copying the addon folder to the live Ascension AddOns path AscBuildschmiede and rebuilding AscBuildschmiede.zip from addon/.",
+      "Allow read-only inspection of local Ascension client extracts (DBC, Interface) for API research.",
+      "Allow starting a local python -m http.server for page verification."
+    ],
+    "block_instructions": [
+      "Never auto-approve git push --force, git reset --hard, or other destructive/irreversible git.",
+      "Never auto-approve git commit, git push, or gh pr create unless the user explicitly requested that action in the current turn.",
+      "Never auto-approve writing or committing proprietary Ascension/Blizzard client Lua into the repository.",
+      "Never auto-approve mutating in-game state via Ascension APIs in the addon (export remains clipboard-only)."
+    ]
+  },
+  "autoReview": {
+    "allow_instructions": [
+      "Allow pipeline runs, assemble.py, luac -p, live AddOns sync + zip rebuild, read-only DBC/Interface research, and local http.server.",
+      "Prefer allowlist auto-run for Ascension-parity tooling in this repo; do not require confirmation for those allowlisted commands."
+    ],
+    "block_instructions": [
+      "Block or require approval for force-push, hard reset, and unsolicited commits/pushes.",
+      "Do not weaken guards against inventing spell coefficients or copying proprietary client Lua into git."
+    ]
+  }
+}

@@ -1,73 +1,165 @@
 <title>Wildcard Synergiekompendium</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;700&display=swap">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<!-- uichrome -->
 <style>
+/*
+  ASCENSION CA / WILDCARD TOKEN BLOCK — mirrored from builder-head.html
+  Shared surfaces/gold/ember/quality. School hues (--fire…--physical) are Synergien-only.
+  --chrome-* from data/uichrome.css (assemble.py).
+*/
 :root{
-  --ground:#EDEFF4; --raised:#FFFFFF; --sunken:#E3E7EF;
-  --ink:#171A26; --ink-soft:#4A5063; --ink-faint:#767D92;
-  --rule:#CFD5E2; --rule-soft:#DFE3EC;
-  --accent:#0E7C8C; --accent-ink:#FFFFFF; --accent-soft:#D6EDF1;
-  --fire:#C24A18; --frost:#2C7FBF; --shadow:#7444B8;
-  --nature:#3C8A48; --holy:#A8811A; --arcane:#AB3E8C; --physical:#5C6274;
-  --warn:#B24A12; --good:#2F7D4F;
+  --ground:#D8D2C4; --raised:#EDE6D6; --sunken:#C9C1B0;
+  --ink:#1A1510; --ink-soft:#4A4034; --ink-faint:#7A6E5C;
+  --rule:#8A7E68; --rule-soft:#B0A48E;
+  --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E8D9A8;
+  --ember:#B84A12; --ember-soft:#F0DCC8;
+  --warn:var(--ember); --warn-soft:var(--ember-soft);
+  --good:#2D6B3A; --good-soft:#D4E8D0;
+  --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
+  --fire:#C24A18; --frost:#0070DD; --shadow:#A335EE;
+  --nature:#1EFF00; --holy:#E0BC4A; --arcane:#A335EE; --physical:#9D9D9D;
+  --atm-a:rgba(139,105,20,.12); --atm-b:rgba(184,74,18,.06);
+  --edge:rgba(26,21,16,.12);
+  --panel-glow:rgba(139,105,20,.08);
+  --stone:#2A241C; --gold:#C9A227; --gold-hi:#E8C547;
+  --dur-view:.22s; --dur-chip:.15s; --ease-out:cubic-bezier(.2,.7,.2,1);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --ground:#12141F; --raised:#1B1E2C; --sunken:#0C0E16;
-    --ink:#E2E6F0; --ink-soft:#A7AEC2; --ink-faint:#767D92;
-    --rule:#2C3145; --rule-soft:#222637;
-    --accent:#4FC3D6; --accent-ink:#0B1418; --accent-soft:#16323A;
-    --fire:#F0783C; --frost:#5FADEA; --shadow:#A87BE8;
-    --nature:#63C070; --holy:#E0BC4A; --arcane:#DE72BC; --physical:#98A0B4;
-    --warn:#F0904A; --good:#5BC488;
+    --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
+    --ink:#E8E0D0; --ink-soft:#B8AE9A; --ink-faint:#8A8070;
+    --rule:#3A3428; --rule-soft:#2A241C;
+    --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
+    --ember:#FF8000; --ember-soft:#2A1608;
+    --warn:var(--ember); --warn-soft:var(--ember-soft);
+    --good:#1EFF00; --good-soft:#0A2010;
+    --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
+    --fire:#F0783C; --frost:#5AA8E4; --shadow:#A87BE8;
+    --nature:#63C070; --holy:#E0BC4A; --arcane:#D56BB4; --physical:#98A0B4;
+    --atm-a:rgba(201,162,39,.10); --atm-b:rgba(255,128,0,.06);
+    --edge:rgba(0,0,0,.45);
+    --panel-glow:rgba(201,162,39,.06);
+    --stone:#1A1612; --gold:#C9A227; --gold-hi:#E8C547;
   }
 }
 :root[data-theme="dark"]{
-  --ground:#12141F; --raised:#1B1E2C; --sunken:#0C0E16;
-  --ink:#E2E6F0; --ink-soft:#A7AEC2; --ink-faint:#767D92;
-  --rule:#2C3145; --rule-soft:#222637;
-  --accent:#4FC3D6; --accent-ink:#0B1418; --accent-soft:#16323A;
-  --fire:#F0783C; --frost:#5FADEA; --shadow:#A87BE8;
-  --nature:#63C070; --holy:#E0BC4A; --arcane:#DE72BC; --physical:#98A0B4;
-  --warn:#F0904A; --good:#5BC488;
+  --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
+  --ink:#E8E0D0; --ink-soft:#B8AE9A; --ink-faint:#8A8070;
+  --rule:#3A3428; --rule-soft:#2A241C;
+  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#2E2610;
+  --ember:#FF8000; --ember-soft:#2A1608;
+  --warn:var(--ember); --warn-soft:var(--ember-soft);
+  --good:#1EFF00; --good-soft:#0A2010;
+  --q0:#9D9D9D; --q1:#1EFF00; --q2:#0070DD; --q3:#A335EE; --q4:#FF8000;
+  --fire:#F0783C; --frost:#5AA8E4; --shadow:#A87BE8;
+  --nature:#63C070; --holy:#E0BC4A; --arcane:#D56BB4; --physical:#98A0B4;
+  --atm-a:rgba(201,162,39,.10); --atm-b:rgba(255,128,0,.06);
+  --edge:rgba(0,0,0,.45);
+  --panel-glow:rgba(201,162,39,.06);
+  --stone:#1A1612; --gold:#C9A227; --gold-hi:#E8C547;
 }
 
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{
-  margin:0; background:var(--ground); color:var(--ink);
+  margin:0; color:var(--ink); min-height:100vh;
   font-family:"Source Serif 4",Georgia,serif; font-size:17px; line-height:1.62;
   -webkit-font-smoothing:antialiased;
+  background-color:var(--ground);
+  background-image:
+    radial-gradient(ellipse 95% 60% at 6% -12%,var(--atm-a),transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,var(--atm-b),transparent 48%),
+    repeating-linear-gradient(-14deg,transparent,transparent 12px,rgba(18,21,31,.016) 12px,rgba(18,21,31,.016) 13px);
+  background-attachment:fixed;
 }
-h1,h2,h3{font-family:"Archivo Black",Impact,sans-serif; font-weight:400; text-wrap:balance; line-height:1.1; margin:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{
+  background-image:
+    radial-gradient(ellipse 95% 60% at 6% -12%,var(--atm-a),transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,var(--atm-b),transparent 48%),
+    repeating-linear-gradient(-14deg,transparent,transparent 12px,rgba(255,255,255,.02) 12px,rgba(255,255,255,.02) 13px)}}
+:root[data-theme="dark"] body{background-image:
+  radial-gradient(ellipse 95% 60% at 6% -12%,var(--atm-a),transparent 55%),
+  radial-gradient(ellipse 70% 50% at 100% 0%,var(--atm-b),transparent 48%),
+  repeating-linear-gradient(-14deg,transparent,transparent 12px,rgba(255,255,255,.02) 12px,rgba(255,255,255,.02) 13px)}
+h1,h2,h3{font-family:"Archivo Black",Impact,sans-serif; font-weight:400; text-wrap:balance; line-height:1.12; margin:0}
 code,.mono,.lvl,.qual,th,.tag{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); padding:1px 5px}
 
-.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
-.layout{display:grid; grid-template-columns:1fr; gap:40px}
+.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(12px,2.4vw,28px)}
+.layout{display:grid; grid-template-columns:1fr; gap:40px; padding:8px 0 0}
 @media(min-width:1000px){.layout{grid-template-columns:210px minmax(0,1fr)}}
 
-/* ---------- masthead ---------- */
-.mast{border-bottom:3px solid var(--ink); padding:clamp(36px,7vw,72px) 0 28px}
-.kicker{font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--accent); margin:0 0 18px}
-.mast h1{font-size:clamp(34px,7vw,68px); letter-spacing:-.02em}
-.dek{max-width:62ch; margin:20px 0 0; font-size:clamp(17px,2vw,20px); color:var(--ink-soft)}
+/* ---------- brand bar (forge-steel + Ascension chrome) ---------- */
+.topbar{position:sticky; top:0; z-index:50; background:var(--raised);
+  border-bottom:1px solid var(--rule)}
+.topbar::after{content:"";display:block;height:2px;
+  background:linear-gradient(90deg,var(--accent) 0%,var(--ember) 42%,transparent 72%)}
+.tbin{max-width:1180px; margin:0 auto; padding:0 clamp(12px,2.4vw,28px);
+  display:flex; align-items:center; gap:clamp(12px,2vw,28px); flex-wrap:wrap;
+  min-height:68px}
+.brand{display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:0;
+  text-decoration:none; color:inherit}
+.brand:hover .btext b{color:var(--accent)}
+.bmark{width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center;
+  position:relative; background:var(--accent) var(--chrome-poa,none) center/cover no-repeat;
+  color:var(--accent-ink); font-family:"Archivo Black",sans-serif;
+  font-size:14px; letter-spacing:.02em;
+  box-shadow:0 0 0 1px var(--panel-glow), inset 0 0 0 1px rgba(255,255,255,.12)}
+.bmark::after{content:""; position:absolute; inset:0; pointer-events:none;
+  border:6px solid transparent; border-image:var(--chrome-iframe,none) 10 fill;
+  opacity:.75}
+.bmark-txt{position:relative; z-index:1; text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.btext{display:flex; flex-direction:column; line-height:1.1; min-width:0}
+.btext .bguild{font-style:normal; font-family:"JetBrains Mono",monospace; font-size:10px;
+  letter-spacing:.05em; color:var(--accent); margin-bottom:2px}
+.btext b{font-family:"Archivo Black",Impact,sans-serif; font-size:clamp(17px,2.4vw,20px);
+  font-weight:400; letter-spacing:-.02em; transition:color var(--dur-chip) var(--ease-out)}
+.btext i{font-style:normal; font-family:"JetBrains Mono",monospace; font-size:9.5px;
+  letter-spacing:.07em; color:var(--ink-faint); margin-top:3px}
+.prodnav{display:flex; gap:0; align-items:stretch; margin-left:auto}
+.prodnav a,.slink{font-family:"JetBrains Mono",monospace; font-size:12px; font-weight:700;
+  color:var(--ink-faint); text-decoration:none; border:0; border-bottom:2px solid transparent;
+  background:none; padding:22px 13px; white-space:nowrap;
+  transition:color var(--dur-chip) var(--ease-out),border-color var(--dur-chip) var(--ease-out)}
+.prodnav a:hover,.slink:hover{color:var(--ink)}
+.prodnav a.on{color:var(--accent); border-bottom-color:var(--accent)}
+.slink{border:1px solid var(--accent); border-bottom-width:1px; background:var(--accent-soft);
+  color:var(--accent); padding:8px 14px; margin:12px 0}
+.slink:hover{background:var(--accent); color:var(--accent-ink)}
 
-.limits{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
-  background:var(--rule); border:1px solid var(--rule); margin:32px 0 0}
-.limit{background:var(--raised); padding:16px 18px}
-.limit .n{font-family:"Archivo Black",sans-serif; font-size:32px; line-height:1; display:block}
-.limit .l{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--ink-faint); margin-top:6px; display:block}
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--rule); padding:clamp(28px,5vw,48px) 0 26px;
+  position:relative}
+.mast::after{content:"";display:block;height:2px;margin-top:24px;
+  background:linear-gradient(90deg,var(--accent) 0%,var(--ember) 36%,transparent 74%)}
+.kicker{font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.08em;
+  color:var(--accent); margin:0 0 14px}
+.mast h1{font-size:clamp(32px,6.5vw,56px); letter-spacing:-.02em}
+.dek{max-width:62ch; margin:16px 0 0; font-size:clamp(16px,2vw,19px); color:var(--ink-soft); line-height:1.5}
+
+.limits{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;
+  margin:26px 0}
+.limit{position:relative; background:var(--raised); padding:16px 18px;
+  border:1px solid var(--rule);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+.limit::after{content:""; position:absolute; inset:0; pointer-events:none;
+  border:8px solid transparent; border-image:var(--chrome-slot,none) 14;
+  opacity:.5}
+.limit .n{font-family:"Archivo Black",sans-serif; font-size:32px; line-height:1; display:block;
+  font-variant-numeric:tabular-nums; position:relative; z-index:1}
+.limit .l{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.08em;
+  color:var(--ink-faint); margin-top:6px; display:block; position:relative; z-index:1}
 
 /* ---------- nav ---------- */
 nav{align-self:start}
-@media(min-width:1000px){nav{position:sticky; top:24px}}
+@media(min-width:1000px){nav{position:sticky; top:86px}}
 nav ol{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px}
 @media(min-width:1000px){nav ol{display:block}}
-nav a{display:block; padding:5px 0; font-family:"JetBrains Mono",monospace; font-size:12px;
-  color:var(--ink-soft); text-decoration:none; border-bottom:1px solid transparent}
+nav a{display:block; padding:6px 0; font-family:"JetBrains Mono",monospace; font-size:12px;
+  color:var(--ink-soft); text-decoration:none; border-bottom:1px solid transparent;
+  transition:color var(--dur-chip) var(--ease-out),border-color var(--dur-chip) var(--ease-out)}
 nav a:hover,nav a:focus-visible{color:var(--accent); border-bottom-color:var(--accent)}
 
 /* ---------- sections ---------- */
@@ -75,70 +167,140 @@ section{padding:52px 0; border-bottom:1px solid var(--rule-soft)}
 section:last-of-type{border-bottom:none}
 h2{font-size:clamp(24px,3.4vw,36px); letter-spacing:-.01em}
 h2 .num{font-family:"JetBrains Mono",monospace; font-size:13px; color:var(--accent);
-  display:block; margin-bottom:10px; letter-spacing:.12em}
+  display:block; margin-bottom:10px; letter-spacing:.1em;
+  border-left:3px solid transparent;
+  border-image:linear-gradient(180deg,var(--accent),var(--ember)) 1;
+  padding-left:10px}
 h3{font-size:19px; margin:34px 0 12px}
 p{max-width:66ch}
 section > p:first-of-type{margin-top:18px}
 
 .lede{font-size:19px; color:var(--ink-soft)}
 
-/* ---------- school grid ---------- */
+/* ---------- school grid (slot chrome) ---------- */
 .schools{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:12px; margin:26px 0 0}
-.school{background:var(--raised); border:1px solid var(--rule); border-left:5px solid var(--c); padding:14px 16px}
-.school .name{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:14px; color:var(--c)}
-.school .count{font-family:"Archivo Black",sans-serif; font-size:26px; line-height:1.2}
-.school .eg{font-size:14px; color:var(--ink-faint)}
+.school{position:relative; background:var(--raised); border:1px solid var(--rule);
+  border-left:5px solid var(--c); padding:14px 16px;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+.school::after{content:""; position:absolute; inset:0; pointer-events:none;
+  border:7px solid transparent; border-image:var(--chrome-quick,none) 12;
+  opacity:.4}
+.school .name,.school .count,.school .eg{position:relative; z-index:1}
+.school .name{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:14px; color:var(--c);
+  display:block}
+.school .count{font-family:"Archivo Black",sans-serif; font-size:26px; line-height:1.2; display:block}
+.school .eg{font-size:14px; color:var(--ink-faint); display:block}
 
 /* ---------- chains ---------- */
-.chain{background:var(--raised); border:1px solid var(--rule); padding:16px 18px; margin:14px 0}
+.chain{position:relative; background:var(--raised); border:1px solid var(--rule);
+  padding:16px 18px; margin:14px 0;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+.chain::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--accent),var(--ember)); opacity:.85}
 .chain-flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px}
 .node{font-family:"JetBrains Mono",monospace; font-size:13px; font-weight:700;
-  background:var(--sunken); border:1px solid var(--rule); padding:3px 9px}
-.node.src{border-color:var(--accent); color:var(--accent)}
+  position:relative; background:var(--sunken); border:1px solid var(--rule); padding:5px 10px;
+  box-shadow:inset 0 0 0 1px var(--panel-glow)}
+.node::after{content:""; position:absolute; inset:-2px; pointer-events:none;
+  border:5px solid transparent; border-image:var(--chrome-slot,none) 14;
+  opacity:.45}
+.node.src{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
 .arrow{color:var(--ink-faint); font-size:14px}
 .chain p{margin:0; font-size:15px; color:var(--ink-soft); max-width:none}
 
-/* ---------- tables ---------- */
-.tbl-wrap{overflow-x:auto; margin:20px 0; border:1px solid var(--rule)}
+/* ---------- tables (filter/tab chrome feel) ---------- */
+.tbl-wrap{overflow-x:auto; margin:20px 0; border:1px solid var(--rule);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow); position:relative}
+.tbl-wrap::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--accent),var(--ember)); opacity:.7; z-index:2}
 table{border-collapse:collapse; width:100%; min-width:560px; background:var(--raised)}
 th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--rule-soft); font-size:14px}
-th{background:var(--sunken); font-size:11px; letter-spacing:.09em; text-transform:uppercase;
-  color:var(--ink-faint); font-weight:700; position:sticky; top:0}
+th{background:var(--sunken); font-size:11px; letter-spacing:.08em;
+  color:var(--ink-faint); font-weight:700; position:sticky; top:0;
+  border-bottom:1px solid var(--rule)}
 td{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums}
 td.txt{font-family:"Source Serif 4",serif; color:var(--ink-soft)}
 tr:last-child td{border-bottom:none}
 
-.qual{font-size:11px; padding:2px 6px; border:1px solid currentColor}
-.q-Legendary{color:var(--warn)} .q-Epic{color:var(--arcane)}
-.q-Rare{color:var(--frost)} .q-Normal{color:var(--ink-faint)} .q-Uncommon{color:var(--good)}
+.qual{font-size:11px; padding:2px 7px; border:1px solid currentColor; font-weight:700;
+  background:color-mix(in srgb,currentColor 10%,transparent)}
+@supports not (background:color-mix(in srgb,white 50%,black)){
+  .qual{background:var(--sunken)}}
+.q-Legendary{color:var(--q4)} .q-Epic{color:var(--q3)}
+.q-Rare{color:var(--q2)} .q-Normal{color:var(--q0)} .q-Uncommon{color:var(--q1)}
 
 /* ---------- callouts ---------- */
-.note{border-left:4px solid var(--accent); background:var(--accent-soft);
-  padding:16px 20px; margin:24px 0}
-.note.warn{border-left-color:var(--warn); background:transparent; border:1px solid var(--warn); border-left-width:4px}
+.note{position:relative; border-left:4px solid var(--accent); background:var(--accent-soft);
+  padding:16px 20px; margin:24px 0;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow)}
+.note.warn{border-left-color:var(--warn); background:var(--warn-soft);
+  border:1px solid var(--warn); border-left-width:4px}
+.note.good{border-left-color:var(--good); background:var(--good-soft);
+  border:1px solid var(--good); border-left-width:4px}
 .note p{margin:0; max-width:none}
-.note .hd{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
-  text-transform:uppercase; margin-bottom:7px; font-weight:700}
+.note p+p{margin-top:10px}
+.note .hd{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.08em;
+  margin-bottom:7px; font-weight:700; color:var(--accent)}
+.note.warn .hd{color:var(--warn)}
+.note.good .hd{color:var(--good)}
+a.cta{display:inline-block; background:var(--accent); color:var(--accent-ink);
+  font-family:"JetBrains Mono",monospace; font-size:13px; font-weight:700;
+  padding:10px 16px; text-decoration:none; border:1px solid var(--accent);
+  margin-top:14px; transition:filter var(--dur-chip) var(--ease-out);
+  box-shadow:0 1px 0 var(--edge)}
+a.cta:hover{filter:brightness(1.06); color:var(--accent-ink)}
 
 /* ---------- build columns ---------- */
 .cols{display:grid; grid-template-columns:1fr; gap:26px; margin-top:24px}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
-.col h3{margin-top:0}
+.col{background:var(--raised); border:1px solid var(--rule); padding:16px 18px;
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow); position:relative}
+.col::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--accent),var(--ember)); opacity:.85}
+.col h3{margin-top:0; padding-left:6px}
 .col ul{list-style:none; margin:0; padding:0}
 .col li{display:flex; justify-content:space-between; gap:12px; padding:5px 0;
   border-bottom:1px solid var(--rule-soft); font-size:14px}
 .col li .nm{font-family:"JetBrains Mono",monospace}
 .col li .meta{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink-faint); white-space:nowrap}
-.grp{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--accent); margin:18px 0 6px}
+.grp{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.08em;
+  color:var(--accent); margin:18px 0 6px}
 .grp:first-child{margin-top:0}
 
-footer{padding:40px 0 64px; color:var(--ink-faint); font-size:14px}
+footer{padding:40px 0 64px; color:var(--ink-faint); font-size:14px; line-height:1.6;
+  border-top:1px solid var(--rule); margin-top:8px}
 footer p{max-width:70ch}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+@media(max-width:560px){
+  .tbin{min-height:0; padding-top:10px; padding-bottom:10px; gap:10px}
+  .bmark{width:36px; height:36px; flex-basis:36px; font-size:12px}
+  .btext b{font-size:16px}
+  .prodnav{width:100%; margin-left:0}
+  .prodnav a{flex:1; text-align:center; padding:12px 8px}
+  .slink{width:100%; text-align:center; margin:0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
 </style>
+
+<header class="topbar">
+  <div class="tbin">
+    <a class="brand" href="index.html" title="Zur Buildschmiede">
+      <span class="bmark" aria-hidden="true"><span class="bmark-txt">AE</span></span>
+      <span class="btext">
+        <em class="bguild">Aldi Ehrfürchtig</em>
+        <b>Synergiekompendium</b>
+        <i>Season 10 Wildcard · Level 10–59</i>
+      </span>
+    </a>
+    <nav class="prodnav" aria-label="Produkt">
+      <a href="index.html">Buildschmiede</a>
+      <a class="on" href="synergien.html" aria-current="page">Synergien</a>
+    </nav>
+  </div>
+</header>
 
 <div class="wrap">
   <header class="mast">
@@ -146,12 +308,6 @@ a{color:var(--accent)}
     <h1>Wildcard Synergiekompendium</h1>
     <p class="dek">Der Katalog hat 3.071 Einträge. Mitnehmen darfst du 55. Diese Seite handelt
       davon, welche Kombinationen diese 55 Plätze verdienen — und welche nur so aussehen.</p>
-    <div class="limits">
-      <div class="limit"><span class="n">30</span><span class="l">Abilities</span></div>
-      <div class="limit"><span class="n">25</span><span class="l">Talente</span></div>
-      <div class="limit"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
-      <div class="limit"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
-    </div>
   </header>
 
   <div class="layout">
@@ -166,7 +322,7 @@ a{color:var(--accent)}
         <li><a href="#schaden">07 · Schadens-Skalierung</a></li>
         <li><a href="#heilung">08 · Heilungs-Skalierung</a></li>
         <li><a href="#beispiel">09 · Beispiel: Shuriken</a></li>
-        <li><a href="#builder" style="color:var(--accent)">→ Buildschmiede</a></li>
+        <li><a href="#builder">→ Buildschmiede</a></li>
       </ol>
     </nav>
 
@@ -175,6 +331,12 @@ a{color:var(--accent)}
         <h2><span class="num">01</span>Das Budget ist die eigentliche Mechanik</h2>
         <p class="lede">Jede Entscheidung in diesem System ist eine Verdrängungsentscheidung.
           Nicht „ist das gut?“, sondern „ist das besser als das, was dafür rausfliegt?“</p>
+        <div class="limits">
+          <div class="limit"><span class="n">30</span><span class="l">Abilities</span></div>
+          <div class="limit"><span class="n">25</span><span class="l">Talente</span></div>
+          <div class="limit"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
+          <div class="limit"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
+        </div>
         <p>Der Katalog enthält 1.321 Spells und 1.750 Talente. Du nimmst 30 und 25 mit. Alles,
           was du an Redundanz mitschleppst — zwei Fähigkeiten, die dasselbe tun, ein Talent ohne
           seine Voraussetzung — kostet dich einen Platz, den ein wirksamer Effekt haben könnte.</p>
@@ -639,13 +801,21 @@ a{color:var(--accent)}
         <p class="lede">Alles auf dieser Seite steckt auch in der Buildschmiede — dort aber
           interaktiv: Katalog durchsuchen, Plätze zählen lassen, und bei jeder Auswahl sofort
           sehen, was zusammenspielt und was ins Leere läuft.</p>
+        <div class="note good">
+          <p class="hd">Import aus dem Spiel</p>
+          <p>Die Buildschmiede übernimmt den <code>/bs</code>-Export und matcht
+            Fähigkeiten sowie Talente per <code>spellId</code>, Ausrüstung per
+            <code>itemId</code> — nicht über den Anzeigenamen. Umbenennungen und
+            Sprachvarianten bleiben folgenlos, solange die IDs stimmen.</p>
+        </div>
         <div class="note">
           <p class="hd">Buildschmiede der Gilde Aldi Ehrfürchtig</p>
-          <p><a href="https://claude.ai/code/artifact/b4789853-146a-4417-82fc-52b67bc3072c">
-            Zur interaktiven Buildschmiede →</a><br>
-            Alle 3.071 Einträge mit Original-Icons, Warnungen bei Dubletten, fehlenden
+          <p>Alle 3.071 Einträge mit Original-Icons, Warnungen bei Dubletten, fehlenden
             Voraussetzungen, geteilten Cooldowns und ungenutzter Skalierung. Fertige Builds
-            lassen sich per Link teilen — der komplette Build steckt in der URL.</p>
+            lassen sich per Link teilen — der komplette Build steckt in der URL.
+            Paths, Stats und das Companion-Addon stehen unter
+            <a href="index.html#t=vWissen">Wissen</a>.</p>
+          <a class="cta" href="index.html">Zur Buildschmiede →</a>
         </div>
       </section>
 
@@ -657,6 +827,8 @@ a{color:var(--accent)}
           Der Katalog liefert Tooltip-Texte, keine Schadensformeln. Dass Synergien ineinandergreifen,
           ist belegt; dass ein Build stärker ist als ein anderer, ist es nicht — das entscheidet die
           Übungspuppe.</p>
+        <p style="margin-top:12px"><a href="index.html">← Zurück zur Buildschmiede</a>
+          · <a href="index.html#t=vWissen">Wissen in der Buildschmiede</a></p>
       </footer>
     </main>
   </div>

@@ -7,7 +7,8 @@ externe Anfrage ausser Google Fonts.
 
     python3 pipeline/assemble.py
 
-liest src/ und data/ und schreibt index.html im Wurzelverzeichnis.
+liest src/ und data/, schreibt index.html und kopiert
+src/synergien-source.html → synergien.html (GitHub Pages).
 """
 import base64
 import io
@@ -31,8 +32,23 @@ PAYLOAD = [
     ("bm", "basemods.json"),        # Basisindex -> Talente, die sie verbessern
     ("tag", "pathtags.json"),       # Bitmaske: woraus zieht ein Eintrag Wert
     ("sc", "scaling.json"),         # aus Tooltips gelesene Skalierungszahlen
-    ("mc", "mechanics.json"),       # Cooldown/Cast/Kosten aus Spell.dbc
+    ("mc", "mechanics.json"),       # Cooldown/Cast/Kosten/Charges aus Spell.dbc
 ]
+
+# Optional: fehlen stillschweigend — Seite baut trotzdem.
+OPTIONAL_PAYLOAD = [
+    ("meth", "methods.json"),             # pipeline/methods.py
+    ("tree", "spectags.json"),            # Spec-/Schul-Tab aus DataMiner (oeffentlich)
+    ("des", "desireelig.json"),           # Desire-Board-fähig (CatalogData.desiredEligible)
+    ("stags", "method-spelltags.json"),   # SpellTags-Facetten (DBC ∩ Katalog)
+    ("tagn", "tagnames.json"),            # SpellTagTypes Namen + bySpell
+    ("ssug", "statsuggest.json"),         # Path aus SpellStatSuggestions.dbc
+    ("ssugsp", "spellsuggest.json"),      # Related-Spell-Graph (SpellSpellSuggestions)
+    ("iic", "itemicons.json"),            # itemId -> iconName (itemicons.py, kompakt)
+]
+
+# Sicherheitsnetz: nur einbetten wenn klein genug fuer GitHub Pages.
+ITEMICONS_EMBED_MAX_KB = 512
 
 
 def read(path):
@@ -47,6 +63,32 @@ def main():
             raise SystemExit("fehlt: data/%s - siehe AGENTS.md" % fname)
         payload[key] = json.load(io.open(p, encoding="utf-8"))
 
+    opt_note = []
+    for key, fname in OPTIONAL_PAYLOAD:
+        p = os.path.join(DATA, fname)
+        if not os.path.exists(p):
+            continue
+        if key == "iic":
+            kb = os.path.getsize(p) / 1024.0
+            if kb > ITEMICONS_EMBED_MAX_KB:
+                print("  iic uebersprungen (%.0f KB > %d KB) — "
+                      "pipeline/itemicons.py ohne --all neu laufen"
+                      % (kb, ITEMICONS_EMBED_MAX_KB))
+                continue
+        payload[key] = json.load(io.open(p, encoding="utf-8"))
+        opt_note.append(key)
+
+    # Spell- und Entry-IDs aus spellids.json — Addon-Import matcht zuerst
+    # per entryId, dann spellId, zuletzt Name (Season10-Stil; Doppelungen).
+    sid_path = os.path.join(DATA, "spellids.json")
+    if not os.path.exists(sid_path):
+        raise SystemExit("fehlt: data/spellids.json - siehe AGENTS.md")
+    sid_rows = json.load(io.open(sid_path, encoding="utf-8"))
+    payload["sid"] = [int(row[0]) for row in sid_rows]
+    payload["eid"] = [
+        int(row[5]) if len(row) > 5 else 0 for row in sid_rows
+    ]
+
     sprite_path = os.path.join(DATA, "sprite.webp")
     if not os.path.exists(sprite_path):
         raise SystemExit("fehlt: data/sprite.webp - siehe AGENTS.md")
@@ -57,8 +99,15 @@ def main():
     body = read(os.path.join(SRC, "builder-body.html"))
     js = read(os.path.join(SRC, "builder-app.js"))
 
+    chrome_css = ""
+    chrome_path = os.path.join(DATA, "uichrome.css")
+    if os.path.exists(chrome_path):
+        chrome_css = read(chrome_path)
+
     out = []
     out.append(head)
+    if chrome_css:
+        out.append("<style>\n" + chrome_css + "</style>")
     out.append("<style>.icon{background-image:url(data:image/webp;base64,"
                + sprite_b64 + ")}</style>")
     out.append(body)
@@ -77,6 +126,27 @@ def main():
     print("Groesse:", round(len(html.encode("utf-8")) / 1024 / 1024, 2), "MB")
     print("  Katalog:", len(payload["cat"]),
           "| Sprite:", round(len(sprite_b64) / 1024), "KB base64")
+    if chrome_css:
+        print("  UI-Chrome:", round(len(chrome_css.encode("utf-8")) / 1024, 1), "KB")
+    if opt_note:
+        print("  Optional:", ", ".join(opt_note))
+
+    # Synergiekompendium: Quelle + Ascension-Chrome (gleiche Assets wie index).
+    syn_src = os.path.join(SRC, "synergien-source.html")
+    syn_dest = os.path.join(ROOT, "synergien.html")
+    if not os.path.exists(syn_src):
+        raise SystemExit("fehlt: src/synergien-source.html")
+    syn_html = read(syn_src)
+    chrome_block = ""
+    if chrome_css:
+        chrome_block = "<style>\n" + chrome_css + "</style>"
+    if "<!-- uichrome -->" in syn_html:
+        syn_html = syn_html.replace("<!-- uichrome -->", chrome_block, 1)
+    elif chrome_block:
+        syn_html = syn_html.replace("<style>", chrome_block + "\n<style>", 1)
+    io.open(syn_dest, "w", encoding="utf-8").write(syn_html)
+    print("Geschrieben:", syn_dest,
+          "| Chrome:", "ja" if chrome_css else "nein")
 
 
 if __name__ == "__main__":

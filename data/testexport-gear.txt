@@ -1,0 +1,53 @@
+=== BUILDSCHMIEDE v1 ===
+ADDON|1.5.1
+CHAR|GearProbe|40|Human|Hero
+PATH|Agility
+PATHINFO|954689|Interface\Icons\Ability_Rogue_Sprint|Agility
+PATHENTRY|12002
+PATHAURA|954689
+SUGGEST|Agility;Strength
+ESSENCE|A:2|T:0|AS:28|TS:12|AX:30
+INVEST|AE:28|TE:12|CP:1|TAB:4:1:5;TAB:4:2:7
+SPEC|1|Wildcard|CHR:1
+MODE|WILDCARD|DRAFT
+DESIRE|801;805
+UNDESIRE|999
+WC|CanRoll:1|Starting:1|WillStart:1|WillFirst:0|MaxRapid:2|CanRapid:1|AwaitTalent:0|RRPhase:Rolling|RRStop:Manual|RRLearned:805|RRDesired:1|RRCanStart:0
+STARTCHOICE|801;802;803
+STAT|STR:80|AGI:190|STA:140|INT:40|SPI:35|SP:0|HEAL:0|AP:320|RAP:210|CRIT:12.40|SCRIT:0|HASTERATING:40|CRITRATING:55|HITRATING:28|ARMOR:4200|DODGE:8.10|PARRY:5.00|ARPEN:2.50|HITPCT:4.20|SHITPCT:0|EXP:18|EXPPCT:4.50|MP5:0|SPECPEN:0|HOLY:0|FIRE:0|NATURE:5|FROST:0|SHADOW:0|ARCANE:0
+WEAPON|MH|Shadowfang|ilvl35|speed2.70|120-180|dps55.6|INVTYPE_WEAPONMAINHAND|Dagger|1482|1900|23094|0|0|0
+WEAPON|OH|Gutgore Ripper|ilvl35|speed1.80|70-110|dps50.0|INVTYPE_WEAPONOFFHAND|Dagger|17071
+WEAPON|RANGED|Heartseeker Scope|ilvl35|speed2.90|95-140|dps40.5|INVTYPE_RANGEDRIGHT|Gun|34334
+ILVL|34.50
+GEAR|Head|Nightscape Headband|34|2|Leather|8191|3820|0|0|0|0
+GEAR|Neck|Thick Bronze Necklace|33|2|Miscellaneous|21933
+GEAR|Shoulder|Nightscape Shoulders|35|2|Leather|8192
+GEAR|Back|Cloak of Flames|36|3|Cloth|14134|2621|0|0|0|0
+GEAR|Chest|Nightscape Tunic|35|2|Leather|8175|15|0|0|0|0
+GEAR|Wrist|Nightscape Bracers|33|2|Leather|8198
+GEAR|Hands|Nightscape Gloves|34|2|Leather|8194|2564|0|0|0|0
+GEAR|Waist|Nightscape Belt|34|2|Leather|8176
+GEAR|Legs|Nightscape Pants|35|2|Leather|8193|37|0|0|0|0
+GEAR|Feet|Nightscape Boots|34|2|Leather|8197|911|0|0|0|0
+GEAR|Ring1|Ring of Precision|32|2|Miscellaneous|9538
+GEAR|Ring2|Band of the Hierophant|34|3|Miscellaneous|19863
+GEAR|Trinket1|Black Pearl|30|2|Miscellaneous|7971
+GEAR|Trinket2|Mark of the Chosen|35|3|Miscellaneous|17774
+GEAR|MainHand|Shadowfang|35|3|Dagger|1482|1900|23094|0|0|0
+GEAR|OffHand|Gutgore Ripper|35|3|Dagger|17071
+GEAR|Ranged|Heartseeker Scope|35|3|Gun|34334
+QUALITY|Uncommon:6/12|Rare:4/8|Epic:1/4|Legendary:0/2
+QCOST|Uncommon:1|Rare:1|Epic:1|Legendary:1
+QOWN|40001:2:1;40002:3:1;40003:3:1
+LOCK|8801
+ECOST|40001:1:0;40002:0:1
+MAST|40001
+TRAIT|8801
+ABI|Sinister Strike#40001@801;Eviscerate#40002@802;Slice and Dice#40003@803;Sprint#40004@804;Kick#40005@805
+TAL|Improved Sinister Strike:1#41001@811;Remorseless Attacks:1#41002@812;Dual Wield Specialization:1#41003@813
+COUNT|A:5|T:3
+CODE|gearProbeSample001
+SCARD|DEFAULT_NORMAL:9201@0:q2:A;LUCKY_NORMAL:B@1
+CARDED|40001;40005
+SCARDPEND|0
+=== ENDE ===

@@ -1,19 +1,38 @@
 === BUILDSCHMIEDE v1 ===
+ADDON|1.5.2
 CHAR|Lazra|51|Troll|Hero
 PATH|Intelligence
-ESSENCE|A:1|T:1
-STAT|STR:69|AGI:51|STA:178|INT:240|SPI:63|SP:608|HEAL:254|AP:54|RAP:0|CRIT:5.97|SCRIT:12.47|HASTERATING:19|CRITRATING:10|HITRATING:0|ARMOR:1882|DODGE:3.54|PARRY:3.29|ARPEN:0.00
-WEAPON|MH|Tempest of the Sea|ilvl18|speed2.68|287-315|dps115.7|INVTYPE_2HWEAPON|Staff
-WEAPON|OH|Emberfang Dagger|ilvl18|speed1.80|94-121|dps59.7|INVTYPE_WEAPONOFFHAND|Dagger
-WEAPON|RANGED|Stormcaller Bow|ilvl18|speed2.90|140-176|dps54.5|INVTYPE_RANGEDRIGHT|Bow
+PATHINFO|954693|Interface\Icons\Spell_Holy_DivineSpirit|Intelligence
+PATHENTRY|12003
+PATHAURA|954693
+SUGGEST|Intelligence;Healing
+ESSENCE|A:1|T:1|AS:42|TS:18|AX:43
+INVEST|AE:42|TE:18|CP:3|TAB:8:1:6;TAB:8:3:4
+SPEC|1|Wildcard|CHR:1
+MODE|WILDCARD|DRAFT
+DESIRE|501;507;510
+UNDESIRE|9999
+WC|CanRoll:1|Starting:0|WillStart:0|WillFirst:0|MaxRapid:3|CanRapid:1|AwaitTalent:0|RRPhase:Idle|RRLearned:0|RRDesired:0|RRCanStart:1|RRAbi:2/5/8|RRTal:1/3/5|RepurchAbi:1|RepurchTal:0|CanRepurch:1
+STAT|STR:69|AGI:51|STA:178|INT:240|SPI:63|SP:608|HEAL:254|AP:54|RAP:0|CRIT:5.97|SCRIT:12.47|HASTERATING:19|CRITRATING:10|HITRATING:0|ARMOR:1882|DODGE:3.54|PARRY:3.29|ARPEN:0.00|HITPCT:3.12|SHITPCT:8.40|EXP:6|EXPPCT:1.50|MP5:14|SPECPEN:0|HOLY:0|FIRE:12|NATURE:0|FROST:18|SHADOW:0|ARCANE:5
+WEAPON|MH|Tempest of the Sea|ilvl18|speed2.68|287-315|dps115.7|INVTYPE_2HWEAPON|Staff|45078|3832|40112|0|0|0
+WEAPON|OH|Emberfang Dagger|ilvl18|speed1.80|94-121|dps59.7|INVTYPE_WEAPONOFFHAND|Dagger|32237
+WEAPON|RANGED|Stormcaller Bow|ilvl18|speed2.90|140-176|dps54.5|INVTYPE_RANGEDRIGHT|Bow|34334
 ILVL|18.00
-GEAR|Head|Flamewreath Crown|18|3|Cloth
-GEAR|Chest|Emberweave Robe|18|3|Cloth
-GEAR|MainHand|Tempest of the Sea|18|3|Staff
+GEAR|Head|Flamewreath Crown|18|3|Cloth|42555|3820|40113|0|0|0
+GEAR|Chest|Emberweave Robe|18|3|Cloth|47604
+GEAR|MainHand|Tempest of the Sea|18|3|Staff|45078|3832|40112|0|0|0
 QUALITY|Uncommon:4/12|Rare:3/8|Epic:2/4|Legendary:1/2
 QCOST|Uncommon:1|Rare:1|Epic:1|Legendary:1
-ABI|Voltaic Bite;Eldritch Weapon;Lava Sweep;Forbidden Technique;Seal of Fervor;Ice Lash;Conduit;Thunder Hide;The Eye of the Storm;Mass Razorlash
-TAL|Deep Wounds:1;Anticipation:1;Toughness:1;Survival of the Fittest:1;Glyph of Bestial Wrath:1;Ward of Light:1;Endurance:1;Scent of Blood:1;Voellig Erfundenes Talent:1
+QOWN|12345:3:1;23456:4:1;34567:2:1
+LOCK|1001;1002;2048
+ECOST|12345:1:0;23456:0:1;34567:1:1
+MAST|12345;99901
+TRAIT|88001;88002
+ABI|Voltaic Bite#10001@501;Eldritch Weapon#10002@502;Lava Sweep#10003@503;Forbidden Technique#10004@504;Seal of Fervor#10005@505;Ice Lash#10006@506;Conduit#10007@507;Thunder Hide#10008@508;The Eye of the Storm#10009@509;Mass Razorlash#10010@510
+TAL|Deep Wounds:1#20001@601;Anticipation:1#20002@602;Toughness:1#20003@603;Survival of the Fittest:1#20004@604;Glyph of Bestial Wrath:1#20005@605;Ward of Light:1#20006@606;Endurance:1#20007@607;Scent of Blood:1#20008@608;Voellig Erfundenes Talent:1
 COUNT|A:10|T:9
 CODE|abc123DEF456ghi789
+SCARD|DEFAULT_NORMAL:9001@0:q3:A;DEFAULT_NORMAL:9002@1:q2;DEFAULT_GOLDEN:B@2
+CARDED|10001;10002
+SCARDPEND|1
 === ENDE ===

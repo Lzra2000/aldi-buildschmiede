@@ -1,0 +1,51 @@
+---
+description: Full agent utilization, auto-allow safe Ascension tooling, file-lane ownership; hard AGENTS.md guardrails
+alwaysApply: true
+---
+
+# Full agent utilization + auto-allow
+
+Hard product rules live in `AGENTS.md`. This rule adds **how agents work** on this repo.
+
+## Volle Agenten-Auslastung
+
+When Multitask / continuous progress is desired: keep **multiple independent background agents** busy on **non-overlapping file lanes**. Do not idle on one agent while other Ascension-parity lanes are free.
+
+Assign one lane per agent; no shared write paths:
+
+| Lane | Owns (write) | Typical work |
+|---|---|---|
+| **addon** | `addon/**` | Lua, `.toc`, SkillCards, live sync + zip |
+| **pipeline+data** | `pipeline/**`, `data/**` | DBC/scripts → JSON, methods, mechanics |
+| **src-js** | `src/builder-app.js` (+ related JS only) | parseExport, UI logic, analysis |
+| **src-css** | `src/builder-head.html`, markup chrome in `src/builder-body.html` | tokens, layout, views |
+| **docs** | `AGENTS.md`, `pipeline/NOTES-*.md`, `pipeline/README-*.md` | notes only — no product invent |
+
+Built artifacts (`index.html`, `synergien.html`, `AscBuildschmiede.zip`) are produced by the owning lane’s assemble/zip step — don’t hand-edit them in parallel.
+
+## Auto-allow (proceed without asking)
+
+Prefer running without stopping for permission:
+
+- `python` / `python3` pipeline scripts and `pipeline/assemble.py`
+- `node -e 'new Function(...)'` syntax check on `src/builder-app.js`
+- `luac5.1 -p addon/AscBuildschmiede/*.lua`
+- Live AddOns sync to `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\` + rebuild `AscBuildschmiede.zip` from `addon/`
+- **Read-only** AscensionDBC / Interface extracts (API/DBC research)
+- Local `python -m http.server` for verify
+
+Project Auto-Run: `.cursor/permissions.json` (`approvalMode: allowlist`).
+
+## Never auto / never do
+
+- Force-push, hard reset, or other destructive git
+- `git commit` / PR / push unless the user explicitly asked
+- Invent spell coefficients or tooltip numbers missing from data
+- Copy proprietary client Lua into git
+- Mutate-game / write Ascension APIs in the addon (export stays clipboard-only; `BS.Safe` + `pcall`)
+
+## AGENTS.md anchors
+
+- Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
+- After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
+- Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict

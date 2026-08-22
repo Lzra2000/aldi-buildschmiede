@@ -17,6 +17,9 @@ endlich sagen, was ein Angriff kostet und wie oft er geht.
    46 rangeIndex       -> SpellRange.dbc
    80..82 EffectBasePoints (vorzeichenbehaftet)
 
+Ascension-Erweiterung (DBFilesClient):
+   SpellCharges.dbc + SpellChargesCategory.dbc -> ch (max), chr (Recharge s)
+
 Ausgabe mechanics.json: pro Katalogindex ein Objekt, leere Felder weg.
 """
 import io
@@ -34,7 +37,7 @@ F_PROC, F_DURATION, F_POWER, F_MANA = 35, 40, 41, 42
 F_RANGE, F_ICON, F_NAME = 46, 133, 136
 
 POWER = {0: "Mana", 1: "Wut", 2: "Fokus", 3: "Energie", 4: "Glueck",
-         5: "Runen", 6: "Runenmacht"}
+         5: "Runen", 6: "Runenmacht", -2: "Leben"}
 
 
 def read_dbc(path):
@@ -84,8 +87,26 @@ def main():
     # SpellRange.dbc: 0 id, 1 minRangeHostile, ... 3 maxRangeHostile
     ranges = lookup("SpellRange.dbc", 3, as_float=True)
 
-    print("Hilfstabellen: casttimes=%d durations=%d ranges=%d"
-          % (len(cast_times), len(durations), len(ranges)))
+    # Ascension: SpellCharges.dbc (spellId, categoryId) +
+    # SpellChargesCategory.dbc (id, maxCharges, rechargeMs).
+    charges_by_spell = {}
+    charges_path = os.path.join(DBC_DIR, "SpellCharges.dbc")
+    cat_path = os.path.join(DBC_DIR, "SpellChargesCategory.dbc")
+    if os.path.exists(charges_path) and os.path.exists(cat_path):
+        crc, cfc, crs, cdata, _ = read_dbc(cat_path)
+        charge_cats = {}
+        for i in range(crc):
+            cid, mx, ms = struct.unpack_from("<III", cdata, i * crs)
+            charge_cats[cid] = (mx, ms)
+        src, sfc, srs, sdata, _ = read_dbc(charges_path)
+        for i in range(src):
+            sid, catid = struct.unpack_from("<II", sdata, i * srs)
+            if catid in charge_cats:
+                charges_by_spell[sid] = charge_cats[catid]
+
+    print("Hilfstabellen: casttimes=%d durations=%d ranges=%d charges=%d"
+          % (len(cast_times), len(durations), len(ranges),
+             len(charges_by_spell)))
 
     rc, fc, rs, data, sb = read_dbc(SPELL)
     print("Spell.dbc:", rc, "Eintraege,", fc, "Felder")
@@ -116,13 +137,18 @@ def main():
             o["cast"] = round(ct / 1000.0, 1)
         if v[F_MANA]:
             cost = v[F_MANA]
+            # powerType ist vorzeichenbehaftet: -2 = Leben (Health Funnel).
+            # Als unsigned gelesen wird daraus 4294967294 und res="?".
+            power = v[F_POWER]
+            if power >= 0x80000000:
+                power -= 0x100000000
             # Wut und Runenmacht liegen intern in Zehnteln vor: Dancing Rune
             # Weapon steht mit 600 in der DBC und kostet im Spiel 60.
-            if v[F_POWER] in (1, 6):
+            if power in (1, 6):
                 cost = cost / 10.0
                 cost = int(cost) if cost == int(cost) else round(cost, 1)
             o["cost"] = cost
-            o["res"] = POWER.get(v[F_POWER], "?")
+            o["res"] = POWER.get(power, "?")
         dur = durations.get(v[F_DURATION], 0)
         if dur and 0 < dur < 3600000:
             o["dur"] = round(dur / 1000.0, 1)
@@ -135,6 +161,13 @@ def main():
         # als Zahl anzuzeigen waere schlicht falsch.
         if 0 < v[F_PROC] < 100:
             o["proc"] = v[F_PROC]
+        ch = charges_by_spell.get(v[0])
+        if ch:
+            mx, ms = ch
+            if mx and mx > 0:
+                o["ch"] = int(mx)
+            if ms and ms > 0:
+                o["chr"] = round(ms / 1000.0, 1)
         if o:
             hit += 1
         out.append(o)

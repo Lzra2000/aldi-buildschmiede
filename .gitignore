@@ -1,3 +1,10 @@
 *.tmp
 __pycache__/
 *.pyc
+.tmp-wow-skill/
+tmp-s10-*
+.tmp-s10-*
+pipeline/_probe*.py
+pipeline/_audit_*.py
+data/*.bak*
+data/itemicons-all.json

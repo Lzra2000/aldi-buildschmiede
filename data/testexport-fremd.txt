@@ -1,11 +1,28 @@
 === BUILDSCHMIEDE v1 ===
+ADDON|1.5.1
 INSPECT|1
 CHAR|Chibah|53|Orc|Hero
 PATH|Strength
+PATHINFO|954687|Interface\Icons\Ability_Warrior_StrengthOfArms|Strength
+PATHENTRY|12001
+PATHAURA|954687
+SUGGEST|Strength;Agility
+ESSENCE|A:0|T:2|AS:38|TS:22|AX:40
+INVEST|AE:38|TE:22|CP:2|TAB:1:1:8;TAB:1:2:10
+SPEC|2|Fury|CHR:2
+SPECS|1;2
+MODE|WILDCARD
+DESIRE|701;704
+UNDESIRE|706
+WC|CanRoll:0|Starting:0|WillStart:0|WillFirst:0|MaxRapid:0|CanRapid:0|AwaitTalent:0|RRPhase:Idle|RRLearned:0|RRDesired:0|RRCanStart:0
 ILVL|21.40
-GEAR|Head|Ironbark Helm|22|3|Plate
-GEAR|Chest|Ironbark Plate|21|3|Plate
-ABI|Battle Charge;Titanic Mutilate;Savage Blade;Titanic Strike;Thrust;Javelin;Eclipse Strike
-TAL|Survival of the Fittest:1;Glyph of Bestial Wrath:1;Ward of Light:1;Endurance:1;Scent of Blood:1;Enrage:1;Improved Barkskin:1;Veteran of the Third War:1;Ursine Frenzy:1
+GEAR|Head|Ironbark Helm|22|3|Plate|50314
+GEAR|Chest|Ironbark Plate|21|3|Plate|50024
+GEAR|MainHand|Ironbark Greatsword|22|3|Two-Handed Swords|49623|3789|0|0|0|0
+ABI|Battle Charge#30001@701;Titanic Mutilate#30002@702;Savage Blade#30003@703;Titanic Strike#30004@704;Thrust#30005@705;Javelin#30006@706;Eclipse Strike#30007@707
+TAL|Survival of the Fittest:1#20004@604;Glyph of Bestial Wrath:1#20005@605;Ward of Light:1#20006@606;Endurance:1#20007@607;Scent of Blood:1#20008@608;Enrage:1#20009@609;Improved Barkskin:1#20010@610;Veteran of the Third War:1#20011@611;Ursine Frenzy:1#20012@612
 COUNT|A:7|T:9
+SCARD|DEFAULT_NORMAL:9101@0:q2:A
+CARDED|30001
+SCARDPEND|0
 === ENDE ===
