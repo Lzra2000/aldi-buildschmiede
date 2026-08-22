@@ -94,6 +94,18 @@ ist schlimmer als eine fehlende.
 erlaubt sind nur Google Fonts. Kein CDN, kein Fetch, keine externen Bilder.
 Alles wird eingebettet.
 
+### Kein Sprachmodell in der Seite
+
+Die Buildschmiede ruft bewusst kein Modell auf. Dafuer muesste ein
+API-Schluessel in `index.html` stehen — einer oeffentlich ausgelieferten
+Datei. Stattdessen baut `buildPrompt()` einen vollstaendigen Prompt
+(Charakterwerte, Build mit allen Zahlen, die Ascension-Regeln, konkrete
+Fragen), den der Nutzer selbst in ein Modell einfuegt.
+
+Wer das aendern will: der Schluessel gehoert dann in einen kleinen Proxy
+mit Rate-Limit, nie in die Seite. Und die Seite muss ohne den Proxy
+weiterlaufen — sie liegt auf GitHub Pages und soll offline funktionieren.
+
 ---
 
 ## Fallen, die schon zugeschnappt sind

@@ -75,6 +75,9 @@
             class="cnt" id="cP">—</span></button>
           <button class="tab" data-tab="tIssues" role="tab">Befund<span
             class="cnt" id="cI">—</span></button>
+          <button class="tab" data-tab="tGen" role="tab">Generator</button>
+          <button class="tab" data-tab="tStat" role="tab">Stat-Prio<span
+            class="cnt" id="cB">—</span></button>
           <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
             class="cnt" id="cV">—</span></button>
           <button class="tab" data-tab="tScale" role="tab">Skalierung<span
@@ -88,6 +91,8 @@
         </div>
         <div class="tabp on" id="tPath"><div id="paths"></div></div>
         <div class="tabp" id="tIssues"><div id="issues"></div></div>
+        <div class="tabp" id="tGen"><div id="genbox"></div></div>
+        <div class="tabp" id="tStat"><div id="statbox"></div></div>
         <div class="tabp" id="tSug"><div id="sugbox"></div></div>
         <div class="tabp" id="tScale"><div id="scalebox"></div></div>
         <div class="tabp" id="tFlags"><div id="flags"></div></div>
@@ -110,9 +115,16 @@
           <div class="share">
             <button class="primary" id="bLink">Link kopieren</button>
             <button id="bText">Als Text kopieren</button>
+            <button id="bAI">Für KI kopieren</button>
             <button id="bClear">Leeren</button>
             <input type="text" id="url" readonly aria-label="Build-Link">
             <div class="offlink" id="official"></div>
+            <p class="aihint">„Für KI kopieren" legt einen fertigen
+              Prompt in die Zwischenablage: deine Werte, dein kompletter
+              Build mit allen Zahlen und die Ascension-Regeln, die ein
+              Modell sonst nicht kennt. In Claude oder ChatGPT einfügen.
+              Die Seite selbst ruft kein Modell auf — dafür müsste ein
+              Schlüssel in dieser öffentlichen Datei stehen.</p>
           </div>
         </div>
       </div>

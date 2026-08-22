@@ -1526,6 +1526,479 @@
     if (b) toggle(+b.dataset.add);
   });
 
+  // ---------- Build-Generator ----------
+  // Baut aus dem gesamten Katalog einen vollstaendigen Build zu einer
+  // Ausrichtung. Kein Zufall und kein Sprachmodell: jeder Eintrag wird
+  // gegen die vorhandenen Daten bewertet, und jede Aufnahme laesst sich
+  // begruenden. Was im Spiel nicht ginge, kommt gar nicht erst in Frage.
+
+  var THEMES = [
+    {
+      k: "ele", n: "Elementarer Waffenkämpfer",
+      d: "Waffenangriffe, die als Feuer, Frost oder Natur zählen. Ignorieren " +
+         "Armor und ziehen trotzdem vollen Nutzen aus Spell Power.",
+      score: function (i) {
+        var t = TAG[i] || 0, s = SC[i] || {};
+        var v = 0;
+        if ((t & T_WEAPON) && (t & T_MAGIC)) v += 10;
+        else if (t & T_WEAPON) v += 3;
+        if (s.w) v += s.w / 40;
+        return v;
+      }
+    },
+    {
+      k: "phys", n: "Reiner Waffenkämpfer",
+      d: "Physischer Schaden aus Waffenangriffen. Einfach zu spielen, " +
+         "skaliert geradlinig mit Waffe und Attack Power.",
+      score: function (i) {
+        var t = TAG[i] || 0, s = SC[i] || {};
+        var v = 0;
+        if ((t & T_WEAPON) && !(t & T_MAGIC)) v += 9;
+        if (t & T_PHYS) v += 3;
+        if (s.w) v += s.w / 35;
+        if (s.ap) v += 3;
+        return v;
+      }
+    },
+    {
+      k: "cast", n: "Zauberwirker",
+      d: "Reine Sprüche ohne Waffenanteil. Der Pfad mit dem stärksten " +
+         "Spell-Power-Multiplikator.",
+      score: function (i) {
+        var t = TAG[i] || 0, s = SC[i] || {};
+        var v = 0;
+        if ((t & T_MAGIC) && !(t & T_WEAPON)) v += 9;
+        if (s.flat) v += 3;
+        if (s.sp) v += 3;
+        return v;
+      }
+    },
+    {
+      k: "dot", n: "Schaden über Zeit",
+      d: "Wirkt auf mehrere Ziele gleichzeitig und läuft weiter, während " +
+         "du das nächste anfängst. Stark beim Leveln.",
+      score: function (i) {
+        var s = SC[i] || {};
+        var v = 0;
+        if (s.dot) v += 8;
+        if (s.tick) v += 6;
+        if (TAG[i] & T_MAGIC) v += 2;
+        return v;
+      }
+    },
+    {
+      k: "heal", n: "Heiler",
+      d: "Heilung als Hauptaufgabe. Braucht zwingend Path of Healing, sonst " +
+         "wird deine Spell Power nie in Healing Power umgerechnet.",
+      score: function (i) {
+        var t = TAG[i] || 0, s = SC[i] || {};
+        var v = 0;
+        if (t & T_HEAL) v += 9;
+        if (s.heal) v += 4;
+        return v;
+      }
+    },
+    {
+      k: "burst", n: "Cooldown-Burst",
+      d: "Wenige, harte Treffer auf Cooldown statt Dauerfeuer. Gut gegen " +
+         "einzelne dicke Ziele.",
+      score: function (i) {
+        var s = SC[i] || {}, m = MC[i] || {};
+        var v = 0;
+        if (s.w && s.w >= 150) v += 8;
+        if (m.cd && m.cd >= 8 && m.cd <= 120) v += 5;
+        if (s.w) v += s.w / 50;
+        return v;
+      }
+    }
+  ];
+  var THEMEBY = {};
+  THEMES.forEach(function (t) { THEMEBY[t.k] = t; });
+
+  var lastGen = null;
+
+  // Darf dieser Eintrag ueberhaupt in den Build? Budget wird lokal
+  // mitgefuehrt, damit der Generator nicht gegen den globalen Zustand
+  // rechnet, den er gerade erst aufbaut.
+  function genLegal(i, sel, use, cnt) {
+    if (sel[i]) return false;
+    var isTal = CAT[i][1] === 1;
+    if (isTal && cnt.t >= MAX_T) return false;
+    if (!isTal && cnt.a >= MAX_A) return false;
+    if (tooHigh(i)) return false;
+    var q = CAT[i][3], lim = qualityLimit(q);
+    if (lim && use[q] + qualityCost(q) > lim) return false;
+    var g = REL[i][3];
+    if (g >= 0) {
+      for (var k in sel) { if (REL[k][3] === g) return false; }
+    }
+    var gate = REL[i][4];
+    var mine = CHAR ? normPath(CHAR.path) : "";
+    if (gate && gate[0] === "Path" && mine && normPath(gate[1]) &&
+        normPath(gate[1]) !== mine) return false;
+    return true;
+  }
+
+  function generateBuild(themeKey) {
+    var th = THEMEBY[themeKey];
+    if (!th) return null;
+
+    var sel = Object.create(null);
+    var use = [0, 0, 0, 0, 0];
+    var cnt = { a: 0, t: 0 };
+    var why = {};
+
+    function take(i, reason) {
+      sel[i] = true;
+      why[i] = reason;
+      use[CAT[i][3]] += qualityCost(CAT[i][3]);
+      if (CAT[i][1] === 1) cnt.t++; else cnt.a++;
+    }
+
+    // Runde 1: Faehigkeiten nach Themenpassung.
+    var pool = [];
+    for (var i = 0; i < CAT.length; i++) {
+      if (CAT[i][1] !== 0) continue;
+      var v = th.score(i);
+      if (v > 0) pool.push([v + CAT[i][3] * 0.4, i]);
+    }
+    pool.sort(function (a, b) { return b[0] - a[0]; });
+    for (var p = 0; p < pool.length && cnt.a < MAX_A; p++) {
+      var idx = pool[p][1];
+      if (genLegal(idx, sel, use, cnt)) take(idx, "passt zur Ausrichtung");
+    }
+
+    // Runde 2: Talente, die genau diese Faehigkeiten verbessern.
+    // Erst hier wird aus einer Liste ein Build.
+    var bases = {};
+    Object.keys(sel).map(Number).forEach(function (i) {
+      bases[i] = 1;
+      var b = REL[i][0];
+      if (b !== null && b !== undefined) bases[b] = 1;
+    });
+    var tpool = [];
+    for (var j = 0; j < CAT.length; j++) {
+      if (CAT[j][1] !== 1) continue;
+      var hits = (MODOF[j] || []).filter(function (b) { return bases[b]; });
+      var refs = (REL[j][2] || []).filter(function (r) { return sel[r]; });
+      var sc = hits.length * 6 + refs.length * 4;
+      // Reine Schadensmultiplikatoren zaehlen auch ohne Namensbezug.
+      ((SC[j] || {}).inc || []).forEach(function (x) {
+        if (x[2] === "dmg" && themeKey !== "heal") sc += 1.5;
+        if (x[2] === "heal" && themeKey === "heal") sc += 2.5;
+      });
+      if (sc > 0) tpool.push([sc + CAT[j][3] * 0.3, j, hits, refs]);
+    }
+    tpool.sort(function (a, b) { return b[0] - a[0]; });
+    for (var q2 = 0; q2 < tpool.length && cnt.t < MAX_T; q2++) {
+      var t2 = tpool[q2];
+      if (!genLegal(t2[1], sel, use, cnt)) continue;
+      take(t2[1], t2[2].length
+        ? "verbessert " + CAT[t2[2][0]][0]
+        : (t2[3].length ? "wirkt auf " + CAT[t2[3][0]][0] : "hebt deinen Schaden"));
+    }
+
+    return { theme: th, ids: Object.keys(sel).map(Number), why: why, use: use };
+  }
+
+  // ---------- Stat-Priorität aus dem fertigen Build ----------
+  // Jede Gewichtung zaehlt eine Eigenschaft, die im Build tatsaechlich
+  // vorkommt - keine Faustregeln.
+  function statPriority(ids) {
+    var w = { SP: 0, AP: 0, Crit: 0, Haste: 0, Int: 0, Agi: 0, Str: 0,
+              Heal: 0, Hit: 0, Sta: 0 };
+    var n = { weapon: 0, weaponTal: 0, spell: 0, heal: 0, cast: 0,
+              instant: 0, crit: 0 };
+
+    ids.forEach(function (i) {
+      var t = TAG[i] || 0, s = SC[i] || {}, m = MC[i] || {};
+      if (s.w || (t & T_WEAPON)) {
+        if (CAT[i][1] === 0) n.weapon++; else n.weaponTal++;
+        w.SP += 3; w.AP += 2; w.Hit += 1;
+      }
+      if ((t & T_MAGIC) && !s.w) { n.spell++; w.SP += 3; }
+      if (s.flat) w.SP += 1;
+      if (t & T_HEAL) { n.heal++; w.Heal += 3; w.SP += 1; }
+      if (m.cast) { n.cast++; w.Haste += 2.5; }
+      else if (m.cd) { n.instant++; w.Haste += 0.3; }
+      if (t & T_CRIT) { n.crit++; w.Crit += 2; }
+      if (t & (T_WEAPON | T_MAGIC | T_HEAL)) w.Crit += 0.6;
+      w.Sta += 0.15;
+    });
+
+    // Der Path multipliziert Spell Power - das verschiebt die Rangfolge
+    // staerker als jede einzelne Faehigkeit.
+    var pk = CHAR ? normPath(CHAR.path) : "";
+    if (!pk) {
+      var best = scorePaths(profile(ids))[0];
+      pk = best ? best.k : "";
+    }
+    var P = PATHBY[pk];
+    if (P) {
+      w.SP *= P.sp;
+      // Crit ist getrennt - ausser auf Duality, wo beide Attribute beides geben.
+      if (pk === "dua") { w.Int += w.Crit * 0.4; w.Agi += w.Crit * 0.4; }
+      else if (n.weapon > n.spell) w.Agi += w.Crit * 0.5;
+      else w.Int += w.Crit * 0.5;
+      if (pk === "int" || pk === "heal") w.Int += n.spell * 0.8 + n.heal * 0.8;
+      if (pk === "str") w.Str += n.weapon * 1.2;
+      if (pk === "agi") w.Agi += n.weapon * 1.2;
+    }
+
+    var rows = Object.keys(w).map(function (k) { return { k: k, v: w[k] }; })
+      .filter(function (r) { return r.v > 0.5; })
+      .sort(function (a, b) { return b.v - a.v; });
+    var top = rows.length ? rows[0].v : 1;
+    rows.forEach(function (r) { r.pct = Math.round(r.v / top * 100); });
+    return { rows: rows, n: n, path: P };
+  }
+
+  var STAT_LABEL = {
+    SP: "Spell Power", AP: "Attack Power", Crit: "Crit Rating",
+    Haste: "Haste Rating", Int: "Intellect", Agi: "Agility",
+    Str: "Strength", Heal: "Healing Power", Hit: "Hit Rating",
+    Sta: "Stamina"
+  };
+
+  function statReason(k, n, P) {
+    switch (k) {
+      case "SP": return "zählt doppelt: 14 Spell Power = 1 Waffen-DPS, " +
+        "und voll auf jeden Spruch" + (P && P.sp > 1
+          ? " — auf " + P.n + " zusätzlich ×" + String(P.sp).replace(".", ",")
+          : "");
+      case "AP": return (n.weapon + n.weaponTal) +
+        " Einträge mit Waffenbezug, gleiche 14:1-Regel";
+      case "Crit": return "der einzige Stat, der Melee- und Spell-Crit " +
+        "gleichzeitig hebt";
+      case "Haste": return n.cast
+        ? n.cast + " Einträge mit Castzeit"
+        : "fast alles ist instant — Haste bringt hier wenig";
+      case "Int": return "Spell-Crit und Mana" +
+        (P && P.k === "dua" ? "; auf Duality zusätzlich Melee-Crit" : "");
+      case "Agi": return "Melee-Crit, Armor, Dodge" +
+        (P && P.k === "dua" ? "; auf Duality zusätzlich Spell-Crit" : "");
+      case "Str": return "Attack Power und Parry";
+      case "Heal": return n.heal + " heilende Einträge";
+      case "Hit": return "Waffenangriffe können verfehlen — 8 % gegen Bosse";
+      case "Sta": return "Überleben, kein Schaden";
+      default: return "";
+    }
+  }
+
+  function renderGenerator() {
+    var box = document.getElementById("genbox");
+    if (!box) return;
+    var o = [];
+
+    o.push('<div class="qhint">Durchsucht alle 3.071 Einträge und stellt ' +
+      "einen vollständigen Build zusammen: erst die Fähigkeiten der " +
+      "Ausrichtung, dann die Talente, die genau <em>diese</em> Fähigkeiten " +
+      "verbessern. Dubletten, zu hohe Stufen, gesperrte Paths und dein " +
+      "Seltenheits-Budget sind dabei berücksichtigt." +
+      (CHAR ? "" : " <strong>Ohne importierten Charakter kennt der Generator " +
+       "weder deine Stufe noch dein Budget</strong> — dann sind die " +
+       "Vorschläge theoretisch.") + "</div>");
+
+    o.push('<div class="genlist">' + THEMES.map(function (t) {
+      return '<button class="genb" data-gen="' + t.k + '"><b>' + esc(t.n) +
+        "</b><span>" + esc(t.d) + "</span></button>";
+    }).join("") + "</div>");
+
+    if (lastGen) {
+      var g = lastGen;
+      var abi = g.ids.filter(function (i) { return CAT[i][1] === 0; });
+      var tal = g.ids.filter(function (i) { return CAT[i][1] === 1; });
+      o.push('<div class="scsum"><b>' + esc(g.theme.n) + "</b>" +
+        abi.length + " Fähigkeiten und " + tal.length + " Talente " +
+        "zusammengestellt. Übernehmen ersetzt deine aktuelle Auswahl.</div>");
+      o.push('<div class="pastebtns" style="padding:10px 14px">' +
+        '<button class="primary" id="bGenApply">Build übernehmen</button>' +
+        '<button id="bGenDrop">Verwerfen</button></div>');
+      o.push('<div class="schd">Ausgewählt</div>');
+      g.ids.slice().sort(function (a, b) {
+        return CAT[a][1] - CAT[b][1] || CAT[b][3] - CAT[a][3];
+      }).slice(0, 20).forEach(function (i) {
+        o.push('<div class="cmprow"><span class="icon" style="width:20px;' +
+          'height:20px;flex:0 0 20px;' + iconStyle(i, 20) + '"></span>' +
+          '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
+          esc(CAT[i][0]) + "</span>" +
+          '<span class="genwhy">' + esc(g.why[i] || "") + "</span></div>");
+      });
+      if (g.ids.length > 20) {
+        o.push('<div class="qhint">… und ' + (g.ids.length - 20) + " weitere</div>");
+      }
+    }
+    box.innerHTML = o.join("");
+  }
+
+  function renderStats(ids) {
+    var box = document.getElementById("statbox");
+    var hd = document.getElementById("cB");
+    if (!box) return;
+    if (!ids.length) {
+      hd.textContent = "—"; hd.className = "cnt";
+      box.innerHTML = '<div class="empty">Wähle oder generiere einen Build — ' +
+        "dann steht hier, worauf du beim Gear achten musst.</div>";
+      return;
+    }
+    var r = statPriority(ids);
+    hd.textContent = r.rows.length ? STAT_LABEL[r.rows[0].k] : "—";
+    hd.className = "cnt ok";
+
+    var o = ['<div class="qhint">Abgeleitet aus deinem Build, nicht aus einer ' +
+      "Faustregel: " + r.n.weapon + " Waffenangriffe" +
+      (r.n.weaponTal ? " (+" + r.n.weaponTal + " Talente dazu)" : "") + ", " +
+      r.n.spell + " reine Sprüche, " + r.n.heal + " heilende Einträge, " +
+      r.n.cast + " mit Castzeit" + (r.path ? ", Path " + esc(r.path.n.replace("Path of ", ""))
+      : "") + ".</div>"];
+    r.rows.forEach(function (x, n) {
+      o.push('<div class="statrow"><span class="rk">' + (n + 1) + "</span>" +
+        '<span class="sn">' + esc(STAT_LABEL[x.k]) + "</span>" +
+        '<span class="sbar"><i style="width:' + x.pct + '%"></i></span>' +
+        '<span class="sp">' + x.pct + "</span>" +
+        '<span class="swhy">' + esc(statReason(x.k, r.n, r.path)) + "</span></div>");
+    });
+    o.push('<div class="qhint">Die Prozentzahl ist relativ zum wichtigsten ' +
+      "Stat, keine Schadenszunahme. Sie sagt dir, was du bei gleichem " +
+      "Itemplatz bevorzugen solltest.</div>");
+    box.innerHTML = o.join("");
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-gen]");
+    if (b) {
+      lastGen = generateBuild(b.dataset.gen);
+      renderGenerator();
+      if (lastGen) toast(lastGen.ids.length + " Einträge zusammengestellt");
+      return;
+    }
+    if (e.target.id === "bGenApply" && lastGen) {
+      picked = Object.create(null);
+      lastGen.ids.forEach(function (i) { picked[i] = true; });
+      lastGen = null;
+      refresh();
+      toast("Build übernommen");
+      return;
+    }
+    if (e.target.id === "bGenDrop") {
+      lastGen = null;
+      renderGenerator();
+    }
+  });
+
+  // ---------- Übergabe an ein Sprachmodell ----------
+  // Die Seite ruft bewusst kein Modell selbst auf: dafuer muesste ein
+  // API-Schluessel in einer oeffentlichen Datei stehen, und der waere fuer
+  // jeden lesbar. Stattdessen wird hier ein vollstaendiger Prompt gebaut,
+  // den man in Claude, ChatGPT oder sonst was einfuegt - mitsamt allem,
+  // was das Modell ueber Ascension wissen muss, um nicht zu raten.
+  function buildPrompt() {
+    var ids = Object.keys(picked).map(Number);
+    var L = [];
+
+    L.push("Du berätst mich zu einem Charakter in Project Ascension, " +
+      "Season 10 Wildcard (WoW 3.3.5a, klassenlos). Antworte auf Deutsch.");
+    L.push("");
+    L.push("## Regeln dieses Servers (gemessen, nicht geraten)");
+    L.push("- 30 Ability-Plätze, 25 Talent-Plätze.");
+    L.push("- Zusätzlich ein Seltenheits-Budget: man kann nicht beliebig " +
+      "viele Epics und Legendaries tragen.");
+    L.push("- Waffenschaden skaliert aus Attack Power UND Spell Power, " +
+      "im selben Verhältnis: 14 Punkte = 1 Waffen-DPS. Spell Power ist " +
+      "deshalb auch für reine Waffenbuilds stark.");
+    L.push("- Crit ist getrennt: Agility gibt nur Melee-Crit, Intellect nur " +
+      "Spell-Crit. Nur Crit Rating hebt beides. Der Path of Duality hebt " +
+      "diese Trennung auf.");
+    L.push("- Es gibt fünf Paths: Strength, Agility, Duality, Intelligence, " +
+      "Healing. Sie multiplizieren Spell Power aus Items: Intelligence ×2, " +
+      "Duality ×1,75, die anderen ×1.");
+    L.push("- Alle Ressourcenpools existieren gleichzeitig. Wut und " +
+      "Runenmacht regenerieren nicht von selbst und brauchen Generatoren.");
+    L.push("- Elementare Sprüche ignorieren Armor, haben dafür etwas " +
+      "niedrigere Grund-DPS.");
+    L.push("");
+
+    if (CHAR) {
+      var s = CHAR.stats || {};
+      L.push("## Mein Charakter");
+      L.push("- " + (CHAR.name || "?") + ", Stufe " + (CHAR.level || "?") +
+        ", Path of " + (CHAR.path || "?"));
+      var st = [];
+      ["STR", "AGI", "INT", "SPI", "STA", "SP", "AP", "CRIT", "SCRIT",
+       "HITRATING", "HASTERATING", "ARMOR"].forEach(function (k) {
+        if (s[k] !== undefined) st.push(k + " " + s[k]);
+      });
+      if (st.length) L.push("- Werte: " + st.join(", "));
+      var mh = CHAR.weapons.filter(function (w) { return w.slot === "MH"; })[0];
+      if (mh) {
+        L.push("- Waffe: " + mh.name + ", " + mh.dmg + " Schaden, Tempo " +
+          mh.speed + (/2HWEAPON/i.test(mh.loc) ? " (Zweihand)" : " (Einhand)"));
+      }
+      if (CHAR.ilvl) L.push("- Gegenstandsstufe " + CHAR.ilvl);
+      if (CHAR.qlimit) {
+        var q = [];
+        for (var qq = 4; qq >= 1; qq--) {
+          if (CHAR.qlimit[qq]) q.push(QN[qq] + " max " + CHAR.qlimit[qq]);
+        }
+        if (q.length) L.push("- Seltenheits-Budget: " + q.join(", "));
+      }
+      L.push("");
+    }
+
+    function line(i) {
+      var s = SC[i] || {}, m = MC[i] || {}, bits = [];
+      if (s.w) bits.push(s.w + " % Waffenschaden" + (s.sch ? " als " + s.sch : ""));
+      if (s.flat) bits.push(s.flat[0] + "-" + s.flat[1] +
+        (s.fsch ? " " + s.fsch : "") + " Schaden");
+      if (s.heal) bits.push("Heilung " + s.heal[0] + "-" + s.heal[1]);
+      if (s.dot) bits.push("über " + s.dot + " s");
+      (s.inc || []).forEach(function (x) { bits.push("+" + x[0] + " % " + x[1]); });
+      (s.gen || []).forEach(function (x) {
+        bits.push("gibt " + (x[0] < 0 ? -x[0] + " % " : x[0] + " ") + x[1]);
+      });
+      if (m.cd) bits.push("CD " + m.cd + " s");
+      if (m.cast) bits.push(m.cast + " s Cast");
+      if (m.cost) bits.push("kostet " + m.cost + " " + m.res);
+      return "- " + CAT[i][0] + " [" + QN[CAT[i][3]] + ", Stufe " + CAT[i][4] +
+        "]" + (bits.length ? ": " + bits.join("; ") : "");
+    }
+
+    var abi = ids.filter(function (i) { return CAT[i][1] === 0; });
+    var tal = ids.filter(function (i) { return CAT[i][1] === 1; });
+    L.push("## Mein Build (" + abi.length + "/30 Abilities, " +
+      tal.length + "/25 Talente)");
+    L.push("");
+    L.push("### Abilities");
+    abi.forEach(function (i) { L.push(line(i)); });
+    L.push("");
+    L.push("### Talente");
+    tal.forEach(function (i) { L.push(line(i)); });
+    L.push("");
+
+    var pr = statPriority(ids);
+    if (pr.rows.length) {
+      L.push("## Stat-Priorität, die mein Werkzeug aus dem Build ableitet");
+      L.push(pr.rows.map(function (r) {
+        return STAT_LABEL[r.k] + " (" + r.pct + ")";
+      }).join(" > "));
+      L.push("");
+    }
+
+    L.push("## Meine Fragen");
+    L.push("1. Welche zwei oder drei Einträge in diesem Build sind am " +
+      "schwächsten und wodurch würdest du sie ersetzen?");
+    L.push("2. Passt der Path zu dem, was der Build tut?");
+    L.push("3. Auf welche Item-Stats soll ich beim Leveln von 10 auf 59 " +
+      "achten, und in welcher Reihenfolge?");
+    L.push("4. Fehlt dem Build etwas Grundsätzliches — Ressourcen, " +
+      "Überleben, Flächenschaden?");
+    L.push("");
+    L.push("Nenne Fähigkeiten beim Namen und begründe kurz. Wenn dir Daten " +
+      "fehlen, sag das, statt zu raten.");
+
+    return L.join("\n");
+  }
+
   // ---------- Merken ----------
   var STORE = "aldi-buildschmiede-v1";
   function save() {
@@ -1962,6 +2435,17 @@
       : "";
   }
 
+  document.getElementById("bAI").addEventListener("click", function () {
+    var ids = Object.keys(picked);
+    if (!ids.length) { toast("Erst einen Build wählen"); return; }
+    var txt = buildPrompt();
+    el.url.value = txt.slice(0, 120) + " …";
+    try {
+      navigator.clipboard.writeText(txt);
+      toast("Prompt kopiert (" + Math.round(txt.length / 100) / 10 + " k Zeichen)");
+    } catch (e) { toast("Kopieren nicht möglich"); }
+  });
+
   document.getElementById("bClear").addEventListener("click", function () {
     picked = Object.create(null);
     location.hash = "";
@@ -1979,6 +2463,7 @@
     renderIssues(ids);
     renderScale(ids);
     renderSuggest(ids);
+    renderStats(ids);
     renderCompare();
     refreshOfficial();
     renderArchetypes();
@@ -2002,5 +2487,6 @@
   });
 
   renderArchetypes();
+  renderGenerator();
   refresh();
 })();
