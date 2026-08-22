@@ -79,6 +79,9 @@
 --   WC|…|RepurchAbi:n|RepurchTal:n|CanRepurch:0/1
 --                                         (GetNumRepurchasable* / CanRepurchaseAnyRolls)
 --
+-- 1.5.10 (FORMAT bleibt 1): QUALITY/QCOST nicht mehr an Quality.lua koppeln —
+--   Fallback-Collector in dieser Datei; fehlende BS.Collect*-Felder kosten
+--   eine Zeile, nie den ganzen Export.
 -- 1.5.9 (FORMAT bleibt 1): SkillCards :sSPELLID robuster (InfoAtIndex + extra
 --   GetCardAtIndex-Werte). Token-Form unveraendert.
 -- 1.5.8 (FORMAT bleibt 1, Token-Form unveraendert):
@@ -736,6 +739,71 @@ function BS.CollectTalents()
     return out
 end
 
+-- Seltenheits-Budget. Canonical hier, damit der Export nicht abstuerzt wenn
+-- Quality.lua fehlt, nicht geladen hat oder BS.CollectQuality nie gesetzt hat.
+-- Quality.lua darf dieselben Funktionen zuerst setzen; wir fuellen nur Luecken.
+local QNAME = {
+    [2] = "Uncommon",
+    [3] = "Rare",
+    [4] = "Epic",
+    [5] = "Legendary",
+}
+
+if type(BS.CollectQuality) ~= "function" then
+    function BS.CollectQuality()
+        local out = {}
+        for q = 2, 5 do
+            local count = Safe(function()
+                return C_CharacterAdvancement.GetQualityCount(q)
+            end)
+            local limit = Safe(function()
+                return C_CharacterAdvancement.GetQualityLimit(q)
+            end)
+            if count or limit then
+                out[#out + 1] = QNAME[q] .. ":" .. Num(count or 0) .. "/" .. Num(limit or 0)
+            end
+        end
+        return out
+    end
+end
+
+if type(BS.CollectQualityCost) ~= "function" then
+    function BS.CollectQualityCost()
+        local entries = Safe(function()
+            return C_CharacterAdvancement.GetAllEntries()
+        end)
+        if type(entries) ~= "table" then return nil end
+
+        local lo, hi, seen = {}, {}, false
+        for _, e in ipairs(entries) do
+            local spellID = e and e.Spells
+            if type(spellID) == "table" then spellID = spellID[1] end
+            if spellID then
+                local q, cost = Safe(function()
+                    return C_CharacterAdvancement.GetQualityInfo(spellID)
+                end)
+                q = tonumber(q)
+                cost = tonumber(cost)
+                if q and QNAME[q] and cost and cost > 0 then
+                    seen = true
+                    if not lo[q] or cost < lo[q] then lo[q] = cost end
+                    if not hi[q] or cost > hi[q] then hi[q] = cost end
+                end
+            end
+        end
+        if not seen then return nil end
+
+        local out = {}
+        for q = 2, 5 do
+            if lo[q] then
+                out[#out + 1] = QNAME[q] .. ":" .. Num(lo[q]) ..
+                    (hi[q] ~= lo[q] and ("-" .. Num(hi[q])) or "")
+            end
+        end
+        return out
+    end
+end
+
 -- Pro besessenem Eintrag: spellId:quality:cost — damit die Seite Budget
 -- gegen echte Kosten rechnen kann, nicht nur gegen den Katalogdurchschnitt.
 function BS.CollectOwnedQuality()
@@ -1107,6 +1175,15 @@ function BS.CollectGear()
     return out, avg
 end
 
+-- Fehlende oder abstuerzende Collector: eine Exportzeile weglassen, nie alles.
+local function tryCollect(name)
+    local fn = BS[name]
+    if type(fn) ~= "function" then return nil end
+    local ok, a, b, c = pcall(fn)
+    if not ok then return nil end
+    return a, b, c
+end
+
 -- Baut den Textblock, den der Spieler kopiert.
 function BS.BuildExport()
     local db = BS.DB()
@@ -1125,20 +1202,20 @@ function BS.BuildExport()
     local path = pathName()
     L[#L + 1] = "PATH|" .. (path or "unbekannt")
 
-    local pathInfo = BS.CollectPathInfo()
+    local pathInfo = tryCollect("CollectPathInfo")
     if pathInfo then
         L[#L + 1] = "PATHINFO|" .. pathInfo
     end
-    local pathEntry = BS.CollectPathEntry()
+    local pathEntry = tryCollect("CollectPathEntry")
     if pathEntry then
         L[#L + 1] = "PATHENTRY|" .. pathEntry
     end
-    local pathAura = BS.CollectPathAura()
+    local pathAura = tryCollect("CollectPathAura")
     if pathAura then
         L[#L + 1] = "PATHAURA|" .. pathAura
     end
 
-    local suggest = BS.CollectSuggestedStats()
+    local suggest = tryCollect("CollectSuggestedStats")
     if suggest and #suggest > 0 then
         L[#L + 1] = "SUGGEST|" .. table.concat(suggest, ";")
     end
@@ -1167,12 +1244,12 @@ function BS.BuildExport()
         L[#L + 1] = "ESSENCE|" .. table.concat(parts, "|")
     end
 
-    local invest = BS.CollectInvestment()
+    local invest = tryCollect("CollectInvestment")
     if invest then
         L[#L + 1] = "INVEST|" .. table.concat(invest, "|")
     end
 
-    local specId, specName, chrSpec = BS.CollectSpec()
+    local specId, specName, chrSpec = tryCollect("CollectSpec")
     if specId then
         local specLine = "SPEC|" .. Num(specId) .. (specName and ("|" .. specName) or "")
         if chrSpec then
@@ -1185,81 +1262,89 @@ function BS.BuildExport()
         L[#L + 1] = specLine
     end
 
-    local modes = BS.CollectGameModes()
+    local modes = tryCollect("CollectGameModes")
     if modes and #modes > 0 then
         L[#L + 1] = "MODE|" .. table.concat(modes, "|")
     end
 
-    local desire = BS.CollectDesired()
+    local desire = tryCollect("CollectDesired")
     if desire and #desire > 0 then
         L[#L + 1] = "DESIRE|" .. table.concat(desire, ";")
     end
-    local undesire = BS.CollectUndesired()
+    local undesire = tryCollect("CollectUndesired")
     if undesire and #undesire > 0 then
         L[#L + 1] = "UNDESIRE|" .. table.concat(undesire, ";")
     end
 
-    local wc = BS.CollectWildcardStatus()
+    local wc = tryCollect("CollectWildcardStatus")
     if wc and #wc > 0 then
         L[#L + 1] = "WC|" .. table.concat(wc, "|")
     end
 
-    local startChoice = BS.CollectStartingChoice()
+    local startChoice = tryCollect("CollectStartingChoice")
     if startChoice and #startChoice > 0 then
         L[#L + 1] = "STARTCHOICE|" .. table.concat(startChoice, ";")
     end
 
     if db.includeStats then
-        L[#L + 1] = "STAT|" .. table.concat(BS.CollectStats(), "|")
-        for _, w in ipairs(BS.CollectWeapons()) do
-            L[#L + 1] = "WEAPON|" .. w
+        local stats = tryCollect("CollectStats")
+        if type(stats) == "table" then
+            L[#L + 1] = "STAT|" .. table.concat(stats, "|")
+        end
+        local weapons = tryCollect("CollectWeapons")
+        if type(weapons) == "table" then
+            for _, w in ipairs(weapons) do
+                L[#L + 1] = "WEAPON|" .. w
+            end
         end
     end
 
     if db.includeGear then
-        local gear, avg = BS.CollectGear()
-        L[#L + 1] = "ILVL|" .. Num(avg, 2)
-        for _, g in ipairs(gear) do
-            L[#L + 1] = "GEAR|" .. g
+        local gear, avg = tryCollect("CollectGear")
+        if type(gear) == "table" then
+            L[#L + 1] = "ILVL|" .. Num(avg, 2)
+            for _, g in ipairs(gear) do
+                L[#L + 1] = "GEAR|" .. g
+            end
         end
     end
 
     -- Seltenheits-Budget: die zweite Grenze neben der Platzzahl.
-    local q = BS.CollectQuality()
+    local q = tryCollect("CollectQuality")
     if q and #q > 0 then
         L[#L + 1] = "QUALITY|" .. table.concat(q, "|")
     end
-    local qc = BS.CollectQualityCost()
+    local qc = tryCollect("CollectQualityCost")
     if qc and #qc > 0 then
         L[#L + 1] = "QCOST|" .. table.concat(qc, "|")
     end
-    local qo = BS.CollectOwnedQuality()
+    local qo = tryCollect("CollectOwnedQuality")
     if qo and #qo > 0 then
         L[#L + 1] = "QOWN|" .. table.concat(qo, ";")
     end
 
-    local locked = BS.CollectLocked()
+    local locked = tryCollect("CollectLocked")
     if locked and #locked > 0 then
         L[#L + 1] = "LOCK|" .. table.concat(locked, ";")
     end
 
-    local ecost = BS.CollectEssenceCosts()
+    local ecost = tryCollect("CollectEssenceCosts")
     if ecost and #ecost > 0 then
         L[#L + 1] = "ECOST|" .. table.concat(ecost, ";")
     end
 
-    local mast = BS.CollectMasteries()
+    local mast = tryCollect("CollectMasteries")
     if mast and #mast > 0 then
         L[#L + 1] = "MAST|" .. table.concat(mast, ";")
     end
 
-    local traits = BS.CollectTraits()
+    local traits = tryCollect("CollectTraits")
     if traits and #traits > 0 then
         L[#L + 1] = "TRAIT|" .. table.concat(traits, ";")
     end
 
-    local abi = BS.CollectAbilities()
-    local tal = BS.CollectTalents()
+    local abi = tryCollect("CollectAbilities") or {}
+    local tal = tryCollect("CollectTalents") or {}
     L[#L + 1] = "ABI|" .. table.concat(abi, ";")
     L[#L + 1] = "TAL|" .. table.concat(tal, ";")
     L[#L + 1] = "COUNT|A:" .. #abi .. "|T:" .. #tal

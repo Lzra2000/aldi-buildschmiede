@@ -6,7 +6,7 @@ Companion-Addon für die [Buildschmiede](https://lzra2000.github.io/aldi-buildsc
 
 | | |
 |---|---|
-| **Version** | 1.5.9 |
+| **Version** | 1.5.10 |
 | **Export-Format** | `BS.FORMAT` = **1** (additiv; alte Exporte bleiben lesbar) |
 | **Interface** | 30300 (WoW 3.3.5a) |
 

@@ -11,13 +11,35 @@
 --
 -- q ist Enum.SpellQuality / ItemQuality: 2 Uncommon, 3 Rare, 4 Epic, 5 Legendary.
 -- Common (1) hat kein Budget. Die eingewickelten GetQualityCount/Limit mappen
--- ueber Enum.QualityToCAQuality — deshalb diese Zahlen, nicht 1..4.
+-- ueber Enum.QualityToCAQuality -- deshalb diese Zahlen, nicht 1..4.
 --
 -- Ohne diese Zahlen kann die Buildschmiede nur Plaetze zaehlen und haelt
 -- Builds fuer moeglich, die es im Spiel nicht gibt.
+--
+-- Collect.lua definiert dieselben Funktionen als Fallback, falls diese Datei
+-- nicht geladen hat. BuildExport ruft sie nur ueber tryCollect auf.
 
 local BS = AscBuildschmiede
+if type(BS) ~= "table" then return end
+
 local Safe, Num = BS.Safe, BS.Num
+if type(Safe) ~= "function" then
+    Safe = function(fn, ...)
+        if type(fn) ~= "function" then return nil end
+        local ok, a, b, c, d, e = pcall(fn, ...)
+        if not ok then return nil end
+        return a, b, c, d, e
+    end
+end
+if type(Num) ~= "function" then
+    Num = function(v, decimals)
+        v = tonumber(v) or 0
+        if decimals and decimals > 0 then
+            return string.format("%." .. decimals .. "f", v)
+        end
+        return string.format("%d", math.floor(v + 0.5))
+    end
+end
 
 -- Enum.SpellQuality: Common=1 hat kein Budget; Uncommon..Legendary = 2..5.
 local QNAME = {
