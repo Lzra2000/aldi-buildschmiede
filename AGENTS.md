@@ -4,9 +4,16 @@ Werkzeuge für Project Ascension, Season 10 Wildcard: ein Build-Builder als
 einzelne HTML-Datei, ein Synergie-Nachschlagewerk und ein Companion-Addon
 für den Spielclient.
 
-Zielgruppe der Seite sind Gildenmitglieder, die **10–59 leveln** — nicht
-Endgame-Raid. Wenn eine Entscheidung zwischen „für Level 60 korrekt" und
-„für einen Levelrun nützlich" steht, gewinnt der Levelrun.
+Zielgruppe: Gildenmitglieder beim **Leveln (10–59)** und beim **Endgame
+(Level 60 Wildcard inklusive)**. Beides ist first-class — die Seite ist kein
+reines Levelrun-Werkzeug und kein reines Raid-Tool; am Ende soll sie ein
+vollständiger Builder für 10–60 sein.
+
+Wenn Levelrun und L60/Endgame kollidieren: Lösungen bevorzugen, die **beiden**
+dienen (gemeinsame Daten/Logik, oder UI-Modi „Levelrun“ / „Endgame“). L60 nicht
+verwerfen, nur weil der Levelrun gerade wichtiger wirkt. Details und Agenten-
+Verhalten: `.cursor/rules/full-agent-utilization.mdc`, Calc-RE:
+`.cursor/rules/ascension-calc-re.mdc`.
 
 ---
 

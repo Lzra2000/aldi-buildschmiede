@@ -6,7 +6,13 @@ alwaysApply: true
 # Ascension calculation reverse engineering (ethical)
 
 User mandate: **always** practice Ascension calc RE as part of Buildschmiede work.
-Prefer **level-run 10–59** usefulness over L60 purity when they conflict (see `AGENTS.md`).
+
+**Audience (first-class both):** useful for **level-run 10–59** and a complete
+**L60 / endgame** builder (Wildcard at 60 included). See `AGENTS.md`.
+
+When level-run and L60 numbers or priorities conflict: prefer solutions that
+serve **both**, or gate by UI mode (Levelrun / Endgame). Do **not** discard L60
+accuracy to favor level-run alone.
 
 How agents work / ship: `.cursor/rules/full-agent-utilization.mdc`.
 
@@ -47,6 +53,7 @@ Do not score, chain, or recommend as if duplicates grant parallel GCDs.
 
 ## Anchors
 
-- `AGENTS.md` → „Nichts raten, was nicht in den Daten steht“; Spielmechanik (shared GCD vs talent inheritance)
+- `AGENTS.md` → Zielgruppe 10–60 (Levelrun + Endgame); „Nichts raten…“; Spielmechanik (shared GCD vs talent inheritance)
+- Dual audience / ship workflow: `.cursor/rules/full-agent-utilization.mdc`
 - Pipeline notes: `pipeline/NOTES-*.md`
 - Auto-allow read-only DBC/API research: `full-agent-utilization.mdc`

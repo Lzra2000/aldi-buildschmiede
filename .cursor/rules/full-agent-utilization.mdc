@@ -7,6 +7,15 @@ alwaysApply: true
 
 Hard product rules live in `AGENTS.md`. This rule adds **how agents work** on this repo.
 
+**Audience (first-class both):** Buildschmiede must stay useful for **level-run
+10–59** and become a complete **L60 / endgame** builder (Wildcard at 60 included).
+Level-run stays important; endgame is an equal goal — not a later afterthought.
+See `AGENTS.md` (Zielgruppe).
+
+When level-run and L60/endgame decisions conflict: prefer solutions that serve
+**both** (shared data/logic), or **gate the UI** (Levelrun / Endgame modes). Do
+**not** discard L60 correctness just to optimize for leveling alone.
+
 **Ascension calc RE (always):** mine real numbers from DBC/tooltips/Safe APIs;
 never invent SP/AP coefficients — see `.cursor/rules/ascension-calc-re.mdc`.
 
@@ -92,6 +101,6 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 
 - Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
 - After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
-- Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict — ethical calc RE: `.cursor/rules/ascension-calc-re.mdc`
+- Numbers: measure; don’t invent. Levelrun **and** L60/endgame are first-class; on conflict prefer both / UI modes — ethical calc RE: `.cursor/rules/ascension-calc-re.mdc`
 - After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
 - Product German: correct grammar, **du**, short clear sentences — `.cursor/rules/german-language.mdc`
