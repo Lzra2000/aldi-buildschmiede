@@ -1689,24 +1689,17 @@
         case "CARDED":
         case "CARD":
           // CARDED|sid;sid — Alias CARD|…; auch :/, als Trenner (OCR/ältere Exporte)
-          d.carded = String(parts.join("|") || "")
-            .split(/[|;,\s]+/)
-            .map(function (x) { return parseInt(x, 10) || 0; })
-            .filter(Boolean);
+          d.carded = parseSidList(parts);
           break;
         case "DESIRE":
         case "DESIRED":
           // DESIRE|entryId;… — persoenliche Wishlist (IsDesiredID), NICHT D.des
-          d.desire = (parts.join("|") || "").split(";").map(function (x) {
-            return parseInt(x, 10) || 0;
-          }).filter(Boolean);
+          d.desire = parseIdList(parts);
           break;
         case "UNDESIRE":
         case "UNDESIRED":
           // UNDESIRE|entryId;… — IsUndesiredID, nicht Catalog desiredEligible
-          d.undesire = (parts.join("|") || "").split(";").map(function (x) {
-            return parseInt(x, 10) || 0;
-          }).filter(Boolean);
+          d.undesire = parseIdList(parts);
           break;
         case "PATHAURA":
           // PATHAURA|spellId  (ggf. mehrere mit ;)
@@ -1851,6 +1844,36 @@
   function nameBySid(sid) {
     var i = BYSID[sid];
     return i !== undefined ? CAT[i][0] : ("spell " + sid);
+  }
+  function wcIdLabel(id, kind) {
+    var nm = kind === "sid" ? nameBySid(id) : nameByEid(id);
+    if (!nm || nm.indexOf("entry ") === 0 || nm.indexOf("spell ") === 0) {
+      return (kind === "sid" ? "Spell #" : "Eintrag #") + id;
+    }
+    return nm;
+  }
+  function wcIdGridHtml(ids, label, kind) {
+    if (!ids || !ids.length) return "";
+    var o = [];
+    o.push('<div class="wepline"><b>' + esc(label) + "</b> " + ids.length + "</div>");
+    function cell(id) {
+      var idx = kind === "sid" ? BYSID[id] : BYEID[id];
+      return '<div class="scard" role="listitem">' + scardIco(idx, 28) +
+        '<div class="scbody"><span class="scname">' + esc(wcIdLabel(id, kind)) +
+        "</span>" +
+        '<span class="scmeta">#' + id + "</span></div></div>";
+    }
+    var head = ids.slice(0, 8);
+    var tail = ids.slice(8);
+    o.push('<div class="scardgrid" role="list">');
+    head.forEach(function (id) { o.push(cell(id)); });
+    o.push("</div>");
+    if (tail.length) {
+      o.push(wrapDetails(
+        '<div class="scardgrid" role="list">' + tail.map(cell).join("") + "</div>",
+        "Weitere " + label + " (" + tail.length + ")"));
+    }
+    return o.join("");
   }
   // SCARD-Tag DEFAULT_NORMAL → { deck: "Standard", kind: "Normal" }
   function scardDeckParts(tag) {
