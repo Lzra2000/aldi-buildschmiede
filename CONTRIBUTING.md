@@ -20,9 +20,10 @@ Bei Addon-Änderungen: `luac5.1 -p addon/AscBuildschmiede/*.lua`, dann `./script
 
 Einzeltests: `python tests/test_export_parse.py`, `python tests/test_data_sanity.py` (Node für Export-Harness). Optional: `python -m pytest tests/ -q`.
 
-## CI (GitHub Actions)
+## CI (optional)
 
-Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) bei Push/PR auf **`main`**: Assemble, JS-Syntax, optional `luac`, Unittests. CI **deployt nicht** — Pages bleibt Root auf `main`.
+Referenz-Workflow: [docs/ci-workflow.yml](docs/ci-workflow.yml).  
+Zum Aktivieren nach `.github/workflows/ci.yml` kopieren und mit einem Token pushen, das den Scope **`workflow`** hat. CI **deployt nicht** — Pages bleibt Root auf `main`.
 
 ## GitHub Pages
 

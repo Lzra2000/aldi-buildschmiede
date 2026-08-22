@@ -1,0 +1,119 @@
+# Reference GitHub Actions workflow for this repo.
+# Copy to `.github/workflows/ci.yml` to enable CI.
+# Publishing `.github/workflows/*` needs a GitHub token with the `workflow` scope
+# (the default Cursor OAuth token often lacks it).
+#
+# Does NOT deploy GitHub Pages — Pages stays branch main / root (see CONTRIBUTING.md).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Assemble · JS · Lua
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Assemble site
+        run: python pipeline/assemble.py
+
+      - name: Require built index.html
+        run: |
+          if [ ! -f index.html ]; then
+            echo "::error::index.html missing after assemble.py"
+            exit 1
+          fi
+          if [ ! -f synergien.html ]; then
+            echo "::error::synergien.html missing after assemble.py"
+            exit 1
+          fi
+          ls -lh index.html synergien.html 2>/dev/null || ls -lh index.html
+
+      - name: JS syntax (builder-app.js)
+        run: >
+          node -e
+          'new Function(require("fs").readFileSync("src/builder-app.js","utf8"))'
+
+      - name: Install Lua 5.1 (luac5.1)
+        id: lua
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+          command -v luac5.1
+          luac5.1 -v
+
+      - name: Check addon Lua
+        run: |
+          set -euo pipefail
+          if ! command -v luac5.1 >/dev/null 2>&1; then
+            echo "::notice::luac5.1 not available — skipping addon Lua syntax check"
+            exit 0
+          fi
+          shopt -s nullglob
+          files=(addon/AscBuildschmiede/*.lua)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::no Lua files under addon/AscBuildschmiede/"
+            exit 1
+          fi
+          echo "Checking ${#files[@]} Lua file(s) with luac5.1 -p"
+          for f in "${files[@]}"; do
+            echo "  luac5.1 -p $f"
+            luac5.1 -p "$f"
+          done
+          echo "Addon Lua OK"
+
+      - name: Optional Python tests
+        run: |
+          set -euo pipefail
+          ran=0
+
+          shopt -s nullglob
+          for t in pipeline/test_*.py; do
+            echo "Running $t"
+            python "$t"
+            ran=1
+          done
+
+          if [ -d tests ]; then
+            mapfile -t tests_py < <(find tests -type f -name 'test_*.py' | sort)
+            if [ ${#tests_py[@]} -gt 0 ]; then
+              if python -c 'import pytest' 2>/dev/null; then
+                echo "Running pytest on tests/"
+                python -m pytest -q tests/
+              else
+                for t in "${tests_py[@]}"; do
+                  echo "Running $t"
+                  python "$t"
+                done
+              fi
+              ran=1
+            fi
+          fi
+
+          if [ "$ran" -eq 0 ]; then
+            echo "No optional tests (pipeline/test_*.py or tests/test_*.py) — skipping"
+          fi

@@ -8,7 +8,8 @@ alwaysApply: true
 ## Original chrome — invent / generate freely
 
 Agents **MAY invent and generate** original UI chrome and textures for the website
-(`src/`, assembled `index.html` / `synergien.html`) from their own ideas:
+(`src/`, assembled `index.html` / `synergien.html`) from their own ideas —
+apply chrome to **both** Builder and Synergien (see `synergien-first-class.mdc`):
 
 - CSS, SVG, hand-made or AI-generated PNG/WebP
 - Layout, panels, tabs, borders, corners, backgrounds, ornaments — all original

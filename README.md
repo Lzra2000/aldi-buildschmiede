@@ -65,7 +65,7 @@ Weitere Anker: [AGENTS.md](AGENTS.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [
 | Synergien | https://lzra2000.github.io/aldi-buildschmiede/synergien.html |
 | Addon-Zip (raw) | https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip |
 
-GitHub Pages: Branch **`main`**, Ordner **`/`**. Pages baut **nicht** aus `src/` und nicht aus `docs/` — nur die mitgepushten Artefakte.
+GitHub Pages: Branch **`main`**, Ordner **`/`**. Pages baut **nicht** aus `src/` und nicht aus `docs/` — nur die mitgepushten Artefakte `index.html` / `synergien.html`. Beide sind gleichrangig: `assemble.py` schreibt immer Builder **und** Synergien.
 
 ### Lizenz
 
