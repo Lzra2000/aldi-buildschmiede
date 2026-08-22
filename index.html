@@ -987,7 +987,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         <div class="pastewrap">
           <p class="pastehint">Im Spiel <code>/bs</code> tippen,
             <kbd>Strg</kbd>+<kbd>C</kbd>, hier einfügen. Addon 1.4+ liefert IDs,
-            Essence, Locks und Gear — der Import matcht per spellId.
+            Essence, Locks und Gear — der Import ordnet per spellId zu.
             Installation unter <em>Wissen</em>.</p>
           <textarea id="pasteBox" rows="4" spellcheck="false"
             placeholder="=== BUILDSCHMIEDE v1 ===&#10;CHAR|…"></textarea>
@@ -1051,8 +1051,8 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         Die Regeln hinter Dubletten, Modifiern und Ketten stehen im
         <a href="synergien.html">Synergiekompendium</a>. Dieser Reiter hier
         erklärt Paths, Stats und das Addon.
-        Import aus <code>/bs</code> matcht Fähigkeiten und Talente per
-        <code>spellId</code>, Gear per <code>itemId</code>.</div>
+        Import aus <code>/bs</code> ordnet Fähigkeiten und Talente per
+        <code>spellId</code> zu, Gear per <code>itemId</code>.</div>
       <div class="tabbar big" role="tablist">
         <button class="tab on" data-tab="rPaths" role="tab">Die fünf Paths</button>
         <button class="tab" data-tab="rStats" role="tab">Stat-Scaling</button>
@@ -1178,7 +1178,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 
       <p class="srcnote">Die Path-Empfehlung oben im Builder wendet genau diese Regeln auf
         deine Auswahl an. Sie zählt, wie viele deiner Einträge Waffenschaden, eine
-        Magieschule, beides oder Heilung nennen, und nennt dir die Skills beim Namen.
+        Magieschule, beides oder Heilung nennen, und nennt dir die Fähigkeiten beim Namen.
         Klicke in der Rangliste auf einen anderen Path, dann siehst du, was <em>der</em>
         mit deinem Build machen würde.</p></div>
       <div class="tabp" id="rStats">
@@ -1288,8 +1288,8 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         Jede Zeile im Katalog trägt, was sich aus ihrem Tooltip herauslesen lässt.
         Das sind keine geschätzten Werte — es ist wörtlich das, was im Spiel
         im Tooltip steht, nur als Zahl statt als Satz.
-        Katalog-Tooltips sind ein DBC-synchroner Snapshot; der Import matcht per
-        spellId (BYEID → BYSID → Name) — so landen Doppelungen wie Vengeance richtig.
+        Katalog-Tooltips sind ein DBC-synchroner Snapshot; der Import ordnet per
+        spellId zu (BYEID → BYSID → Name) — so landen Doppelungen wie Vengeance richtig.
       </div>
 
       <div class="tblwrap">
@@ -1331,14 +1331,14 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
         sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
         weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
-        Angriffe schlägt härter zu“ reicht es. Für ein DPS-Ranking nicht.</div></div>
+        Angriffe schlägt härter zu?“ reicht es. Für ein DPS-Ranking nicht.</div></div>
       <div class="tabp" id="rAddon">
       <div class="headline">
         <b>Warum du es willst</b>
         Ohne das Addon klickst du deinen Build hier von Hand zusammen. Mit dem Addon
         tippst du im Spiel <code>/bs</code>, kopierst einen Textblock und fügst ihn
         oben unter „Aus dem Spiel einfügen“ ein. Die Seite kennt dann deine
-        <strong>echten</strong> Skills, deinen Path, deine Stats und dein Gear —
+        <strong>echten</strong> Fähigkeiten, deinen Path, deine Stats und dein Gear —
         und sagt dir, was daran kritisch ist.
       </div>
 
@@ -2906,7 +2906,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
         ' <span class="gid">#' + c.pathEntry + "</span></div>");
     }
     if (c.suggest && c.suggest.length) {
-      o.push('<div class="wepline"><b>Suggest</b> ' +
+      o.push('<div class="wepline"><b>Path-Vorschlag</b> ' +
         c.suggest.map(esc).join(", ") + "</div>");
     }
 
@@ -3015,7 +3015,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
           }).join(", ") + "</div>");
       }
       if (c.locked && c.locked.length) {
-        o.push('<div class="wepline"><b>Locks</b> ' +
+        o.push('<div class="wepline"><b>Sperren</b> ' +
           c.locked.slice(0, 10).map(function (eid) {
             return esc(nameByEid(eid));
           }).join(", ") +
@@ -3197,7 +3197,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       }
     }
     if (c.locked && c.locked.length) {
-      push("ok", c.locked.length + " gelockte Einträge",
+      push("ok", c.locked.length + " gesperrte Einträge",
         " Die bleiben beim Umskillen liegen — der Generator fasst sie nicht an.");
     }
     if (c.desire && c.desire.length) {
@@ -3214,10 +3214,10 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       var sugHit = c.suggest.some(function (x) {
         return normPath(x) === mineP;
       });
-      push(sugHit ? "ok" : "info", "Suggest: " + esc(sug),
+      push(sugHit ? "ok" : "info", "Path-Vorschlag: " + esc(sug),
         sugHit
           ? " Dein Path steht in der Addon-Empfehlung."
-          : " Addon empfiehlt andere Paths als den aktuellen.");
+          : " Das Addon empfiehlt andere Paths als den aktuellen.");
     }
     if (isDraftChar(c)) {
       push("info", "Draft-Modus aktiv",
@@ -3238,7 +3238,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       }
       push("ok", "Wildcard" + (modeLabel(c) ? " (" + esc(modeLabel(c)) + ")" : ""),
         (nSlot ? " " + nSlot + " Skill-Card-Slots belegt." : "") +
-        (nCard ? " " + nCard + " Spells auf Karten — Vorschläge bevorzugen diese." : "") +
+        (nCard ? " " + nCard + " Zauber auf Karten — Vorschläge bevorzugen diese." : "") +
         wcNote);
     }
 
@@ -4208,7 +4208,7 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
       CHAR.locked.forEach(function (eid) {
         var li = BYEID[eid];
         if (li !== undefined && genLegal(li, sel, use, cnt)) {
-          take(li, "gelockt");
+          take(li, "gesperrt");
         }
       });
     }

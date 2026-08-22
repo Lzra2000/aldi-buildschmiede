@@ -1475,7 +1475,7 @@
         ' <span class="gid">#' + c.pathEntry + "</span></div>");
     }
     if (c.suggest && c.suggest.length) {
-      o.push('<div class="wepline"><b>Suggest</b> ' +
+      o.push('<div class="wepline"><b>Path-Vorschlag</b> ' +
         c.suggest.map(esc).join(", ") + "</div>");
     }
 
@@ -1584,7 +1584,7 @@
           }).join(", ") + "</div>");
       }
       if (c.locked && c.locked.length) {
-        o.push('<div class="wepline"><b>Locks</b> ' +
+        o.push('<div class="wepline"><b>Sperren</b> ' +
           c.locked.slice(0, 10).map(function (eid) {
             return esc(nameByEid(eid));
           }).join(", ") +
@@ -1766,7 +1766,7 @@
       }
     }
     if (c.locked && c.locked.length) {
-      push("ok", c.locked.length + " gelockte Einträge",
+      push("ok", c.locked.length + " gesperrte Einträge",
         " Die bleiben beim Umskillen liegen — der Generator fasst sie nicht an.");
     }
     if (c.desire && c.desire.length) {
@@ -1783,10 +1783,10 @@
       var sugHit = c.suggest.some(function (x) {
         return normPath(x) === mineP;
       });
-      push(sugHit ? "ok" : "info", "Suggest: " + esc(sug),
+      push(sugHit ? "ok" : "info", "Path-Vorschlag: " + esc(sug),
         sugHit
           ? " Dein Path steht in der Addon-Empfehlung."
-          : " Addon empfiehlt andere Paths als den aktuellen.");
+          : " Das Addon empfiehlt andere Paths als den aktuellen.");
     }
     if (isDraftChar(c)) {
       push("info", "Draft-Modus aktiv",
@@ -1807,7 +1807,7 @@
       }
       push("ok", "Wildcard" + (modeLabel(c) ? " (" + esc(modeLabel(c)) + ")" : ""),
         (nSlot ? " " + nSlot + " Skill-Card-Slots belegt." : "") +
-        (nCard ? " " + nCard + " Spells auf Karten — Vorschläge bevorzugen diese." : "") +
+        (nCard ? " " + nCard + " Zauber auf Karten — Vorschläge bevorzugen diese." : "") +
         wcNote);
     }
 
@@ -2777,7 +2777,7 @@
       CHAR.locked.forEach(function (eid) {
         var li = BYEID[eid];
         if (li !== undefined && genLegal(li, sel, use, cnt)) {
-          take(li, "gelockt");
+          take(li, "gesperrt");
         }
       });
     }
