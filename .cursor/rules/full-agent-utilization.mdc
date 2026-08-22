@@ -1,5 +1,5 @@
 ---
-description: Full agent utilization, auto-allow safe Ascension tooling, file-lane ownership; hard AGENTS.md guardrails
+description: Full agent utilization, auto-allow safe Ascension tooling, auto-commit+push after ship; hard AGENTS.md guardrails
 alwaysApply: true
 ---
 
@@ -33,13 +33,48 @@ Prefer running without stopping for permission:
 - Live AddOns sync to `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\` + rebuild `AscBuildschmiede.zip` from `addon/`
 - **Read-only** AscensionDBC / Interface extracts (API/DBC research)
 - Local `python -m http.server` for verify
+- **`git add` / `git commit` / `git push -u origin HEAD`** after meaningful shipped work (user mandate: always auto-push)
 
 Project Auto-Run: `.cursor/permissions.json` (`approvalMode: allowlist`).
+
+## Ship → commit → push (user mandate)
+
+After meaningful shipped work (feature, fix, data/pipeline update, assemble artifacts, docs that belong in the repo):
+
+1. Verify as in `AGENTS.md` (assemble / syntax / spot-check as applicable).
+2. `git add` only relevant shippable paths (see allowlist below).
+3. Commit with a concise message focused on **why** (follow repo commit style; HEREDOC / `-m` as usual).
+4. `git push -u origin HEAD` (or push the current tracking branch). Do **not** wait for the user to ask.
+
+### Do commit
+
+- `src/`
+- `data/*.json` that are embeddable / pipeline outputs (not ignored junk)
+- `addon/`
+- `pipeline/`
+- `index.html`, `synergien.html`, `AscBuildschmiede.zip`
+- `AGENTS.md`, `.cursor/rules/`, `.cursor/permissions.json` when changed as part of the ship
+
+### Never commit
+
+- Secrets (`.env`, credentials, API keys)
+- `_tmp_*` scratch files
+- `data/itemicons-all.json` (gitignored; full Item.dbc dump)
+- Proprietary Ascension/Blizzard client Lua
+- Huge accidental binaries / dumps outside the normal ship set
+
+### Git hard limits (never)
+
+- **Never** force-push (`--force`, `--force-with-lease`, etc.)
+- **Never** skip hooks (`--no-verify`, `--no-gpg-sign`, etc.)
+- **Never** amend unless all amend rules are met (user asked OR hook auto-modified files after a commit **you** made this turn; not pushed; fix-up via new commit if hook rejected)
+- **Never** hard reset or other destructive/irreversible git unless the user explicitly requests it
+
+Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 
 ## Never auto / never do
 
 - Force-push, hard reset, or other destructive git
-- `git commit` / PR / push unless the user explicitly asked
 - Invent spell coefficients or tooltip numbers missing from data
 - Copy proprietary client Lua into git
 - Mutate-game / write Ascension APIs in the addon (export stays clipboard-only; `BS.Safe` + `pcall`)
@@ -49,3 +84,4 @@ Project Auto-Run: `.cursor/permissions.json` (`approvalMode: allowlist`).
 - Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
 - After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
 - Numbers: measure; don’t invent. Levelrun > L60 purity when they conflict
+- After ship: commit + push so GitHub Pages gets the built files

@@ -1,5 +1,5 @@
 === BUILDSCHMIEDE v1 ===
-ADDON|1.5.1
+ADDON|1.5.2
 INSPECT|1
 CHAR|Chibah|53|Orc|Hero
 PATH|Strength
@@ -14,7 +14,7 @@ SPECS|1;2
 MODE|WILDCARD
 DESIRE|701;704
 UNDESIRE|706
-WC|CanRoll:0|Starting:0|WillStart:0|WillFirst:0|MaxRapid:0|CanRapid:0|AwaitTalent:0|RRPhase:Idle|RRLearned:0|RRDesired:0|RRCanStart:0
+WC|CanRoll:0|Starting:0|WillStart:0|WillFirst:0|MaxRapid:0|CanRapid:0|AwaitTalent:0|RRPhase:Idle|RRLearned:0|RRDesired:0|RRCanStart:0|RRAbi:0/0/0|RRTal:0/0/0|RepurchAbi:0|RepurchTal:0|CanRepurch:0
 ILVL|21.40
 GEAR|Head|Ironbark Helm|22|3|Plate|50314
 GEAR|Chest|Ironbark Plate|21|3|Plate|50024

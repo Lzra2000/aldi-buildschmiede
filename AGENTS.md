@@ -390,6 +390,8 @@ wären.
 5. Bei UI-Änderungen mit Charakterbezug: `data/`-Testexport einspielen und
    prüfen, dass Befund, Path-Empfehlung und Budget zusammenpassen.
 6. `index.html` mitcommitten — GitHub Pages liefert die gebaute Datei aus.
+7. Nach sinnvollem Ship: commit + `git push` (kein Force-Push) — Pages
+   liefert den Stand vom Remote; Details in `.cursor/rules/full-agent-utilization.mdc`.
 
 Ein Fehler in einer Zahl ist hier schlimmer als ein Fehler im Layout. Die
 Leute treffen danach Entscheidungen über ihren Charakter.

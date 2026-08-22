@@ -260,6 +260,7 @@ local function createInset(parent)
         header:SetVertexColor(1, 1, 1, 0.85)
         inset._caHeader = header
         decorateGoldCorners(inset)
+        inset._decorated = true
         return inset
     end
 
@@ -268,6 +269,7 @@ local function createInset(parent)
     inset:SetBackdropColor(0.12, 0.11, 0.1, 0.95)
     inset:SetBackdropBorderColor(0.55, 0.48, 0.3, 1)
     decorateCACorners(inset)
+    inset._decorated = true
     return inset
 end
 
@@ -492,8 +494,7 @@ local function makeFrame()
     inset:SetPoint("TOPLEFT", PAD, topY - 78)
     inset:SetPoint("BOTTOMRIGHT", -(PAD + 4), 78)
     f.inset = inset
-    -- CA-Ecken nur am Inset (PortraitFrame hat bereits Metal-Corners).
-    if not inset._caHeader then
+    if not inset._decorated then
         decorateCACorners(inset)
     end
 
