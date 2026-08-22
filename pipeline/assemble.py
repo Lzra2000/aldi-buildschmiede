@@ -142,10 +142,17 @@ def main():
     js = read(os.path.join(SRC, "builder-app.js"))
 
     out = []
+    out.append("<!DOCTYPE html>")
+    out.append('<html lang="de">')
+    out.append("<head>")
+    out.append('<meta charset="utf-8">')
+    out.append('<meta name="viewport" content="width=device-width, initial-scale=1">')
     out.append(head)
     # Spell sprite only — UI chrome is CSS in builder-head (no BLP panel frames).
     out.append("<style>.icon{background-image:url(data:image/webp;base64,"
                + sprite_b64 + ")}</style>")
+    out.append("</head>")
+    out.append("<body>")
     out.append(body)
     out.append('<script type="application/json" id="data">')
     out.append(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
@@ -153,6 +160,8 @@ def main():
     out.append("<script>")
     out.append(js)
     out.append("</script>")
+    out.append("</body>")
+    out.append("</html>")
 
     html = "\n".join(out)
     dest = os.path.join(ROOT, "index.html")

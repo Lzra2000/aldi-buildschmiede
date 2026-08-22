@@ -153,7 +153,7 @@ input[type=search]{flex:1 1 190px;min-width:0}
 .filtmore>summary::after{content:" +";color:var(--ink-faint)}
 .filtmore[open]{flex:1 1 100%}
 .filtmore[open]>summary,.filtmore.active>summary{border-color:var(--accent);color:var(--accent)}
-.filtmore[open]>summary::after{content:" ?"}
+.filtmore[open]>summary::after{content:" −"}
 .filtmore-n{margin-left:6px;font-size:10px;font-weight:700;color:var(--accent);
   font-variant-numeric:tabular-nums}
 .filtmore-in{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;align-items:center}
@@ -461,7 +461,7 @@ a.vtab:hover{color:var(--ink)}
 }
 @media(min-width:900px) and (max-width:1399px){.card-wide{grid-column:span 2}}
 
-/* Auswertung: Befund zuerst, Rest sekund?r */
+/* Auswertung: Befund zuerst, Rest sekundär */
 .analyse{display:grid;gap:12px;align-items:start}
 .analyse-lead{border-left:3px solid var(--accent)}
 .framectl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -547,7 +547,7 @@ footer{padding:32px 0 60px;color:var(--ink-faint);font-size:13px;
 /* --- Import als aufklappbares Panel --- */
 details.panel>summary{cursor:pointer;list-style:none}
 details.panel>summary::-webkit-details-marker{display:none}
-details.panel>summary::after{content:"?";font-family:"JetBrains Mono",monospace;
+details.panel>summary::after{content:"−";font-family:"JetBrains Mono",monospace;
   color:var(--ink-faint);margin-left:8px}
 details.panel:not([open])>summary::after{content:"+"}
 details.panel:not([open])>summary{border-bottom:0}
