@@ -680,6 +680,24 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
   #hoverTip.on{transition:none}
 }
 
+/* === Topic wells + quiet headers (matches Builder Analyse/Wissen) === */
+.topic>summary{
+  padding:7px 12px;font-size:15px;color:var(--ink-soft);
+  background:var(--sunken);border-bottom:1px solid transparent}
+.topic>summary .num{color:var(--ink-faint);letter-spacing:.07em}
+.topic[open]>summary{border-bottom-color:var(--rule-soft)}
+.topic-body{
+  margin:0 8px 8px;padding:8px 10px 12px;
+  background:var(--ground);border:1px solid var(--rule-soft);
+  box-shadow:inset 0 1px 0 var(--metal-hi),inset 0 0 10px rgba(0,0,0,.28)}
+.topic[open] .topic-body{border-top:0}
+.col,.rule{
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow),
+    inset 0 1px 0 var(--metal-hi)}
+.col::before,.rule::before{opacity:.28;background:var(--rule)}
+.col h3,.rule h3{font-size:15px;color:var(--ink-soft)}
+.grp{color:var(--ink-faint);letter-spacing:.07em}
+
 </style>
 </head>
 <body>
