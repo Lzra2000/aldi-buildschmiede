@@ -622,6 +622,31 @@ a.cta{background:var(--accent);color:var(--accent-ink);border-color:var(--accent
 body:has(#synTipPanel:not([hidden])) .mast{padding-top:clamp(6px,1.2vw,12px)}
 @media(prefers-reduced-motion:reduce){.skip,.btext b{transition:none}}
 
+/* === Hover system: same delay / focus / tip chrome as Builder. === */
+@media(prefers-reduced-motion:reduce){
+  :root{--hover-delay:0ms;--hover-fade:0ms}
+}
+.quiet{transition:opacity var(--hover-fade,var(--dur-chip)) var(--ease-out)}
+a.school,a.limit,[data-jump]{transition:border-color var(--hover-fade) var(--ease-out),color var(--hover-fade) var(--ease-out)}
+a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--c,var(--accent)) 55%,var(--rule))}
+#hoverTip{
+  position:fixed;z-index:var(--hover-z);max-width:min(28ch,calc(100vw - 24px));
+  padding:7px 10px 8px 12px;background:var(--raised);color:var(--ink);
+  border:1px solid var(--metal,var(--rule));pointer-events:none;
+  box-shadow:0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi,rgba(255,255,255,.06));
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;line-height:1.35;
+  opacity:0;visibility:hidden}
+#hoverTip::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold,var(--accent));opacity:.7}
+#hoverTip.on{
+  opacity:1;visibility:visible;
+  transition:opacity var(--hover-fade) var(--ease-out)}
+@media(prefers-reduced-motion:reduce){
+  .quiet,a.school,a.limit,[data-jump]{transition:none}
+  #hoverTip.on{transition:none}
+}
+
 </style>
 </head>
 <body>

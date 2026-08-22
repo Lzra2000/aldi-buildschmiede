@@ -26,6 +26,7 @@
   var SSUGSP = D.ssugsp || null; // SpellSpellSuggestions related-graph (optional)
   var FRM = D.frm || [];       // Form-Familie (formtags.py), "" wenn unbekannt
   var PREQ = D.preq || null;   // harte Path-Requires (pathreq.py) ≠ D.ssug
+  var LMETA = D.lmeta || null; // Darkmoon-Log-Meta (logmeta.py) — kein Score-Override
 
   // SpellTag-Index: Katalogindex → {facets[], schools[], tagCount}
   var STAG_BY_I = {};
@@ -141,11 +142,15 @@
   function activePathKey() {
     return forcedPath || (CHAR ? normPath(CHAR.path) : "") || "";
   }
-  function pathReqOk(i, mine) {
+  function pathReqLegal(i, mine, themeKey) {
     var keys = pathReqKeys(i);
     if (!keys.length) return true;
+    if (themeKey === "heal" && keys.indexOf("heal") >= 0) return true;
     if (!mine) return true;
     return keys.indexOf(mine) >= 0;
+  }
+  function pathReqOk(i, mine) {
+    return pathReqLegal(i, mine);
   }
   function gateKind(g) {
     if (!g) return "";
@@ -1005,7 +1010,7 @@
     var n = p.n || 1;
     var healV = p.hPrimary * 4 + Math.max(0, p.h - p.hPrimary);
     // Healing nur klar vorne, wenn Heilung der Schwerpunkt ist.
-    if (p.hPrimary < 3 && p.hPrimary < n * 0.3) healV = Math.floor(healV * 0.45);
+    if (!healFocus(p)) healV = Math.floor(healV * 0.45);
 
     var intV = p.pm * 3 + (p.pm ? 1 : 0);
     // Mit echtem Waffen-als-Element ist Duality die Heimat — Int dämpfen.
@@ -1197,6 +1202,11 @@
           ' <span class="gid" title="Harte Requires aus CatalogData / Katalogtext — nicht SpellStatSuggestions">(Pflicht, kein Hinweis)</span></div>');
       }
     }
+    o.push(logmetaDetails(top
+      ? '<div class="wepline"><b>Dein Path</b> ' +
+        esc(P.n.replace("Path of ", "")) +
+        " — Häufigkeit in Logs ändert die Wertung nicht.</div>"
+      : ""));
     box.innerHTML = o.join("");
   }
 
@@ -1326,7 +1336,10 @@
     if (!b) return;
     var k = b.dataset.path;
     forcedPath = (forcedPath === k) ? null : k;
-    renderPaths(Object.keys(picked).map(Number));
+    var ids = Object.keys(picked).map(Number);
+    renderPaths(ids);
+    renderIssues(ids);
+    renderStats(ids);
   });
 
   // ---------- Import aus dem Spiel ----------
@@ -2505,8 +2518,8 @@
     hd.textContent = c.name || "importiert";
     hd.className = "cnt ok";
 
-    var mh = (c.weapons || []).filter(function (w) { return w.slot === "MH"; })[0];
-    var twoH = mh && /2HWEAPON/i.test(mh.loc);
+    var mh = mhFromChar(c);
+    var twoH = mh && weaponIs2H(mh);
 
     var o = [];
     var headBits = [
@@ -2845,7 +2858,7 @@
     var endgame = isEndgameFrame();
     var p = profile(ids);
     var best = scorePaths(p)[0];
-    var have = PATHBY[normPath(c.path)];
+    var have = PATHBY[playedPathKey()];
 
     function push(sev, title, body) {
       out.push('<div class="issue ' + sev + '"><b>' + esc(title) + "</b>" + body + "</div>");
@@ -2994,7 +3007,7 @@
         " Der Path rechnet deine Spell Power in Healing Power um. Wenn nichts " +
         "wirklich heilt, verschenkst du den kompletten Path-Bonus.");
     }
-    if (have && have.k !== "heal" && p.hPrimary >= 5) {
+    if (have && have.k !== "heal" && healFocus(p)) {
       push("fix", p.hPrimary + " klare Heilzauber, aber nicht auf Path of Healing",
         " Ohne diesen Path wird deine Spell Power nie in Healing Power umgerechnet. " +
         "Deine Heilung skaliert dadurch deutlich schlechter als dein Schaden.");
@@ -3343,10 +3356,13 @@
   // hilft niemandem beim Umskillen.
   function pathGain(want, have, p) {
     if (want.sp > have.sp) {
-      return "Der Wechsel hebt deine Spell Power um Faktor " +
-        (want.sp / have.sp).toFixed(2).replace(".", ",") +
-        " — und weil 14 Spell Power = 1 Waffen-DPS sind, wächst damit auch " +
-        "dein Waffenschaden.";
+      var msg = "Der Wechsel hebt deine Spell Power um Faktor " +
+        (want.sp / have.sp).toFixed(2).replace(".", ",") + ".";
+      if ((p.w || 0) > 0 || (p.wm || 0) > 0) {
+        msg += " Weil 14 Spell Power = 1 Waffen-DPS sind, wächst damit auch " +
+          "dein Waffenschaden.";
+      }
+      return msg;
     }
     if (want.k === "dua") {
       return "Du verlierst zwar Spell-Power-Multiplikator, bekommst dafür drei " +
@@ -4248,33 +4264,45 @@
   var FORM_DE = {
     bear: "Bärenform", cat: "Katzenform", moonkin: "Moonkin-Form",
     tree: "Baumform", worgen: "Worgen-Form", travel: "Reiseform",
-    serpent: "Schlangenform", humanoid: "ohne Form",
+    humanoid: "ohne Form",
     presence_blood: "Blood Presence", presence_frost: "Frost Presence",
     presence_unholy: "Unholy Presence", warrior_stance: "Kriegerhaltung",
     shadowform: "Shadowform", meta: "Metamorphosis", ghostwolf: "Ghost Wolf",
     ushift: "in jeder Form"
   };
+  // Nur Codes aus formtags.py — keine erfundenen Familien (kein serpent).
+  var FORM_KNOWN = {
+    bear: 1, cat: 1, moonkin: 1, tree: 1, worgen: 1, travel: 1,
+    shadowform: 1, meta: 1, ghostwolf: 1,
+    presence_blood: 1, presence_frost: 1, presence_unholy: 1,
+    stance_battle: 1, stance_defensive: 1, stance_berserker: 1,
+    humanoid: 1, ushift: 1
+  };
   // Katze, Bär und Worgen sind eigene Kampf-Familien — die Form selbst
   // nicht mischen. Worgen erlaubt Cat-Fähigkeiten, nicht die Katzenform.
   var FORM_EXCL = { cat: 1, bear: 1, worgen: 1 };
   var FORM_COMBAT = {
-    bear: 1, cat: 1, moonkin: 1, tree: 1, worgen: 1, serpent: 1, meta: 1
+    bear: 1, cat: 1, moonkin: 1, tree: 1, worgen: 1, meta: 1
   };
   var FORM_STANCE_GROUP = {
     presence_blood: "presence", presence_frost: "presence",
     presence_unholy: "presence", warrior_stance: "warrior_stance",
     shadowform: "shadowform", meta: "meta", ghostwolf: "ghostwolf"
   };
-  var FORM_GRANT_RX = /^(dire )?bear form$|^cat form$|^moonkin form$|^tree of (life|wrath)$|^worgen form$|^travel form$|^aquatic form$|^flight form$|^serpent form$|^shadowform$|^metamorphosis$|^ghost wolf$|^(blood|frost|unholy) presence$|^(battle|defensive|berserker) stance$/i;
+  var FORM_GRANT_RX = /^(dire )?bear form$|^cat form$|^moonkin form$|^tree of (life|wrath)$|^worgen form$|^travel form$|^aquatic form$|^flight form$|^shadowform$|^metamorphosis$|^ghost wolf$|^(blood|frost|unholy) presence$|^(battle|defensive|berserker) stance$/i;
+  var FORM_OTHER_RX = /^(serpent|ethereal|hellfire|lich|golem) form$/i;
   var FORM_SHAPE_OK_RX = /usable while shapeshifted|can be used while shapeshifted/i;
+  var FORM_NEG_RX = /(?:this effect )?(?:does not|do not|cannot|can not)\s+(?:work|be used)\s+while\s+in\s+[^.]* /i;
+  var FORM_CANCEL_RX = /canceled if you shapeshift|cancelled if you shapeshift|removed upon shapeshifting|shapeshifting\b[^.]*\bcancels|cancels\b[^.]*\bshapeshift/i;
+  var FORM_HUMANOID_RX = /while not shapeshifted|not shapeshifted|does not work while shapeshifted|cannot be used while shapeshifted|while in (?:your )?(?:caster|human(?:oid)?|normal) form|\bhumanoid form\b|\bcaster form\b/i;
+  var FORM_SKIP_HUM_RX = /track humanoids|humanoid targets?|works? on humanoids|against humanoids|nearby humanoid/i;
   var FORM_PATS = [
     { rx: /dire bear form|bear form/i, f: "bear" },
     { rx: /cat form/i, f: "cat" },
-    { rx: /moonkin form|\bmoonkin\b/i, f: "moonkin" },
+    { rx: /moonkin form/i, f: "moonkin" },
     { rx: /tree of life|tree of wrath|tree form/i, f: "tree" },
-    { rx: /worgen form|\bworgen\b/i, f: "worgen" },
+    { rx: /worgen form|\bin worgen\b/i, f: "worgen" },
     { rx: /travel form|aquatic form|flight form/i, f: "travel" },
-    { rx: /serpent form/i, f: "serpent" },
     { rx: /shadowform/i, f: "shadowform" },
     { rx: /\bmetamorphosis\b/i, f: "meta" },
     { rx: /ghost wolf/i, f: "ghostwolf" },
@@ -5051,7 +5079,7 @@
 
     // Der Path multipliziert Spell Power - das verschiebt die Rangfolge
     // staerker als jede einzelne Faehigkeit.
-    var pk = CHAR ? normPath(CHAR.path) : "";
+    var pk = playedPathKey();
     if (!pk) {
       var best = scorePaths(profile(ids))[0];
       pk = best ? best.k : "";
@@ -5221,6 +5249,14 @@
           }).join(""),
           "Path-Wertung"));
       }
+      var thHint = logmetaHintForTheme(g.theme.k);
+      if (thHint) {
+        o.push(logmetaDetails('<div class="wepline">' + esc(thHint) + "</div>"));
+      } else {
+        o.push(logmetaDetails(""));
+      }
+    } else {
+      o.push(logmetaDetails(""));
     }
     box.innerHTML = o.join("");
   }
@@ -5339,10 +5375,12 @@
         if (s[k] !== undefined) st.push(k + " " + s[k]);
       });
       if (st.length) L.push("- Werte: " + st.join(", "));
-      var mh = CHAR.weapons.filter(function (w) { return w.slot === "MH"; })[0];
+      var mh = mhFromChar(CHAR);
       if (mh) {
-        L.push("- Waffe: " + mh.name + ", " + mh.dmg + " Schaden, Tempo " +
-          mh.speed + (/2HWEAPON/i.test(mh.loc) ? " (Zweihand)" : " (Einhand)"));
+        L.push("- Waffe: " + mh.name +
+          (mh.dmg ? ", " + mh.dmg + " Schaden" : "") +
+          (mh.speed ? ", Tempo " + mh.speed : "") +
+          (weaponIs2H(mh) ? " (Zweihand)" : " (Einhand)"));
       }
       if (CHAR.ilvl) L.push("- Gegenstandsstufe " + CHAR.ilvl);
       if (CHAR.qlimit) {
@@ -6265,6 +6303,22 @@
     if (gate) {
       rows.push(["Sperre", '<em>' + esc(gate[0]) + ":</em> " + esc(gate[1])]);
     }
+    var preq = pathReqKeys(i);
+    if (preq.length) {
+      rows.push(["Path", "braucht " + esc(pathReqLabel(preq))]);
+    } else if (pathReqRaw(i)) {
+      rows.push(["Stat-Sperre", esc(pathReqRaw(i))]);
+    }
+    var pathClash = targetsOn.filter(function (r) {
+      var a = preq, b = pathReqKeys(r);
+      if (!a.length || !b.length) return false;
+      return !a.some(function (k) { return b.indexOf(k) >= 0; });
+    });
+    if (pathClash.length) {
+      rows.push(["Andere Path-Sperre",
+        pathClash.map(function (r) { return pill(r, true, false); }).join("") +
+        " <em>— nicht frei tauschbar</em>"]);
+    }
     var gcdPeers = [];
     var dg = REL[i][3];
     if (dg >= 0) {
@@ -6968,7 +7022,11 @@
         "Ein Archetyp ist eine reine Fähigkeitsliste — ohne Talente.",
         "<p>Talente suchst du danach selbst (der Kasten <em>Passt dazu</em> hilft). " +
           "Fast alle bestehen aus Epics, dein Epic-Budget entscheidet also, " +
-          "wie viele du wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</p>") +
+          "wie viele du wirklich bekommst. Deine bestehende Auswahl bleibt stehen.</p>" +
+          (LMETA && LMETA.classless
+            ? "<p>Auf den Darkmoon-Logs sind Wildcard-Spieler Klasse Hero. " +
+              "Diese Archetypen sind Katalog-Samen, keine Log-Klassen.</p>"
+            : "")) +
       '<div class="archgrid">' + names.map(function (n) {
         var f = fits(n);
         return '<button class="archb" data-arch="' + esc(n) + '" title="' +
@@ -7519,5 +7577,7 @@
   renderGenerator();
   renderAI();
   renderMethods();
+  renderLogMetaWissen();
   refresh();
 })();
+
