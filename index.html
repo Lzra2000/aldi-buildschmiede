@@ -32,13 +32,6 @@ body{margin:0;background:var(--ground);color:var(--ink);
   font-family:"Source Serif 4",Georgia,serif;font-size:16px;line-height:1.55}
 h1,h2,h3{font-family:"Archivo Black",Impact,sans-serif;font-weight:400;margin:0;text-wrap:balance;line-height:1.15}
 .mono,code,button,input,select,.meta,.cnt,th{font-family:"JetBrains Mono",ui-monospace,monospace}
-.wrap{max-width:1340px;margin:0 auto;padding:0 clamp(14px,3vw,28px)}
-
-.guild{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--accent);margin:0 0 10px}
-header.mast h1{font-size:clamp(26px,4.6vw,44px);letter-spacing:-.02em}
-header.mast p{margin:12px 0 0;color:var(--ink-soft);max-width:64ch}
-
 
 .panel{background:var(--raised);border:1px solid var(--rule)}
 .panel-hd{display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -85,12 +78,7 @@ button.primary:hover{opacity:.88;color:var(--accent-ink)}
 .toast.on{opacity:1}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-footer{padding:26px 0 50px;color:var(--ink-faint);font-size:13px}
 footer p{max-width:74ch}
-
-
-
-
 
 /* ============ Kopfbalken ============ */
 .topbar{position:sticky;top:0;z-index:50;background:var(--raised);
@@ -220,7 +208,6 @@ details.panel:not([open])>summary{border-bottom:0}
   text-transform:uppercase;color:var(--ink-faint);padding:6px 10px 3px}
 .twocol .slot{padding:4px 10px;font-size:12px}
 .twocol .empty{padding:14px 10px;font-size:11.5px}
-.cntpair{display:flex;gap:8px}
 
 /* --- Skalierungsabzeichen im Katalog --- */
 .bdgs{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
@@ -365,14 +352,12 @@ table.cmp tr.sep td{background:var(--sunken);font-family:"JetBrains Mono",monosp
   font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-soft)}
 .swhy{grid-column:2/-1;font-size:11.5px;color:var(--ink-soft);line-height:1.4}
 
-section.ref{margin-top:22px}
 @media(max-width:560px){
   .twocol{grid-template-columns:1fr}
-  .masthint{text-align:left}
+  
   .tabbar.big .tab{padding:9px 11px;font-size:11px}
   .statgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
 }
-
 
 .steps{padding:6px 14px 12px}
 .steps ol{margin:0;padding-left:20px;font-size:13px}
@@ -457,8 +442,6 @@ a.dl:hover{opacity:.88}
   text-transform:uppercase;color:var(--ink-faint);margin-top:6px}
 .pcard dd{margin:1px 0 0}
 
-.statsec{margin-top:26px}
-.statsec>.panel{margin-bottom:16px}
 .headline{padding:14px;border-bottom:1px solid var(--rule-soft);
   background:var(--accent-soft);border-left:4px solid var(--accent)}
 .headline b{font-family:"JetBrains Mono",monospace;font-size:12px;display:block;
@@ -4029,14 +4012,34 @@ table.stat tr.dead td{color:var(--ink-faint)}
   var h = location.hash.match(/b=([0-9a-z.]+)/);
   if (h) { decode(h[1]); el.url.value = shareUrl(); }
   else { restore(); }
-  var ht = location.hash.match(/t=([A-Za-z]+)/);
-  if (ht) {
+  // #t= verlinkt eine Stelle in der Oberfläche. Seit dem Umbau gibt es
+  // zwei Ebenen: die Ansicht im Kopfbalken und die Reiter im Nachschlage-
+  // werk. Beide über denselben Parameter erreichbar halten, sonst zeigen
+  // ältere geteilte Links ins Leere.
+  function applyHashTarget() {
+    var ht = location.hash.match(/t=([A-Za-z]+)/);
+    if (!ht) return;
+    var vb = document.querySelector('[data-view="' + ht[1] + '"]');
+    if (vb) { vb.click(); return; }
     var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
-    if (tb) tb.click();
+    if (!tb) return;
+    // Der Reiter liegt in einer Ansicht - die muss zuerst auf.
+    var view = tb.closest(".view");
+    if (view) {
+      var vt = document.querySelector('[data-view="' + view.id + '"]');
+      if (vt) vt.click();
+    }
+    tb.click();
   }
+  applyHashTarget();
+
   window.addEventListener("hashchange", function () {
     var m = location.hash.match(/b=([0-9a-z.]+)/);
     if (m) { decode(m[1]); refresh(); }
+    // Ein reiner Hashwechsel laedt die Seite nicht neu - ohne diesen
+    // Aufruf wirkte ein Link auf eine andere Ansicht nur beim ersten
+    // Oeffnen und danach nie wieder.
+    applyHashTarget();
   });
 
   renderArchetypes();

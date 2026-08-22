@@ -3018,14 +3018,34 @@
   var h = location.hash.match(/b=([0-9a-z.]+)/);
   if (h) { decode(h[1]); el.url.value = shareUrl(); }
   else { restore(); }
-  var ht = location.hash.match(/t=([A-Za-z]+)/);
-  if (ht) {
+  // #t= verlinkt eine Stelle in der Oberfläche. Seit dem Umbau gibt es
+  // zwei Ebenen: die Ansicht im Kopfbalken und die Reiter im Nachschlage-
+  // werk. Beide über denselben Parameter erreichbar halten, sonst zeigen
+  // ältere geteilte Links ins Leere.
+  function applyHashTarget() {
+    var ht = location.hash.match(/t=([A-Za-z]+)/);
+    if (!ht) return;
+    var vb = document.querySelector('[data-view="' + ht[1] + '"]');
+    if (vb) { vb.click(); return; }
     var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
-    if (tb) tb.click();
+    if (!tb) return;
+    // Der Reiter liegt in einer Ansicht - die muss zuerst auf.
+    var view = tb.closest(".view");
+    if (view) {
+      var vt = document.querySelector('[data-view="' + view.id + '"]');
+      if (vt) vt.click();
+    }
+    tb.click();
   }
+  applyHashTarget();
+
   window.addEventListener("hashchange", function () {
     var m = location.hash.match(/b=([0-9a-z.]+)/);
     if (m) { decode(m[1]); refresh(); }
+    // Ein reiner Hashwechsel laedt die Seite nicht neu - ohne diesen
+    // Aufruf wirkte ein Link auf eine andere Ansicht nur beim ersten
+    // Oeffnen und danach nie wieder.
+    applyHashTarget();
   });
 
   renderArchetypes();
