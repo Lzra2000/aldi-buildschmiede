@@ -79,6 +79,7 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 - Force-push, hard reset, or other destructive git
 - Invent spell coefficients or tooltip numbers missing from data
 - Copy proprietary client Lua into git
+- Embed Ascension/WoW **BLP** (or BLP-converted) UI frame chrome into the site — see `website-assets.mdc` (own CSS/SVG/PNG/WebP; spell/item icons only)
 - Mutate-game / write Ascension APIs in the addon (export stays clipboard-only; `BS.Safe` + `pcall`)
 
 ## AGENTS.md anchors

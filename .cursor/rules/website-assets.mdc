@@ -1,0 +1,27 @@
+---
+description: Website UI chrome must be original CSS/SVG/PNG/WebP — no Ascension/WoW BLP frame kits; spell/item icons only from client extracts
+alwaysApply: true
+---
+
+# Website assets (Buildschmiede site)
+
+## Own chrome only
+
+Develop **own** UI chrome and textures for the website (`src/`, assembled `index.html` / `synergien.html`):
+
+- CSS, SVG, hand-made PNG/WebP
+- Layout, panels, tabs, borders, corners, backgrounds — all original
+
+## Do NOT embed Ascension / WoW BLP UI chrome
+
+Never copy or embed client **BLP** (or BLP-converted) panel chrome into the site, including but not limited to:
+
+- DialogFrame / UI-Panel / PaperDoll tab art
+- `caCorner` and similar frame-kit corners/borders
+- Full UI frame kits from Interface extracts
+
+Read-only research in client extracts is fine; shipping those textures as site chrome is not.
+
+## Allowed from client extracts
+
+**Spell and item icons only** — via the existing pipeline (`sprite.webp` / `spriteindex.json`, `D.iic` icon names → icons). Not full UI frame kits.

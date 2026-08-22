@@ -45,6 +45,10 @@ data/               Ergebnis der Pipeline, wird eingebettet
 addon/              Lua-Quelle des Companion-Addons
 ```
 
+**Website-Chrome:** eigenes CSS/SVG/PNG/WebP — keine Ascension-/WoW-BLP-Rahmen
+(DialogFrame, PaperDoll-Tabs, caCorner usw.). Aus Client-Extracts nur
+Spell-/Item-Icons (`sprite.webp` / `D.iic`). Details: `.cursor/rules/website-assets.mdc`.
+
 ### Aufbau der Oberfläche
 
 Fünf Ansichten, umgeschaltet über den Kopfbalken; nur eine ist gleichzeitig
@@ -164,6 +168,15 @@ Kopieren — für alle ohne Schlüssel.
 ## Fallen, die schon zugeschnappt sind
 
 Jede davon hat echte Zeit gekostet. Bitte nicht wiederholen.
+
+### Website-UI aus Client-BLP
+
+Die Seite baut ihr Chrome selbst (CSS, SVG, handgemachte Texturen).
+**Keine** eingebetteten Ascension-/WoW-**BLP**-Panelrahmen (DialogFrame,
+PaperDoll-Tabs, caCorner, UI-Frame-Kits) — auch nicht als WebP/PNG-Konvertierung.
+Erlaubt aus Client-Extracts: **nur** Spell-/Item-Icons über die bestehende
+Sprite-/`itemicons`-Pipeline. Sonst wirkt die Seite wie ein geklauter Client,
+und proprietäre UI-Kunst landet im öffentlichen Repo.
 
 ### Sprite
 
