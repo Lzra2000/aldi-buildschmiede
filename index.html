@@ -845,11 +845,17 @@ table.stat tr.dead td{color:var(--ink-faint)}
   });
 
   // ---------- Hilfen ----------
-  function iconStyle(i) {
+  // Der Versatz im Sprite haengt von der ANGEZEIGTEN Kachelgroesse ab,
+  // nicht von der Groesse im Bild. Wer background-size ueberschreibt, muss
+  // die Position mitskalieren - sonst zeigt der Ausschnitt ins Leere.
+  // Genau das war der Grund, warum die Icons in "Dein Build" fehlten.
+  function iconStyle(i, size) {
     var t = SPR.idx[i];
     if (t < 0) return "background:var(--sunken)";
-    var x = (t % SPR.cols) * SPR.tile, y = Math.floor(t / SPR.cols) * SPR.tile;
-    return "background-position:-" + x + "px -" + y + "px";
+    size = size || SPR.tile;
+    var x = (t % SPR.cols) * size, y = Math.floor(t / SPR.cols) * size;
+    return "background-position:-" + x + "px -" + y + "px;" +
+      "background-size:" + (SPR.cols * size) + "px auto";
   }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
@@ -983,7 +989,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
   function slotRow(i) {
     var r = CAT[i];
     return '<div class="slot"><span class="icon" style="width:20px;height:20px;flex:0 0 20px;' +
-      iconStyle(i) + ';background-size:' + (SPR.cols * 20) + 'px auto"></span>' +
+      iconStyle(i, 20) + '"></span>' +
       '<span class="nm" style="color:var(--q' + r[3] + ')" title="' + esc(r[5]) + '">' +
       esc(r[0]) + "</span>" +
       '<button data-rm="' + i + '" aria-label="Entfernen">×</button></div>';
@@ -2296,7 +2302,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
       list.map(function (x) {
         return '<div class="sug" data-add="' + x.i + '" role="button" tabindex="0">' +
           '<span class="icon" style="width:26px;height:26px;flex:0 0 26px;' +
-          iconStyle(x.i) + ';background-size:' + (SPR.cols * 26) + 'px auto"></span>' +
+          iconStyle(x.i, 26) + '"></span>' +
           '<span class="sugb"><span class="nm" style="color:var(--q' + CAT[x.i][3] +
           '">' + esc(CAT[x.i][0]) + "</span>" +
           '<span class="sugwhy">' + x.why + "</span></span>" +
@@ -2510,7 +2516,7 @@ table.stat tr.dead td{color:var(--ink-faint)}
             (stop ? " locked" : "") + '"' +
             (addable && !stop ? ' data-add="' + i + '" role="button" tabindex="0"' : "") + ">" +
             '<span class="icon" style="width:20px;height:20px;flex:0 0 20px;' +
-            iconStyle(i) + ";background-size:" + (SPR.cols * 20) + 'px auto"></span>' +
+            iconStyle(i, 20) + '"></span>' +
             '<span class="nm" style="color:var(--q' + CAT[i][3] + '">' +
             esc(CAT[i][0]) + "</span>" +
             (stop ? '<span class="stop">' + esc(stop) + "</span>"
