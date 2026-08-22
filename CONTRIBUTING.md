@@ -20,6 +20,10 @@ Bei Addon-Änderungen: `luac5.1 -p addon/AscBuildschmiede/*.lua`, dann `./script
 
 Einzeltests: `python tests/test_export_parse.py`, `python tests/test_data_sanity.py` (Node für Export-Harness). Optional: `python -m pytest tests/ -q`.
 
+## CI (GitHub Actions)
+
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) bei Push/PR auf **`main`**: Assemble, JS-Syntax, optional `luac`, Unittests. CI **deployt nicht** — Pages bleibt Root auf `main`.
+
 ## GitHub Pages
 
 Die Live-Seite kommt von **`main` am Repo-Root**. Ordner **`docs/`** ist Projektdoku (PACKAGE.md), **kein** Pages-Build.

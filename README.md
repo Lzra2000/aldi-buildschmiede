@@ -116,7 +116,26 @@ python -m unittest discover -s tests -v
 # optional: python -m pytest tests/ -q
 ```
 
-Fixtures: `data/testexport-*.txt`. Keine erfundenen Spell-Zahlen. CI (`.github/workflows/ci.yml`) führt die Suite mit aus.
+Fixtures: `data/testexport-*.txt`. Keine erfundenen Spell-Zahlen.
 
 Für Pages mitcommitten: `index.html`, `synergien.html`, bei Addon-Änderung `AscBuildschmiede.zip`.  
 Pipeline-Übersicht: [docs/PACKAGE.md](docs/PACKAGE.md). Regeln: [AGENTS.md](AGENTS.md) · Mitmachen: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Komplettpaket / Scripts
+
+Fertige Runner unter `scripts/` (Windows PowerShell + Unix-Shell) und ein `Makefile`. Details auch in [docs/PACKAGE.md](docs/PACKAGE.md).
+
+| Ziel | Windows | Unix / Git Bash | Make |
+|---|---|---|---|
+| Seite bauen (`assemble.py`) | `.\scripts\build.ps1` | `./scripts/build.sh` | `make build` |
+| Prüfen (JS-Syntax, optional `luac`) | `.\scripts\check.ps1` | `./scripts/check.sh` | `make check` / `make test` |
+| Datenpipeline (offline + optionale DBC) | `.\scripts\pipeline-all.ps1` | `./scripts/pipeline-all.sh` | `make pipeline` |
+| Addon: `luac` → Live-AddOns → Zip | `.\scripts\sync-addon.ps1` | `./scripts/package-addon.sh` | `make zip` (nur Zip) |
+
+**Pipeline-Reihenfolge:** `modifiers` → `pathtags` → `scaling` → `spellids` → `methods` → `spectags` → `desireelig` → `tagnames` → `itemicons` → `spellsuggest` → `statsuggest` → `sync_tooltips` (danach ggf. `scaling` erneut). Schritte mit fehlenden Inputs oder fehlendem Ascension-DBC-Pfad werden übersprungen, nicht abgebrochen.
+
+**Umgebung (optional):** `ASCENSION_DBC`, `ASCENSION_SPELL_DBC`, `ASCENSION_ADDONS`, `SEASON10_DIR`.
+
+Keine erfundenen Spell-Koeffizienten; Client-BLP nur für Spell-/Item-Icons über die bestehende Pipeline — kein UI-Chrome aus dem Client.

@@ -25,6 +25,7 @@ Pages: Branch `main`, Ordner `/`. Ohne Push der gebauten HTML-Dateien bleibt die
 | `tests/` | Daten-Sanity + Export-Parse (Python + Node-Harness) |
 | `Makefile` | Wrapper um `scripts/*.sh` |
 | `docs/` | Diese Übersicht (**nicht** Pages-Quelle) |
+| `.github/workflows/` | CI-Validierung (kein Pages-Deploy) |
 
 ## `scripts/`
 

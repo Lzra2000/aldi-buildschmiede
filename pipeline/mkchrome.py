@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Kuratiertes Ascension-UI-Chrome (CA / Wildcard / Dialog) + Item-Icons.
+"""Item-icon WebP enrichment ONLY — no UI chrome.
 
-Liest BLP aus dem lokalen Interface-Extract (nicht ins Repo), schreibt:
-  data/uichrome.css   — CSS-Variablen mit data:-WebP
-  data/itemicons.json — itemId -> {i, url} mit 32px-WebP
+Website rule (.cursor/rules/website-assets.mdc / AGENTS.md):
+  Own CSS/SVG/PNG/WebP for site chrome. Never embed Ascension/WoW BLP
+  (or BLP-converted) panel frames (DialogFrame, PaperDoll tabs, caCorner, …).
 
-Keine FrameXML/Lua — nur abgeleitete Texturen.
+This script used to write data/uichrome.css from Interface BLPs — REMOVED.
+Spell sprites stay in dbcicons.py / mksprite.py.
+Optional: enrich data/itemicons.json with 32px data:-WebP urls (allowed icons).
 """
 from __future__ import print_function
 
@@ -21,46 +23,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 EXTRACT = r"C:\Users\x\Documents\AscensionInterfaceExtract\by-archive"
-LOC = "enUS_locale-enUS.MPQ"
-PA = "patch-A.MPQ"
 
-# key, archive, relpath, resize (int|tuple|None), quality
-CHROME = [
-    # Spell / item slots (3.3.5 chrome — same as CA action buttons)
-    # slot = UI-EmptySlot: OPAQUE fill — only for empty paperdoll cells, NEVER as
-    # .icon::after overlay (covers sprite → white/gray squares). Use iframe/quick.
-    ("slot", LOC, r"Interface\BUTTONS\UI-EmptySlot.blp", 64, 80),
-    ("quick", LOC, r"Interface\BUTTONS\UI-Quickslot2.blp", 64, 80),
-    ("aborder", LOC, r"Interface\BUTTONS\UI-ActionButton-Border.blp", 64, 80),
-    ("dborder", LOC, r"Interface\BUTTONS\UI-Debuff-Border.blp", 64, 80),
-    ("iframe", PA, r"Interface\COMMON\WhiteIconFrame.blp", 64, 80),
-    ("goldicon", PA, r"Interface\Draft\goldiconborder.blp", 64, 82),
-    ("safeslot", PA,
-     r"Interface\AddOns\AwAddons\Textures\SafeSlots\SlotBorder_H.blp", 64, 80),
-    # Character Advancement window chrome
-    ("cacorner", PA, r"Interface\CharacterAdvancement\caCorner.blp", 32, 85),
-    ("goldc", PA, r"Interface\COMMON\GoldBorder-Corner-TL.blp", 32, 85),
-    ("goldtop", PA, r"Interface\COMMON\GoldBorder-Top.blp", None, 85),
-    ("goldleft", PA, r"Interface\COMMON\GoldBorder-Left.blp", None, 85),
-    # Dialog / tooltip panels (WoW 3.3.5 — Ascension still uses these)
-    ("dlgborder", LOC, r"Interface\DialogFrame\UI-DialogBox-Border.blp", None, 78),
-    ("dlgbg", LOC, r"Interface\DialogFrame\UI-DialogBox-Background.blp", 64, 70),
-    ("dlghead", LOC, r"Interface\DialogFrame\UI-DialogBox-Header.blp", (256, 32), 78),
-    ("tipborder", LOC, r"Interface\Tooltips\UI-Tooltip-Border.blp", None, 80),
-    ("tipbg", LOC, r"Interface\Tooltips\UI-Tooltip-Background.blp", 32, 70),
-    # Tabs + panel buttons
-    ("tabon", LOC, r"Interface\PaperDollInfoFrame\UI-Character-ActiveTab.blp",
-     (128, 32), 80),
-    ("taboff", LOC, r"Interface\PaperDollInfoFrame\UI-Character-InActiveTab.blp",
-     (128, 32), 80),
-    ("btnup", LOC, r"Interface\Buttons\UI-Panel-Button-Up.blp", (128, 32), 80),
-    ("btndown", LOC, r"Interface\Buttons\UI-Panel-Button-Down.blp", (128, 32), 80),
-    ("btnhi", LOC, r"Interface\Buttons\UI-Panel-Button-Highlight.blp",
-     (128, 32), 75),
-    # Brand / Wildcard flavour (small)
-    ("poa", PA, r"Interface\BUTTONS\PoAQuestIconBLP_Complete.blp", 48, 78),
-    ("scslot", PA, r"Interface\Draft\skillcardslot.blp", 64, 72),
-]
+ITEMICONS_WEBP_SOFT_MAX_KB = 380
 
 
 def find_icon_blp(name):
@@ -88,37 +52,7 @@ def to_webp_b64(path, size=None, quality=80):
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
-def write_uichrome():
-    lines = [
-        "/* Ascension CA/Wildcard chrome — mkchrome.py (Interface extract) */",
-        ":root{",
-    ]
-    total = 0
-    for key, archive, rel, size, quality in CHROME:
-        path = os.path.join(EXTRACT, archive, rel)
-        if not os.path.exists(path):
-            print("fehlt:", path)
-            continue
-        try:
-            b64 = to_webp_b64(path, size=size, quality=quality)
-        except Exception as exc:
-            print("skip", key, ":", exc)
-            continue
-        total += len(b64)
-        lines.append("  --chrome-%s:url(data:image/webp;base64,%s);" % (key, b64))
-        print("chrome", key, round(len(b64) / 1024.0, 1), "KB")
-    lines.append("}")
-    dest = os.path.join(DATA, "uichrome.css")
-    io.open(dest, "w", encoding="utf-8").write("\n".join(lines) + "\n")
-    print("geschrieben:", dest, "|", round(total / 1024.0, 1), "KB b64")
-
-
-# Soft-Cap: WebP pro Eintrag ~0.8 KB — unter assemble-Limit 512 KB bleiben.
-ITEMICONS_WEBP_SOFT_MAX_KB = 380
-
-
 def enrich_itemicons():
-    """Ergaenzt fehlende 32px-WebP-urls; behaelt cls/sub/inv; stoppt vor Soft-Cap."""
     src = os.path.join(DATA, "itemicons.json")
     raw = json.load(io.open(src, encoding="utf-8"))
     out = {}
@@ -140,10 +74,9 @@ def enrich_itemicons():
             out[iid] = entry
             ok += 1
             continue
-        # Budget: bestehende Datei + bisheriger out
         provisional = json.dumps(out, ensure_ascii=False, separators=(",", ":"))
         if len(provisional.encode("utf-8")) / 1024.0 > ITEMICONS_WEBP_SOFT_MAX_KB:
-            out[iid] = entry  # Name/Meta ohne url
+            out[iid] = entry
             skipped += 1
             continue
         path = find_icon_blp(name)
@@ -167,10 +100,12 @@ def enrich_itemicons():
 
 
 def main():
+    print("Hinweis: UI-Chrome aus BLP ist abgeschaltet "
+          "(website-assets.mdc). Nur Item-Icon-urls.")
     if not os.path.isdir(EXTRACT):
         print("Extract fehlt:", EXTRACT)
         return 1
-    enrich_itemicons()  # no UI chrome BLP
+    enrich_itemicons()
     return 0
 
 
