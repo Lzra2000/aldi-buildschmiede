@@ -54,8 +54,8 @@ Prefer running without stopping for permission:
 
 - `python` / `python3` pipeline scripts and `pipeline/assemble.py`
 - `node -e 'new Function(...)'` syntax check on `src/builder-app.js`
-- `luac5.1 -p addon/AscBuildschmiede/*.lua`
-- Live AddOns sync to `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\` + rebuild `AscBuildschmiede.zip` from `addon/`
+- `luac5.1 -p addon/AscBuildschmiede/*.lua` (or `C:\Program Files (x86)\Lua\5.1\luac.exe -p`)
+- **Addon immer syncen (every addon ship, no skip):** after **any** addon change — even one file — run luac, copy `addon/AscBuildschmiede/` → `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\`, rebuild `AscBuildschmiede.zip` (layout `AscBuildschmiede/...`). If the agent also touches `C:\Users\x\Projects\AscensionLFM`, sync that live folder + zip the same way (file copy only). Details: `.cursor/rules/addon-always-sync.mdc`. Never skip live sync “because we only changed one file.”
 - **Read-only** AscensionDBC / Interface extracts (API/DBC research)
 - Local `python -m http.server` for verify
 - **`git add` / `git commit` / `git push -u origin HEAD`** after every meaningful ship (user mandate: always auto-push; GitHub always up to date)
@@ -111,7 +111,7 @@ Empty commits: skip. If only unshippable scratch remains, leave it unstaged.
 ## AGENTS.md anchors
 
 - Export **FORMAT additive** (`BS.FORMAT` stays 1 unless old exports break)
-- After addon edits: `luac5.1 -p` → **live AddOns sync** → zip rebuild
+- After addon edits: **always** `luac5.1 -p` → **live AddOns sync** → zip rebuild (never skip; `.cursor/rules/addon-always-sync.mdc`)
 - Numbers: measure; don’t invent. Levelrun **and** L60/endgame are first-class; on conflict prefer both / UI modes — ethical calc RE: `.cursor/rules/ascension-calc-re.mdc`
 - After every ship: commit + push so `lzra2000/aldi-buildschmiede` stays current; Pages serves pushed `index.html` / `synergien.html`
 - Product German: correct grammar, **du**, short clear sentences — `.cursor/rules/german-language.mdc`

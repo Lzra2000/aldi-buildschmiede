@@ -1,0 +1,44 @@
+---
+description: Nach jeder Addon-Änderung zwingend luac, Live-AddOns-Sync und Zip — nie überspringen
+alwaysApply: true
+---
+
+# Addon immer syncen (User-Mandat)
+
+User mandate — **immer** befolgen, nicht nachfragen:
+
+**„addons immer syncen“**
+
+Nach **jeder** Addon-Änderung **zwingend** (auch bei einer Datei, auch wenn
+„schon aktuell“ wirkt). Nicht warten, bis jemand danach fragt.
+
+## Reihenfolge (Buildschmiede)
+
+1. `luac5.1 -p addon/AscBuildschmiede/*.lua`  
+   (falls `luac5.1` nicht auf PATH:  
+   `C:\Program Files (x86)\Lua\5.1\luac.exe -p`)
+2. Repo `addon/AscBuildschmiede/` →  
+   `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscBuildschmiede\`
+3. `AscBuildschmiede.zip` aus `addon/` neu bauen  
+   (Zip-Layout `AscBuildschmiede/...`)
+
+Skript: `scripts/sync-addon.ps1` (luac + Live + Zip). `-SkipLive` / `-SkipZip`
+nicht nutzen, außer der Live-Ordner fehlt wirklich.
+
+## AscensionLFM (wenn das Repo existiert)
+
+Wenn der Agent auch `C:\Users\x\Projects\AscensionLFM` anfasst **oder** LFM
+liegt nebenan und ein Ship läuft: dieselbe Kette — nur Dateikopie, keine
+Server-/Comms-Änderungen.
+
+1. `luac5.1 -p` auf die Addon-Lua (`core/`, `ui/`, Root)
+2. Live-Ordner syncen:  
+   `C:\Ascension\Launcher\resources\ascension-live\Interface\AddOns\AscensionLFM\`
+3. Zip neu bauen (Layout `AscensionLFM/...`)
+
+## Nie
+
+- Live-Sync überspringen, „weil nur eine Datei geändert wurde“
+- Nur Zip bauen und den Live-AddOns-Ordner stehen lassen
+- Nur luac prüfen und nicht kopieren
+- LFM-Server oder Comms anfassen — Sync ist reine Dateikopie
