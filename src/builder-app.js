@@ -248,6 +248,7 @@
     el.hits.textContent = total + " Treffer" +
       (total > rows.length ? " (" + rows.length + " gezeigt)" : "");
     el.list.innerHTML = rows.join("");
+    syncFiltMore();
   }
 
   function row(i, r) {
@@ -257,7 +258,7 @@
     var block = tooHigh(i) ? " lock" : (overBudget(i) && !picked[i] ? " lock" : "");
     return '<div class="row' + (picked[i] ? " picked" : block) + '" data-i="' + i + '" role="button" tabindex="0">' +
       '<span class="icon qf' + r[3] + '" style="width:32px;height:32px;flex:0 0 32px;' + iconStyle(i) + '"></span>' +
-      '<span class="body"><span class="nm" style="color:var(--q' + r[3] + ')">' + esc(r[0]) + "</span>" +
+      '<span class="body"><span class="nm q' + r[3] + '">' + esc(r[0]) + "</span>" +
       (a ? ' <span class="meta" style="color:var(--accent)">' + esc(a) + "</span>" : "") +
       (tr ? ' <span class="meta">' + esc(tr) + "</span>" : "") +
       (sug
@@ -297,6 +298,37 @@
   ["fKind", "fClass", "fTree", "fQual", "fDesire", "fScale", "fSort"].forEach(function (id) {
     if (el[id]) el[id].addEventListener("input", render);
   });
+
+  // Weitere Filter: aktive Nebenfilter sichtbar halten, auch wenn details zu ist.
+  function syncFiltMore() {
+    var ids = ["fSort", "fScale", "fQual"];
+    var n = 0;
+    ids.forEach(function (id) {
+      if (el[id] && el[id].value) n++;
+    });
+    var box = document.getElementById("filtMore");
+    var badge = document.getElementById("filtMoreN");
+    if (box) box.classList.toggle("active", n > 0);
+    if (badge) {
+      if (n) {
+        badge.hidden = false;
+        badge.textContent = " · " + n;
+      } else {
+        badge.hidden = true;
+        badge.textContent = "";
+      }
+    }
+  }
+  var filtReset = document.getElementById("filtMoreReset");
+  if (filtReset) {
+    filtReset.addEventListener("click", function (e) {
+      e.preventDefault();
+      ["fSort", "fScale", "fQual"].forEach(function (id) {
+        if (el[id]) el[id].value = "";
+      });
+      render();
+    });
+  }
 
   function toggle(i) {
     if (picked[i]) { delete picked[i]; }
@@ -341,9 +373,10 @@
     return '<div class="slot"><span class="icon qf' + r[3] +
       '" style="width:20px;height:20px;flex:0 0 20px;' +
       iconStyle(i, 20) + '"></span>' +
-      '<span class="nm" style="color:var(--q' + r[3] + ')" title="' + esc(r[5]) + '">' +
+      '<span class="nm q' + r[3] + '" title="' + esc(r[5]) + '">' +
       esc(r[0]) + "</span>" +
-      '<button data-rm="' + i + '" aria-label="Entfernen">×</button></div>';
+      '<button type="button" class="rm" data-rm="' + i +
+      '" aria-label="Entfernen">×</button></div>';
   }
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-rm]");
@@ -1385,7 +1418,9 @@
     var hd = document.getElementById("cC");
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Noch kein Charakter eingelesen.</div>';
+      box.innerHTML = '<div class="empty">Noch kein Charakter eingelesen. ' +
+        '<a href="#t=vTools">Import unter Werkzeuge</a> — im Spiel <code>/bs</code> ' +
+        "kopieren und einfügen.</div>";
       renderGearBox(null);
       return;
     }
@@ -2421,9 +2456,10 @@
         (use[q] > lim ? " over" : "") + '">' + use[q] + " / " + lim + "</span></div>");
     }
     if (!any) {
-      box.innerHTML = '<div class="qhint">Seltenheits-Budget unbekannt — importiere ' +
-        "deinen Charakter, dann wird hier mitgezählt. Im Spiel darfst du nicht " +
-        "beliebig viele Epics und Legendaries tragen.</div>";
+      box.innerHTML = '<div class="qhint">Seltenheits-Budget unbekannt — ' +
+        '<a href="#t=vTools">Charakter importieren</a> (<code>/bs</code>), dann wird ' +
+        "hier mitgezählt. Im Spiel darfst du nicht beliebig viele Epics und " +
+        "Legendaries tragen.</div>";
       return;
     }
     box.innerHTML = o.join("");
@@ -2580,7 +2616,7 @@
         return '<div class="sug" data-add="' + x.i + '" role="button" tabindex="0">' +
           '<span class="icon" style="width:26px;height:26px;flex:0 0 26px;' +
           iconStyle(x.i, 26) + '"></span>' +
-          '<span class="sugb"><span class="nm" style="color:var(--q' + CAT[x.i][3] +
+          '<span class="sugb"><span class="nm q' + CAT[x.i][3] +
           '">' + esc(CAT[x.i][0]) + "</span>" +
           '<span class="sugwhy">' + x.why + "</span></span>" +
           '<span class="sugadd">+</span></div>';
@@ -3640,13 +3676,20 @@
     mirror("cI", "cI2");
     mirror("cP", "cP2");
     var chip = document.getElementById("chipChar");
-    if (chip) {
-      chip.textContent = CHAR
+    var val = document.getElementById("chipCharVal");
+    var go = document.getElementById("chipImport");
+    var hint = document.getElementById("statusHint");
+    if (chip || val) {
+      var label = CHAR
         ? (CHAR.name || "importiert") + " · " + (CHAR.level || "?") +
           " · " + (CHAR.path || "?")
         : "kein Charakter";
-      chip.classList.toggle("set", !!CHAR);
+      if (val) val.textContent = label;
+      else if (chip) chip.textContent = label;
+      if (chip) chip.classList.toggle("set", !!CHAR);
     }
+    if (go) go.hidden = !!CHAR;
+    if (hint) hint.hidden = !!CHAR;
     var ci = document.getElementById("chipIssues");
     if (ci) {
       var t = (document.getElementById("cI") || {}).textContent || "";

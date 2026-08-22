@@ -24,12 +24,17 @@
 <div class="statusrow" aria-label="Build-Status">
   <div class="statusin">
     <div class="chips">
-      <span class="chip" id="chipChar" title="Importierter Charakter">kein Charakter</span>
+      <span class="chip num" id="chipChar" title="Importierter Charakter">
+        <i>CHAR</i><b id="chipCharVal">kein Charakter</b>
+      </span>
+      <a class="chip chip-go" id="chipImport" href="#t=vTools"
+        title="Addon /bs kopieren und unter Werkzeuge einfügen">Import</a>
       <span class="chip num"><i>ABI</i><b id="cA">0 / 30</b></span>
       <span class="chip num"><i>TAL</i><b id="cT">0 / 25</b></span>
       <span class="chip num" id="chipPath"><i>PATH</i><b id="cP">—</b></span>
       <span class="chip num warnable" id="chipIssues"><i>BEFUND</i><b id="cI">—</b></span>
     </div>
+    <p class="statushint" id="statusHint">Noch kein Export — <a href="#t=vTools">Werkzeuge → Import</a> mit <code>/bs</code>.</p>
   </div>
 </div>
 
@@ -59,8 +64,11 @@
             <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
           <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
           <select id="fTree" aria-label="Spec"><option value="">Alle Specs</option></select>
-          <details class="filtmore">
-            <summary>Weitere Filter</summary>
+          <select id="fDesire" aria-label="Desire-Board"><option value="">Desire egal</option>
+            <option value="1">Desire-fähig</option>
+            <option value="0">nicht Desire-fähig</option></select>
+          <details class="filtmore" id="filtMore">
+            <summary>Weitere Filter<span class="filtmore-n" id="filtMoreN" hidden></span></summary>
             <div class="filtmore-in">
               <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
                 <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
@@ -78,9 +86,8 @@
                 <option value="4">Legendary</option><option value="3">Epic</option>
                 <option value="2">Rare</option><option value="1">Uncommon</option>
                 <option value="0">Normal</option></select>
-              <select id="fDesire" aria-label="Desire-Board"><option value="">Desire egal</option>
-                <option value="1">Desire-fähig</option>
-                <option value="0">nicht Desire-fähig</option></select>
+              <button type="button" id="filtMoreReset" class="filtreset"
+                title="Sortierung, Skalierung und Qualität zurücksetzen">Zurücksetzen</button>
             </div>
           </details>
         </div>

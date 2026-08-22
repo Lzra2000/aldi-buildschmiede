@@ -27,6 +27,8 @@ PA = "patch-A.MPQ"
 # key, archive, relpath, resize (int|tuple|None), quality
 CHROME = [
     # Spell / item slots (3.3.5 chrome — same as CA action buttons)
+    # slot = UI-EmptySlot: OPAQUE fill — only for empty paperdoll cells, NEVER as
+    # .icon::after overlay (covers sprite → white/gray squares). Use iframe/quick.
     ("slot", LOC, r"Interface\BUTTONS\UI-EmptySlot.blp", 64, 80),
     ("quick", LOC, r"Interface\BUTTONS\UI-Quickslot2.blp", 64, 80),
     ("aborder", LOC, r"Interface\BUTTONS\UI-ActionButton-Border.blp", 64, 80),
@@ -168,8 +170,7 @@ def main():
     if not os.path.isdir(EXTRACT):
         print("Extract fehlt:", EXTRACT)
         return 1
-    write_uichrome()
-    enrich_itemicons()
+    enrich_itemicons()  # no UI chrome BLP
     return 0
 
 

@@ -99,15 +99,9 @@ def main():
     body = read(os.path.join(SRC, "builder-body.html"))
     js = read(os.path.join(SRC, "builder-app.js"))
 
-    chrome_css = ""
-    chrome_path = os.path.join(DATA, "uichrome.css")
-    if os.path.exists(chrome_path):
-        chrome_css = read(chrome_path)
-
     out = []
     out.append(head)
-    if chrome_css:
-        out.append("<style>\n" + chrome_css + "</style>")
+    # Spell sprite only — UI chrome is CSS in builder-head (no BLP panel frames).
     out.append("<style>.icon{background-image:url(data:image/webp;base64,"
                + sprite_b64 + ")}</style>")
     out.append(body)
@@ -126,27 +120,17 @@ def main():
     print("Groesse:", round(len(html.encode("utf-8")) / 1024 / 1024, 2), "MB")
     print("  Katalog:", len(payload["cat"]),
           "| Sprite:", round(len(sprite_b64) / 1024), "KB base64")
-    if chrome_css:
-        print("  UI-Chrome:", round(len(chrome_css.encode("utf-8")) / 1024, 1), "KB")
     if opt_note:
         print("  Optional:", ", ".join(opt_note))
 
-    # Synergiekompendium: Quelle + Ascension-Chrome (gleiche Assets wie index).
+    # Synergiekompendium: CSS-only chrome (no BLP UI frames).
     syn_src = os.path.join(SRC, "synergien-source.html")
     syn_dest = os.path.join(ROOT, "synergien.html")
     if not os.path.exists(syn_src):
         raise SystemExit("fehlt: src/synergien-source.html")
-    syn_html = read(syn_src)
-    chrome_block = ""
-    if chrome_css:
-        chrome_block = "<style>\n" + chrome_css + "</style>"
-    if "<!-- uichrome -->" in syn_html:
-        syn_html = syn_html.replace("<!-- uichrome -->", chrome_block, 1)
-    elif chrome_block:
-        syn_html = syn_html.replace("<style>", chrome_block + "\n<style>", 1)
+    syn_html = read(syn_src).replace("<!-- uichrome -->", "", 1)
     io.open(syn_dest, "w", encoding="utf-8").write(syn_html)
-    print("Geschrieben:", syn_dest,
-          "| Chrome:", "ja" if chrome_css else "nein")
+    print("Geschrieben:", syn_dest)
 
 
 if __name__ == "__main__":

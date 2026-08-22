@@ -1,8 +1,13 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Synergiekompendium für Project Ascension Season 10 Wildcard: Dubletten, Modifier-Vererbung, Trigger-Ketten und Budgetregeln für Level 10–59.">
 <title>Wildcard Synergiekompendium</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;700&display=swap">
-<!-- uichrome -->
 <style>
 /*
   ASCENSION CA / WILDCARD TOKEN BLOCK — share with builder-head.html
@@ -16,7 +21,7 @@
   --good --good-soft  live / ok
   --q0…--q4  WoW quality (Normal→Legendary)
   --atm-a --atm-b  forge washes
-  --chrome-*  data/uichrome.css via assemble (slot/dialog/tab/button)
+  Chrome: CSS-only — no client BLP panel frames.
   School hues (--fire…--physical) are Synergien-only.
 */
 :root{
@@ -105,7 +110,7 @@ code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); pa
   background:linear-gradient(180deg,var(--raised),var(--sunken));
   border-bottom:1px solid var(--rule)}
 .topbar::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
-  background:var(--chrome-goldtop,none) repeat-x center/auto 2px;opacity:.7;pointer-events:none}
+  background:transparent repeat-x center/auto 2px;opacity:.7;pointer-events:none}
 .topbar::after{content:"";display:block;height:3px;
   background:linear-gradient(90deg,var(--gold-hi) 0%,var(--ember) 22%,var(--gold) 40%,transparent 70%)}
 .tbin{max-width:1180px;margin:0 auto;padding:0 clamp(12px,2.4vw,28px);
@@ -116,7 +121,7 @@ code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); pa
 .brand:hover .btext b{color:var(--gold-hi)}
 .bmark{
   width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;
-  background:var(--chrome-poa,none) center/cover no-repeat,var(--accent);
+  background:transparent;,var(--accent);
   color:var(--accent-ink);font-family:"Archivo Black",sans-serif;
   font-size:13px;letter-spacing:.02em;border:1px solid var(--gold);
   box-shadow:0 0 0 1px var(--stone), inset 0 0 8px rgba(0,0,0,.35);
@@ -131,13 +136,13 @@ code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); pa
   letter-spacing:.07em;color:var(--ink-faint);margin-top:3px}
 .prodnav{display:flex;gap:0;align-items:flex-end;margin-left:auto}
 .prodnav a{
-  background:var(--chrome-taboff,none) center bottom/100% 100% no-repeat;
+  background:transparent center bottom/100% 100% no-repeat;
   background-color:transparent;border:0;border-bottom:2px solid transparent;
   padding:18px 14px 14px;font-family:"JetBrains Mono",monospace;font-size:12px;
   font-weight:700;color:var(--ink-soft);text-decoration:none;white-space:nowrap;
   transition:color var(--dur-chip),filter var(--dur-chip)}
 .prodnav a:hover{color:var(--ink);filter:brightness(1.1)}
-.prodnav a.on{color:var(--gold-hi);background-image:var(--chrome-tabon,none);
+.prodnav a.on{color:var(--gold-hi);
   border-bottom-color:var(--gold)}
 .prodnav a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
@@ -152,23 +157,33 @@ code{font-size:.92em; background:var(--sunken); border:1px solid var(--rule); pa
 
 .limits{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:26px 0}
 .limit{
-  background-color:var(--raised);background-image:var(--chrome-dlgbg,none);background-size:64px 64px;
-  border:8px solid transparent;border-image:var(--chrome-dlgborder,none) 32 fill stretch;
+  background-color:var(--raised);background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
   padding:14px 16px;box-shadow:0 4px 16px var(--edge);position:relative}
 .limit .n{font-family:"Archivo Black",sans-serif;font-size:32px;line-height:1;display:block;
   font-variant-numeric:tabular-nums;color:var(--gold-hi)}
 .limit .l{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
   color:var(--ink-faint);margin-top:6px;display:block}
 
-/* ---------- toc nav ---------- */
-nav{align-self:start}
-@media(min-width:1000px){nav{position:sticky;top:86px}}
-nav ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-@media(min-width:1000px){nav ol{display:block}}
-nav a{display:block;padding:6px 0;font-family:"JetBrains Mono",monospace;font-size:12px;
+/* ---------- toc nav (CA dialog chrome, mirrors builder panel) ---------- */
+.toc{align-self:start}
+@media(min-width:1000px){.toc{position:sticky;top:86px}}
+.toc-box{
+  background-color:var(--raised);background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
+  box-shadow:0 4px 16px var(--edge);padding:10px 12px 12px;position:relative}
+.toc-box::before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:3px;
+  background:linear-gradient(180deg,var(--gold-hi),var(--ember));pointer-events:none}
+.toc-hd{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
+  color:var(--gold);font-weight:700;margin:0 0 8px 8px}
+.toc ol{list-style:none;margin:0;padding:0 0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px}
+@media(min-width:1000px){.toc ol{display:block}}
+.toc a{display:block;padding:6px 0;font-family:"JetBrains Mono",monospace;font-size:12px;
   color:var(--ink-soft);text-decoration:none;border-bottom:1px solid transparent;
   transition:color var(--dur-chip),border-color var(--dur-chip)}
-nav a:hover,nav a:focus-visible{color:var(--gold-hi);border-bottom-color:var(--gold)}
+.toc a:hover,.toc a:focus-visible{color:var(--gold-hi);border-bottom-color:var(--gold)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ---------- sections ---------- */
 section{padding:52px 0;border-bottom:1px solid var(--rule-soft)}
@@ -187,8 +202,8 @@ section > p:first-of-type{margin-top:18px}
 .schools{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin:26px 0 0}
 .school{
   position:relative;background-color:var(--raised);
-  background-image:var(--chrome-dlgbg,none);background-size:64px 64px;
-  border:8px solid transparent;border-image:var(--chrome-dlgborder,none) 32 fill stretch;
+  background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
   box-shadow:0 4px 16px var(--edge);padding:12px 14px}
 .school{box-shadow:0 4px 16px var(--edge), inset 4px 0 0 var(--c)}
 .school .name{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;color:var(--c);display:block}
@@ -197,8 +212,8 @@ section > p:first-of-type{margin-top:18px}
 
 .chain{
   position:relative;background-color:var(--raised);
-  background-image:var(--chrome-dlgbg,none);background-size:64px 64px;
-  border:8px solid transparent;border-image:var(--chrome-dlgborder,none) 32 fill stretch;
+  background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
   padding:14px 16px;margin:14px 0;box-shadow:0 4px 16px var(--edge)}
 .chain::before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:3px;
   background:linear-gradient(180deg,var(--gold-hi),var(--ember));z-index:1}
@@ -207,15 +222,15 @@ section > p:first-of-type{margin-top:18px}
   position:relative;background:var(--sunken);border:1px solid var(--rule);padding:5px 10px;
   box-shadow:inset 0 0 0 1px var(--panel-glow)}
 .node::after{content:"";position:absolute;inset:-3px;pointer-events:none;
-  background:var(--chrome-slot,none) center/contain no-repeat;opacity:.55}
+  background:transparent;opacity:.7}
 .node.src{border-color:var(--gold);color:var(--gold-hi);background:var(--accent-soft)}
 .arrow{color:var(--ink-faint);font-size:14px}
 .chain p{margin:0;font-size:15px;color:var(--ink-soft);max-width:none}
 
 .tbl-wrap{
   overflow-x:auto;margin:20px 0;position:relative;
-  background-color:var(--raised);background-image:var(--chrome-dlgbg,none);background-size:64px 64px;
-  border:8px solid transparent;border-image:var(--chrome-dlgborder,none) 32 fill stretch;
+  background-color:var(--raised);background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
   box-shadow:0 4px 16px var(--edge)}
 table{border-collapse:collapse;width:100%;min-width:560px;background:transparent}
 th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule-soft);font-size:14px}
@@ -232,36 +247,41 @@ tr:last-child td{border-bottom:none}
 
 .note{
   position:relative;border:6px solid transparent;
-  border-image:var(--chrome-tipborder,none) 8 fill stretch;
-  background:var(--chrome-tipbg,var(--accent-soft)) center/cover,var(--accent-soft);
-  padding:16px 20px;margin:24px 0;box-shadow:0 4px 16px var(--edge)}
+  border:1px solid var(--rule);
+  background:var(--accent-soft) center/cover,var(--accent-soft);
+  padding:16px 20px 16px 22px;margin:24px 0;box-shadow:0 4px 16px var(--edge)}
+.note::before{content:"";position:absolute;left:6px;top:10px;bottom:10px;width:3px;
+  background:linear-gradient(180deg,var(--gold-hi),var(--ember));pointer-events:none}
 .note.warn{background:var(--warn-soft)}
+.note.warn::before{background:linear-gradient(180deg,var(--ember),var(--gold))}
 .note.good{background:var(--good-soft)}
+.note.good::before{background:linear-gradient(180deg,var(--good),var(--gold-hi))}
 .note p{margin:0;max-width:none}
 .note p+p{margin-top:10px}
 .note .hd{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
-  margin-bottom:7px;font-weight:700;color:var(--gold)}
+  margin:0 0 7px;font-weight:700;color:var(--gold)}
 .note.warn .hd{color:var(--ember)}
 .note.good .hd{color:var(--good)}
 a.cta{
   display:inline-block;color:var(--accent-ink);text-decoration:none;margin-top:14px;
   font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
   padding:10px 16px;border:1px solid var(--gold);
-  background:var(--chrome-btnup,var(--accent)) center/100% 100% no-repeat;
+  background:var(--accent) center/100% 100% no-repeat;
   background-color:var(--accent);box-shadow:inset 0 0 0 1px var(--gold);
   transition:filter var(--dur-chip)}
 a.cta:hover{filter:brightness(1.08);color:var(--accent-ink);
-  background-image:var(--chrome-btnhi,none),var(--chrome-btnup,none)}
+  background-image:transparent,transparent}
+a.cta:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
 .cols{display:grid;grid-template-columns:1fr;gap:26px;margin-top:24px}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
 .col{
   position:relative;background-color:var(--raised);
-  background-image:var(--chrome-dlgbg,none);background-size:64px 64px;
-  border:8px solid transparent;border-image:var(--chrome-dlgborder,none) 32 fill stretch;
+  background-size:64px 64px;
+  border:8px solid transparent;border:1px solid var(--rule);
   padding:14px 16px;box-shadow:0 4px 16px var(--edge)}
 .col::after{content:"";position:absolute;right:10px;top:10px;width:14px;height:14px;
-  background:var(--chrome-cacorner,none) center/contain no-repeat;opacity:.55;pointer-events:none}
+  background:transparent;opacity:.55;pointer-events:none}
 .col h3{margin-top:0;color:var(--gold-hi)}
 .col ul{list-style:none;margin:0;padding:0}
 .col li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;
@@ -287,10 +307,12 @@ a.cta:focus-visible,nav a:focus-visible,.brand:focus-visible{
 .skip:focus,.skip:focus-visible{transform:translateY(12px);outline-offset:3px}
 .startnote{
   margin:18px 0 0;padding:12px 14px;max-width:66ch;
-  background:var(--accent-soft);border:1px solid var(--accent);
-  font-size:15px;color:var(--ink);line-height:1.45}
+  background:var(--accent-soft);border:1px solid var(--gold);
+  font-size:15px;color:var(--ink);line-height:1.45;
+  box-shadow:inset 3px 0 0 var(--gold)}
 .startnote a{font-family:"JetBrains Mono",monospace;font-weight:700;
-  color:var(--accent);text-decoration:underline}
+  color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)}
+.startnote a:hover{color:var(--gold-hi);border-bottom-color:var(--gold-hi)}
 @media(max-width:560px){
   .tbin{min-height:0;padding-top:10px;padding-bottom:10px;gap:10px}
   .bmark{width:36px;height:36px;flex-basis:36px}
@@ -303,12 +325,14 @@ a.cta:focus-visible,nav a:focus-visible,.brand:focus-visible{
 }
 
 </style>
+</head>
+<body>
 
 <a class="skip" href="#main">Zum Inhalt springen</a>
 <header class="topbar">
   <div class="tbin">
-    <a class="brand" href="index.html" title="Zur Buildschmiede">
-      <span class="bmark" aria-hidden="true"><span class="bmark-txt">AE</span></span>
+    <a class="brand" href="index.html" aria-label="Zur Buildschmiede — Aldi Ehrfürchtig">
+      <span class="bmark" aria-hidden="true" title="Aldi Ehrfürchtig"><span class="bmark-txt">AE</span></span>
       <span class="btext">
         <em class="bguild">Aldi Ehrfürchtig</em>
         <b>Synergiekompendium</b>
@@ -322,7 +346,7 @@ a.cta:focus-visible,nav a:focus-visible,.brand:focus-visible{
   </div>
 </header>
 
-<div class="wrap" id="main" tabindex="-1">
+<main class="wrap" id="main" tabindex="-1">
   <header class="mast">
     <p class="kicker">Project Ascension · Season 10 Wildcard</p>
     <h1>Wildcard Synergiekompendium</h1>
@@ -333,31 +357,34 @@ a.cta:focus-visible,nav a:focus-visible,.brand:focus-visible{
   </header>
 
   <div class="layout">
-    <nav aria-label="Inhalt">
-      <ol>
-        <li><a href="#budget">01 · Das Budget</a></li>
-        <li><a href="#schulen">02 · Die sechs Schulen</a></li>
-        <li><a href="#dubletten">03 · Dubletten-Fallen</a></li>
-        <li><a href="#modifier">04 · Modifier-Vererbung</a></li>
-        <li><a href="#gates">05 · Harte Sperren</a></li>
-        <li><a href="#ketten">06 · Trigger-Ketten</a></li>
-        <li><a href="#schaden">07 · Schadens-Skalierung</a></li>
-        <li><a href="#heilung">08 · Heilungs-Skalierung</a></li>
-        <li><a href="#beispiel">09 · Beispiel: Shuriken</a></li>
-        <li><a href="#builder">→ Buildschmiede</a></li>
-      </ol>
+    <nav class="toc" aria-labelledby="toc-hd">
+      <div class="toc-box">
+        <p class="toc-hd" id="toc-hd">Inhalt</p>
+        <ol>
+          <li><a href="#budget">01 · Das Budget</a></li>
+          <li><a href="#schulen">02 · Die sechs Schulen</a></li>
+          <li><a href="#dubletten">03 · Dubletten-Fallen</a></li>
+          <li><a href="#modifier">04 · Modifier-Vererbung</a></li>
+          <li><a href="#gates">05 · Harte Sperren</a></li>
+          <li><a href="#ketten">06 · Trigger-Ketten</a></li>
+          <li><a href="#schaden">07 · Schadens-Skalierung</a></li>
+          <li><a href="#heilung">08 · Heilungs-Skalierung</a></li>
+          <li><a href="#beispiel">09 · Beispiel: Shuriken</a></li>
+          <li><a href="#builder">→ Buildschmiede</a></li>
+        </ol>
+      </div>
     </nav>
 
-    <main>
+    <div class="content">
       <section id="budget">
         <h2><span class="num">01</span>Das Budget ist die eigentliche Mechanik</h2>
         <p class="lede">Jede Entscheidung in diesem System ist eine Verdrängungsentscheidung.
           Nicht „ist das gut?“, sondern „ist das besser als das, was dafür rausfliegt?“</p>
-        <div class="limits">
-          <div class="limit"><span class="n">30</span><span class="l">Abilities</span></div>
-          <div class="limit"><span class="n">25</span><span class="l">Talente</span></div>
-          <div class="limit"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
-          <div class="limit"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
+        <div class="limits" role="list" aria-label="Budgetgrenzen">
+          <div class="limit" role="listitem"><span class="n">30</span><span class="l">Abilities</span></div>
+          <div class="limit" role="listitem"><span class="n">25</span><span class="l">Talente</span></div>
+          <div class="limit" role="listitem"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
+          <div class="limit" role="listitem"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
         </div>
         <p>Der Katalog enthält 1.321 Spells und 1.750 Talente. Du nimmst 30 und 25 mit. Alles,
           was du an Redundanz mitschleppst — zwei Fähigkeiten, die dasselbe tun, ein Talent ohne
