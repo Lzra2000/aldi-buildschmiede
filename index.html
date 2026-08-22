@@ -3555,16 +3555,22 @@ table.stat tr.dead td{color:var(--ink-faint)}
       var raw = localStorage.getItem(STORE);
       if (!raw) return false;
       var d = JSON.parse(raw);
+      var any = false;
+      // Erst den Charakter: der bringt Stufe, Path und Budget zurueck und
+      // setzt dabei auch die Auswahl aus dem Export.
       if (d.c) {
         var p = parseExport(d.c);
         if (p) {
           document.getElementById("pasteBox").value = d.c;
           applyImport(p);
-          document.getElementById("impPanel").open = false;
-          return true;
+          any = true;
         }
       }
-      if (d.b) { decode(d.b); return true; }
+      // Dann die gespeicherte Auswahl darueber. Ohne diesen Schritt kam
+      // nach jedem Neuladen der importierte Build zurueck statt des
+      // bearbeiteten - alle Aenderungen waeren still verloren gewesen.
+      if (d.b) { decode(d.b); any = true; }
+      return any;
     } catch (e) { /* kaputter Eintrag: ignorieren */ }
     return false;
   }
