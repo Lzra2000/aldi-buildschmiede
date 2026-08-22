@@ -106,7 +106,7 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | — | `catalog.json` | Season10Builder-Repo | nein |
 | — | `relations.json` | ebd. | nein |
 | — | `archetypes.json`, `cdgroups.json` | ebd. | nein |
-| `modifiers.py` | `basemods.json` | `catalog.json` | nein |
+| `modifiers.py` | `basemods.json`, `usesbase.json` | `catalog.json` + `relations.json` (+ Text „uses X modifiers“) | nein |
 | `pathtags.py` | `pathtags.json` | `catalog.json` | nein |
 | `scaling.py` | `scaling.json` | `catalog.json` | nein |
 | `spellids.py` | `spellids.json` | `data/CatalogData.lua` | nein |
@@ -130,6 +130,9 @@ Testexport- + Seed-/Levelrun-Ids; Einbettung nur wenn Datei ≤ 512 KB —
 kein Vollscan von Item.dbc),
 `ilb` ← `ilvlbands.json` (Stufen-Perzentilbänder — `pipeline/NOTES-ilvl.md`),
 `wpn` ← `weapons.json` (kompakte Waffen-Evidence je Seed-itemId; ergänzt `ilb`).
+
+Kern-Payload zusätzlich: `bm` ← `basemods.json`, `ub` ← `usesbase.json`
+(Variante→Basis aus Katalogtext „uses X modifiers“ — `pipeline/NOTES-basemods.md`).
 
 `mechanics.json` (Kern-Payload `mc`): pro Katalogindex u. a. `cd`/`cast`/`cost`/`res`/
 `dur`/`range`/`proc`; Ascension-Charges wenn vorhanden: **`ch`** (max. Ladungen),
@@ -359,11 +362,11 @@ Zeilenbasiert, Felder mit `|`, Listen mit `;`. Der Parser in
 `builder-app.js` (`parseExport`) ist **absichtlich nachsichtig**:
 unbekannte Zeilen werden übersprungen, nicht abgelehnt. Ein neues Feld im
 Addon bricht also keine ältere Seite. `BS.FORMAT` bleibt **1** (additiv);
-Addon-Version aktuell **1.5.6**. Manuelle Testexporte: `data/testexport-*.txt`.
+Addon-Version aktuell **1.5.7**. Manuelle Testexporte: `data/testexport-*.txt`.
 
 ```
 === BUILDSCHMIEDE v1 ===
-ADDON|1.5.6
+ADDON|1.5.7
 CHAR|Name|Level|Rasse|Klasse
 PATH|Intelligence
 PATHINFO|spellId|icon|name
@@ -393,7 +396,7 @@ ABI|Name#spellId@entryId;…
 TAL|Name:Rang#spellId@entryId;…
 COUNT|A:10|T:8
 CODE|<ExportBuild-Code>
-SCARD|DEFAULT_NORMAL:cardId@0:q3:A;…
+SCARD|DEFAULT_NORMAL:cardId@0:q3:A:sSPELLID;…
 CARDED|sid;sid
 SCARDPEND|n
 INSPECT|1            (nur bei /bs target)
