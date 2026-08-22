@@ -94,17 +94,34 @@ ist schlimmer als eine fehlende.
 erlaubt sind nur Google Fonts. Kein CDN, kein Fetch, keine externen Bilder.
 Alles wird eingebettet.
 
-### Kein Sprachmodell in der Seite
+### KI-Anbindung: der Schlüssel gehört dem Nutzer
 
-Die Buildschmiede ruft bewusst kein Modell auf. Dafuer muesste ein
-API-Schluessel in `index.html` stehen — einer oeffentlich ausgelieferten
-Datei. Stattdessen baut `buildPrompt()` einen vollstaendigen Prompt
-(Charakterwerte, Build mit allen Zahlen, die Ascension-Regeln, konkrete
-Fragen), den der Nutzer selbst in ein Modell einfuegt.
+Die Seite ruft Sprachmodelle direkt auf (Reiter **KI**), aber **niemals mit
+einem Schlüssel aus dieser Datei.** `index.html` wird öffentlich
+ausgeliefert; ein Schlüssel darin wäre binnen Stunden abgegrast und liefe
+auf fremde Rechnung. Stattdessen:
 
-Wer das aendern will: der Schluessel gehoert dann in einen kleinen Proxy
-mit Rate-Limit, nie in die Seite. Und die Seite muss ohne den Proxy
-weiterlaufen — sie liegt auf GitHub Pages und soll offline funktionieren.
+- Jeder Nutzer trägt seinen eigenen Schlüssel einmal ein, er landet im
+  `localStorage` **seines** Browsers (`aldi-buildschmiede-ai`).
+- Der Schlüssel geht ausschließlich als Header an den gewählten Anbieter,
+  nie in den Request-Body und an keine dritte Stelle. Beim Ändern bitte
+  nachmessen, nicht annehmen: `fetch` abfangen und prüfen, wohin was geht.
+- Zwei Anbieter sind hinterlegt (`PROVIDERS`), Anthropic und OpenAI. Ein
+  neuer braucht `url`, `headers()`, `body()` und `read()` — sonst nichts.
+- Anthropic verlangt für Browseraufrufe den Header
+  `anthropic-dangerous-direct-browser-access: true`.
+
+**Im Claude-Artifact funktioniert das nicht** — dort sperrt die CSP externe
+Aufrufe. Das ist kein Fehler, und der Fehlerpfad sagt es dem Nutzer und
+verweist auf GitHub Pages. Nicht „reparieren".
+
+Weil kein Modell 3.071 Einträge im Prompt lesen kann, macht der Code die
+Vorauswahl: `aiShortlist()` filtert auf 120 Kandidaten nach derselben
+Bewertung wie der Generator, das Modell entscheidet daraus. Wer die Zahl
+erhöht, treibt Kosten und Halluzinationsrisiko gleichzeitig hoch.
+
+`buildPrompt()` bleibt daneben bestehen und liefert denselben Inhalt zum
+Kopieren — für alle ohne Schlüssel.
 
 ---
 

@@ -70,32 +70,41 @@
       </div>
 
       <div class="panel">
+        <div class="panel-hd"><h2>AUSWERTUNG</h2></div>
         <div class="tabbar" role="tablist">
           <button class="tab on" data-tab="tPath" role="tab">Path<span
             class="cnt" id="cP">—</span></button>
           <button class="tab" data-tab="tIssues" role="tab">Befund<span
             class="cnt" id="cI">—</span></button>
-          <button class="tab" data-tab="tGen" role="tab">Generator</button>
           <button class="tab" data-tab="tStat" role="tab">Stat-Prio<span
             class="cnt" id="cB">—</span></button>
-          <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
-            class="cnt" id="cV">—</span></button>
           <button class="tab" data-tab="tScale" role="tab">Skalierung<span
             class="cnt" id="cS">—</span></button>
           <button class="tab" data-tab="tFlags" role="tab">Analyse<span
             class="cnt" id="cF">—</span></button>
+        </div>
+        <div class="tabp on" id="tPath"><div id="paths"></div></div>
+        <div class="tabp" id="tIssues"><div id="issues"></div></div>
+        <div class="tabp" id="tStat"><div id="statbox"></div></div>
+        <div class="tabp" id="tScale"><div id="scalebox"></div></div>
+        <div class="tabp" id="tFlags"><div id="flags"></div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd"><h2>WERKZEUGE</h2></div>
+        <div class="tabbar" role="tablist">
+          <button class="tab on" data-tab="tAI" role="tab">KI</button>
+          <button class="tab" data-tab="tGen" role="tab">Generator</button>
+          <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
+            class="cnt" id="cV">—</span></button>
           <button class="tab" data-tab="tArch" role="tab">Archetypen</button>
           <button class="tab" data-tab="tCmp" role="tab">Vergleich<span
             class="cnt" id="cX">—</span></button>
           <button class="tab" data-tab="tShare" role="tab">Teilen</button>
         </div>
-        <div class="tabp on" id="tPath"><div id="paths"></div></div>
-        <div class="tabp" id="tIssues"><div id="issues"></div></div>
+        <div class="tabp on" id="tAI"><div id="aibox"></div></div>
         <div class="tabp" id="tGen"><div id="genbox"></div></div>
-        <div class="tabp" id="tStat"><div id="statbox"></div></div>
         <div class="tabp" id="tSug"><div id="sugbox"></div></div>
-        <div class="tabp" id="tScale"><div id="scalebox"></div></div>
-        <div class="tabp" id="tFlags"><div id="flags"></div></div>
         <div class="tabp" id="tArch"><div id="archbox"></div></div>
         <div class="tabp" id="tCmp">
           <div class="pastewrap">

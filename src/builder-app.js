@@ -1999,6 +1999,311 @@
     return L.join("\n");
   }
 
+  // ---------- KI-Anbindung ----------
+  // Der Schluessel liegt im localStorage des jeweiligen Browsers und wird
+  // ausschliesslich an den gewaehlten Anbieter geschickt. Er steht NICHT
+  // in dieser Datei - die liegt oeffentlich auf GitHub Pages, ein Schluessel
+  // darin waere binnen Stunden abgegrast und liefe auf fremde Rechnung.
+  // Jeder traegt seinen eigenen ein, einmal.
+
+  var AISTORE = "aldi-buildschmiede-ai";
+
+  var PROVIDERS = {
+    anthropic: {
+      n: "Anthropic (Claude)",
+      url: "https://api.anthropic.com/v1/messages",
+      model: "claude-sonnet-4-5",
+      keyHint: "sk-ant-…",
+      keyUrl: "https://console.anthropic.com/settings/keys",
+      headers: function (key) {
+        return {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          // Ohne diesen Header lehnt die API Aufrufe aus dem Browser ab.
+          "anthropic-dangerous-direct-browser-access": "true"
+        };
+      },
+      body: function (model, sys, user) {
+        return JSON.stringify({
+          model: model, max_tokens: 2000,
+          system: sys,
+          messages: [{ role: "user", content: user }]
+        });
+      },
+      read: function (j) {
+        return (j.content || []).map(function (c) { return c.text || ""; }).join("");
+      }
+    },
+    openai: {
+      n: "OpenAI (GPT)",
+      url: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4o-mini",
+      keyHint: "sk-…",
+      keyUrl: "https://platform.openai.com/api-keys",
+      headers: function (key) {
+        return { "content-type": "application/json", "authorization": "Bearer " + key };
+      },
+      body: function (model, sys, user) {
+        return JSON.stringify({
+          model: model, max_tokens: 2000,
+          messages: [{ role: "system", content: sys },
+                     { role: "user", content: user }]
+        });
+      },
+      read: function (j) {
+        return ((j.choices || [])[0] || {}).message
+          ? j.choices[0].message.content : "";
+      }
+    }
+  };
+
+  function aiCfg() {
+    try {
+      var raw = localStorage.getItem(AISTORE);
+      var d = raw ? JSON.parse(raw) : {};
+      if (!PROVIDERS[d.provider]) d.provider = "anthropic";
+      if (!d.model) d.model = PROVIDERS[d.provider].model;
+      return d;
+    } catch (e) { return { provider: "anthropic", model: PROVIDERS.anthropic.model }; }
+  }
+  function aiSave(d) {
+    try { localStorage.setItem(AISTORE, JSON.stringify(d)); } catch (e) { /* egal */ }
+  }
+
+  var SYSTEM = "Du bist ein erfahrener Spieler von Project Ascension, " +
+    "Season 10 Wildcard (WoW 3.3.5a, klassenlos). Du bekommst echte, " +
+    "gemessene Daten aus dem Spielclient. Halte dich strikt daran und " +
+    "erfinde keine Fähigkeiten, Zahlen oder Mechaniken. Wenn dir eine " +
+    "Information fehlt, sag das. Antworte auf Deutsch, knapp und konkret, " +
+    "in Markdown. Nenne Fähigkeiten immer beim exakten Namen.";
+
+  function aiOut(html) {
+    document.getElementById("aiout").innerHTML = html;
+  }
+  // Minimales Markdown - genug fuer Ueberschriften, Listen und Fettdruck.
+  function mdLite(s) {
+    var out = esc(s)
+      .replace(/^### (.*)$/gm, "<h4>$1</h4>")
+      .replace(/^## (.*)$/gm, "<h4>$1</h4>")
+      .replace(/^# (.*)$/gm, "<h4>$1</h4>")
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/^\s*[-*] (.*)$/gm, "<li>$1</li>")
+      .replace(/^\s*(\d+)\. (.*)$/gm, "<li>$2</li>");
+    out = out.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g, "<ul>$1</ul>");
+    return out.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
+  }
+
+  var aiBusy = false;
+  function aiAsk(userText, label) {
+    if (aiBusy) return;
+    var cfg = aiCfg();
+    if (!cfg.key) {
+      aiOut('<div class="aiwarn">Kein Schlüssel hinterlegt. Trag oben einen ' +
+        "ein — er bleibt in deinem Browser.</div>");
+      return;
+    }
+    var P = PROVIDERS[cfg.provider];
+    aiBusy = true;
+    aiOut('<div class="aiwait">' + esc(label) + " läuft …</div>");
+
+    fetch(P.url, {
+      method: "POST",
+      headers: P.headers(cfg.key),
+      body: P.body(cfg.model || P.model, SYSTEM, userText)
+    }).then(function (r) {
+      return r.json().then(function (j) { return { ok: r.ok, s: r.status, j: j }; });
+    }).then(function (res) {
+      aiBusy = false;
+      if (!res.ok) {
+        var msg = (res.j && res.j.error && (res.j.error.message || res.j.error.type))
+          || ("HTTP " + res.s);
+        aiOut('<div class="aiwarn"><b>Der Anbieter hat abgelehnt</b>' +
+          esc(msg) + (res.s === 401 ? " — der Schlüssel stimmt nicht." :
+            res.s === 429 ? " — zu viele Anfragen oder kein Guthaben." : "") +
+          "</div>");
+        return;
+      }
+      var txt = P.read(res.j) || "(leere Antwort)";
+      aiOut('<div class="aitext"><p>' + mdLite(txt) + "</p></div>" +
+        '<div class="qhint">Antwort eines Sprachmodells. Es sieht nur, was ' +
+        "im Prompt steht — prüf die Vorschläge gegen den Katalog, bevor du " +
+        "Essence ausgibst.</div>");
+    }).catch(function (e) {
+      aiBusy = false;
+      aiOut('<div class="aiwarn"><b>Kein Zugriff auf den Anbieter</b>' +
+        esc(e.message || String(e)) +
+        ". Wenn du die Seite gerade als Claude-Artifact ansiehst: dort sind " +
+        "externe Aufrufe gesperrt. Nimm " +
+        '<a href="https://lzra2000.github.io/aldi-buildschmiede/" ' +
+        'target="_blank" rel="noopener">die Fassung auf GitHub Pages</a>.' +
+        "</div>");
+    });
+  }
+
+  // Für Vorschläge kann das Modell nicht 3.071 Einträge lesen. Also macht
+  // der Code die Vorauswahl - dieselbe Bewertung wie im Generator, nur ohne
+  // Greedy-Zugriff - und das Modell entscheidet daraus.
+  function aiShortlist(themeKey, n) {
+    var th = THEMEBY[themeKey];
+    if (!th) return [];
+    var pool = [];
+    for (var i = 0; i < CAT.length; i++) {
+      if (tooHigh(i)) continue;
+      var v = CAT[i][1] === 0 ? th.score(i) : 0;
+      if (CAT[i][1] === 1) {
+        ((SC[i] || {}).inc || []).forEach(function (x) {
+          if (x[2] === "dmg" && themeKey !== "heal") v += 2;
+          if (x[2] === "heal" && themeKey === "heal") v += 3;
+        });
+        if ((MODOF[i] || []).length) v += 1;
+      }
+      if (v > 0) pool.push([v + CAT[i][3] * 0.4, i]);
+    }
+    pool.sort(function (a, b) { return b[0] - a[0]; });
+    return pool.slice(0, n).map(function (p) { return p[1]; });
+  }
+
+  function aiSuggestPrompt(themeKey) {
+    var th = THEMEBY[themeKey];
+    var list = aiShortlist(themeKey, 120);
+    var L = [];
+    L.push("Stell mir einen Build für Project Ascension Season 10 Wildcard " +
+      "zusammen. Ausrichtung: **" + th.n + "** — " + th.d);
+    L.push("");
+    L.push("## Regeln");
+    L.push("- Genau 30 Abilities und 25 Talente, nicht mehr.");
+    L.push("- Wähle ausschließlich aus der Liste unten. Erfinde nichts dazu.");
+    L.push("- Waffenschaden skaliert aus Attack Power UND Spell Power im " +
+      "Verhältnis 14 Punkte = 1 Waffen-DPS.");
+    L.push("- Elementare Sprüche ignorieren Armor.");
+    L.push("- Talente wirken nur, wenn die Fähigkeit, die sie verbessern, " +
+      "auch im Build steht — oder eine Schulvariante davon.");
+    if (CHAR) {
+      L.push("- Mein Charakter: Stufe " + CHAR.level + ", Path of " +
+        CHAR.path + ", Spell Power " + (CHAR.stats.SP || "?") + ".");
+      if (CHAR.qlimit) {
+        var q = [];
+        for (var i = 4; i >= 1; i--) {
+          if (CHAR.qlimit[i]) q.push("höchstens " + CHAR.qlimit[i] + " " + QN[i]);
+        }
+        if (q.length) L.push("- Seltenheits-Budget: " + q.join(", ") + ".");
+      }
+    }
+    L.push("");
+    L.push("## Auswahl (" + list.length + " Kandidaten, bereits vorgefiltert)");
+    list.forEach(function (i) {
+      var s = SC[i] || {}, m = MC[i] || {}, b = [];
+      if (s.w) b.push(s.w + " % Waffe" + (s.sch ? " als " + s.sch : ""));
+      if (s.flat) b.push(s.flat[0] + "-" + s.flat[1] + " Schaden");
+      if (s.heal) b.push("Heilung " + s.heal[0] + "-" + s.heal[1]);
+      if (s.dot) b.push(s.dot + " s");
+      (s.inc || []).slice(0, 2).forEach(function (x) {
+        b.push("+" + x[0] + " % " + x[1]);
+      });
+      if (m.cd) b.push("CD " + m.cd + " s");
+      if (m.cost) b.push(m.cost + " " + m.res);
+      L.push("- [" + (CAT[i][1] ? "T" : "A") + "] " + CAT[i][0] + " (" +
+        QN[CAT[i][3]] + ", Stufe " + CAT[i][4] + ")" +
+        (b.length ? ": " + b.join("; ") : ""));
+    });
+    L.push("");
+    L.push("## Ausgabe");
+    L.push("1. Die 30 Abilities als Liste, jede mit einem halben Satz warum.");
+    L.push("2. Die 25 Talente, jedes mit der Fähigkeit, die es verbessert.");
+    L.push("3. Die Stat-Priorität für diesen Build in einer Zeile, " +
+      "zum Beispiel „Spell Power > Crit Rating > Intellect“, mit Begründung.");
+    L.push("4. Zwei Sätze, wie sich der Build spielt.");
+    return L.join("\n");
+  }
+
+  function renderAI() {
+    var box = document.getElementById("aibox");
+    if (!box) return;
+    var cfg = aiCfg();
+    var P = PROVIDERS[cfg.provider];
+    var o = [];
+
+    o.push('<div class="qhint">Der Schlüssel bleibt in <em>deinem</em> Browser ' +
+      "und geht nur an den Anbieter, den du wählst. Er steht nicht in dieser " +
+      "Datei — die liegt öffentlich. Jeder trägt seinen eigenen ein. " +
+      "Anfragen kosten dich je nach Modell ein paar Cent.</div>");
+
+    o.push('<div class="aicfg">' +
+      '<label>Anbieter<select id="aiProv">' +
+      Object.keys(PROVIDERS).map(function (k) {
+        return '<option value="' + k + '"' +
+          (k === cfg.provider ? " selected" : "") + ">" +
+          esc(PROVIDERS[k].n) + "</option>";
+      }).join("") + "</select></label>" +
+      '<label>Modell<input type="text" id="aiModel" value="' +
+      esc(cfg.model || P.model) + '"></label>' +
+      '<label>Schlüssel<input type="password" id="aiKey" placeholder="' +
+      esc(P.keyHint) + '" value="' + (cfg.key ? "" : "") + '"' +
+      (cfg.key ? ' data-set="1"' : "") + "></label>" +
+      '<div class="aicfgrow"><button id="aiSave">Speichern</button>' +
+      '<button id="aiForget">Schlüssel löschen</button>' +
+      '<span class="aistate">' + (cfg.key
+        ? "Schlüssel hinterlegt" : '<a href="' + esc(P.keyUrl) +
+          '" target="_blank" rel="noopener">Schlüssel besorgen</a>') +
+      "</span></div></div>");
+
+    o.push('<div class="schd">Was soll die KI tun?</div>');
+    o.push('<div class="genlist">' +
+      '<button class="genb" id="aiReview"><b>Meinen Build bewerten</b>' +
+      "<span>Schickt deinen aktuellen Build mit allen Zahlen hin und fragt " +
+      "nach Schwachstellen, Path und Stat-Priorität.</span></button>" +
+      THEMES.map(function (t) {
+        return '<button class="genb" data-aigen="' + t.k + '">' +
+          "<b>Build vorschlagen: " + esc(t.n) + "</b><span>" +
+          "120 vorgefilterte Kandidaten, das Modell wählt 30 + 25 daraus " +
+          "und begründet.</span></button>";
+      }).join("") + "</div>");
+
+    o.push('<div id="aiout"></div>');
+    box.innerHTML = o.join("");
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.id === "aiSave") {
+      var cfg = aiCfg();
+      cfg.provider = document.getElementById("aiProv").value;
+      cfg.model = document.getElementById("aiModel").value.trim() ||
+        PROVIDERS[cfg.provider].model;
+      var k = document.getElementById("aiKey").value.trim();
+      if (k) cfg.key = k;
+      aiSave(cfg);
+      renderAI();
+      toast("Gespeichert — nur in diesem Browser");
+      return;
+    }
+    if (t.id === "aiForget") {
+      try { localStorage.removeItem(AISTORE); } catch (err) { /* egal */ }
+      renderAI();
+      toast("Schlüssel gelöscht");
+      return;
+    }
+    if (t.id === "aiReview" || (t.closest && t.closest("#aiReview"))) {
+      if (!Object.keys(picked).length) { toast("Erst einen Build wählen"); return; }
+      aiAsk(buildPrompt(), "Bewertung");
+      return;
+    }
+    var g = t.closest && t.closest("[data-aigen]");
+    if (g) aiAsk(aiSuggestPrompt(g.dataset.aigen), "Vorschlag");
+  });
+
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "aiProv") {
+      var cfg = aiCfg();
+      cfg.provider = e.target.value;
+      cfg.model = PROVIDERS[cfg.provider].model;
+      aiSave(cfg);
+      renderAI();
+    }
+  });
+
   // ---------- Merken ----------
   var STORE = "aldi-buildschmiede-v1";
   function save() {
@@ -2488,5 +2793,6 @@
 
   renderArchetypes();
   renderGenerator();
+  renderAI();
   refresh();
 })();
