@@ -1,0 +1,467 @@
+<div class="wrap">
+  <header class="mast">
+    <div class="masttop">
+      <div>
+        <p class="guild">Gilde Aldi Ehrfürchtig · Season 10 Wildcard</p>
+        <h1>Buildschmiede</h1>
+      </div>
+      <p class="masthint">3.071 Fähigkeiten und Talente · 30 Ability- und
+        25 Talent-Plätze · Path-Empfehlung · Build per Link teilen</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-hd">
+        <h2>KATALOG</h2>
+        <span class="cnt" id="hits">3071 Treffer</span>
+      </div>
+      <div class="controls">
+        <input type="search" id="q" placeholder="Name oder Beschreibung suchen …" aria-label="Suche">
+        <select id="fKind" aria-label="Art"><option value="">Alle Arten</option>
+          <option value="0">Nur Abilities</option><option value="1">Nur Talente</option></select>
+        <select id="fClass" aria-label="Klasse"><option value="">Alle Klassen</option></select>
+        <select id="fSort" aria-label="Sortierung"><option value="">Katalogreihenfolge</option>
+          <option value="name">Name A–Z</option><option value="qual">Seltenheit</option>
+          <option value="level">Stufe</option><option value="wpct">Waffenprozent</option>
+          <option value="dmg">Geschätzter Treffer</option>
+          <option value="cyc">Schaden pro Cooldown</option></select>
+        <select id="fScale" aria-label="Skalierung"><option value="">Jede Skalierung</option>
+          <option value="w">Waffenschaden</option><option value="s">Elementar</option>
+          <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
+          <option value="h">Heilung</option>
+          <option value="cd">Mit Cooldown</option><option value="nocd">Ohne Cooldown</option>
+          <option value="free">Kostenlos</option></select>
+        <select id="fQual" aria-label="Qualität"><option value="">Alle Qualitäten</option>
+          <option value="4">Legendary</option><option value="3">Epic</option>
+          <option value="2">Rare</option><option value="1">Uncommon</option><option value="0">Normal</option></select>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="side">
+      <details class="panel" id="impPanel" open>
+        <summary class="panel-hd"><h2>AUS DEM SPIEL EINFÜGEN</h2>
+          <span class="cnt" id="cC">—</span></summary>
+        <div class="pastewrap">
+          <p class="pastehint">Im Spiel <code>/bs</code> tippen,
+            <kbd>Strg</kbd>+<kbd>C</kbd>, hier rein. Addon gibt es unten unter
+            <em>Nachschlagen</em>.</p>
+          <textarea id="pasteBox" rows="3" spellcheck="false"
+            placeholder="=== BUILDSCHMIEDE v1 ===&#10;CHAR|…"></textarea>
+          <div class="pastebtns">
+            <button class="primary" id="bPaste">Build übernehmen</button>
+            <button id="bPasteClear">Verwerfen</button>
+          </div>
+        </div>
+        <div id="charBox"></div>
+      </details>
+
+      <div class="panel">
+        <div class="panel-hd"><h2>DEIN BUILD</h2>
+          <span class="cntpair"><span class="cnt" id="cA">0 / 30</span><span
+            class="cnt" id="cT">0 / 25</span></span></div>
+        <div id="budget"></div>
+        <div class="twocol">
+          <div><div class="subhd">Abilities</div><div id="slotsA"></div></div>
+          <div><div class="subhd">Talente</div><div id="slotsT"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="tabbar" role="tablist">
+          <button class="tab on" data-tab="tPath" role="tab">Path<span
+            class="cnt" id="cP">—</span></button>
+          <button class="tab" data-tab="tIssues" role="tab">Befund<span
+            class="cnt" id="cI">—</span></button>
+          <button class="tab" data-tab="tSug" role="tab">Vorschläge<span
+            class="cnt" id="cV">—</span></button>
+          <button class="tab" data-tab="tScale" role="tab">Skalierung<span
+            class="cnt" id="cS">—</span></button>
+          <button class="tab" data-tab="tFlags" role="tab">Analyse<span
+            class="cnt" id="cF">—</span></button>
+          <button class="tab" data-tab="tArch" role="tab">Archetypen</button>
+          <button class="tab" data-tab="tCmp" role="tab">Vergleich<span
+            class="cnt" id="cX">—</span></button>
+          <button class="tab" data-tab="tShare" role="tab">Teilen</button>
+        </div>
+        <div class="tabp on" id="tPath"><div id="paths"></div></div>
+        <div class="tabp" id="tIssues"><div id="issues"></div></div>
+        <div class="tabp" id="tSug"><div id="sugbox"></div></div>
+        <div class="tabp" id="tScale"><div id="scalebox"></div></div>
+        <div class="tabp" id="tFlags"><div id="flags"></div></div>
+        <div class="tabp" id="tArch"><div id="archbox"></div></div>
+        <div class="tabp" id="tCmp">
+          <div class="pastewrap">
+            <p class="pastehint">Build-Link eines Gildenkollegen oder ein
+              Export aus dem Spiel. <code>/bs target</code> liest den Build
+              deines Ziels aus.</p>
+            <textarea id="cmpBox" rows="3" spellcheck="false"
+              placeholder="Link mit #b=… oder === BUILDSCHMIEDE v1 ==="></textarea>
+            <div class="pastebtns">
+              <button class="primary" id="bCmp">Vergleichen</button>
+              <button id="bCmpClear">Verwerfen</button>
+            </div>
+          </div>
+          <div id="cmpbox"></div>
+        </div>
+        <div class="tabp" id="tShare">
+          <div class="share">
+            <button class="primary" id="bLink">Link kopieren</button>
+            <button id="bText">Als Text kopieren</button>
+            <button id="bClear">Leeren</button>
+            <input type="text" id="url" readonly aria-label="Build-Link">
+            <div class="offlink" id="official"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <section class="ref">
+    <div class="panel">
+      <div class="tabbar big" role="tablist">
+        <button class="tab on" data-tab="rPaths" role="tab">Die fünf Paths</button>
+        <button class="tab" data-tab="rStats" role="tab">Stat-Scaling</button>
+        <button class="tab" data-tab="rScale" role="tab">Skalierung lesen</button>
+        <button class="tab" data-tab="rAddon" role="tab">Companion-Addon</button>
+      </div>
+      <div class="tabp on" id="rPaths">
+      <div class="headline">
+        <b>Warum der Path vor dem Build kommt</b>
+        Der Path entscheidet, ob deine Spell Power einfach, 1,75-fach oder doppelt zählt —
+        und weil <strong>14 Spell Power = 1 Waffen-DPS</strong> sind, verschiebt dieser
+        Multiplikator auch deinen <em>Waffenschaden</em>. Wer Waffenschaden als Element austeilt und
+        dabei auf dem falschen Path sitzt, verliert die Hälfte seiner Skalierung —
+        ohne dass sich im Tooltip auch nur eine Zahl ändert.
+      </div>
+
+      <div class="pathref">
+        <div class="pcard">
+          <h3>Path of Strength</h3>
+          <span class="mult">Spell Power ×1</span>
+          <p>Gibt dir Strength obendrauf, und jeder Punkt Strength gibt dir zusätzlich
+            Attack Power und Parry.
+            Für schwere Treffer und rüstungsbrechende Angriffe, vor allem für Plattenträger.</p>
+          <dl>
+            <dt>Einhand — Devastating Strikes</dt><dd>Armor Penetration +20 %.</dd>
+            <dt>Zweihand — Heavy Swings</dt><dd>Physische Melee- und Ranged-Fähigkeiten
+              machen 10 % mehr Schaden.</dd>
+          </dl>
+        </div>
+
+        <div class="pcard">
+          <h3>Path of Agility</h3>
+          <span class="mult">Spell Power ×1</span>
+          <p>Gibt dir Agility obendrauf, und jeder Punkt gibt dir Attack Power, Crit-Chance
+            <em>und</em> Crit-Schaden. Für schnelle Angriffe und Crits, vor allem für
+            Leder- und Kettenträger.</p>
+          <dl>
+            <dt>Einhand — Agile Strikes</dt><dd>Globaler Cooldown und Kosten deiner
+              Melee- und Ranged-Fähigkeiten −8 %.</dd>
+            <dt>Zweihand — Fatal Wounds</dt><dd>Crit-Schaden deiner
+              Melee- und Ranged-Fähigkeiten +20 %.</dd>
+          </dl>
+        </div>
+
+        <div class="pcard">
+          <h3>Path of Duality</h3>
+          <span class="mult">Spell Power ×1,75</span>
+          <p>Der Hybrid-Path. Du bekommst Attack Power in Höhe deines besseren Attributs
+            — Strength oder Agility, je nachdem was höher ist. <strong>Intellect gibt hier Melee-Crit, Agility gibt
+            Spell-Crit.</strong> Zaubern setzt deinen Autoangriff nicht mehr zurück.</p>
+          <dl>
+            <dt>Einhand — Twin Flurry</dt><dd>Spell-, Ranged- und Melee-Haste +10 %.</dd>
+            <dt>Zweihand — Unleashed Force</dt><dd>Magischer und physischer Schaden +6 %.</dd>
+          </dl>
+        </div>
+
+        <div class="pcard">
+          <h3>Path of Intelligence</h3>
+          <span class="mult">Spell Power ×2</span>
+          <p>Gibt dir Spell Power, Intellect und Spirit obendrauf. Spell Power aus Items und
+            Effekten wird <strong>verdoppelt</strong> — der stärkste Multiplikator im Spiel.</p>
+          <dl>
+            <dt>Einhand — Devastating Spells</dt><dd>Zauberschaden +5 %.</dd>
+            <dt>Zweihand — Magic Acceleration</dt><dd>Spell Haste +12 %.</dd>
+          </dl>
+        </div>
+
+        <div class="pcard">
+          <h3>Path of Healing</h3>
+          <span class="mult">Spell Power → Healing Power</span>
+          <p>Der einzige Weg in die Heiler-Rolle. Gibt dir Healing Power, Intellect und
+            Spirit obendrauf. Jeder Punkt Spell Power erhöht zusätzlich deine
+            Healing Power.</p>
+          <dl>
+            <dt>Einhand — Empowered Mending</dt><dd>Heilung +5 %.</dd>
+            <dt>Zweihand — Spiritual Acceleration</dt><dd>Spell Haste +10 %,
+              Spell-Crit +3 %.</dd>
+          </dl>
+        </div>
+
+        <div class="pcard">
+          <h3>Einhand oder Zweihand?</h3>
+          <span class="mult">gilt auf jedem Path</span>
+          <p>Jeder Path hat zwei getrennte Boni. Welchen du bekommst, entscheidet allein
+            deine Waffe. Diese Entscheidung wird am häufigsten übersehen:</p>
+          <dl>
+            <dt>Zweihand belohnt</dt><dd>rohen Schaden und Tempo (Strength +10 % phys.,
+              Agility +20 % Crit-Schaden, Duality +6 % auf alles, Intelligence +12 % Spell Haste).</dd>
+            <dt>Einhand belohnt</dt><dd>Durchsatz und Durchdringung (Strength +20 % ArPen,
+              Agility −8 % GCD und Kosten, Duality +10 % Tempo auf allen drei Achsen).</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="tblwrap">
+        <table class="stat">
+          <thead><tr><th>Was du baust</th><th>Path</th><th>Warum</th></tr></thead>
+          <tbody>
+            <tr class="top"><td>Waffenschaden <em>als Element</em> — Burning Slam,
+              Voltaic Bite, Lava Sweep …</td>
+              <td class="num">Duality</td>
+              <td>×1,75 Spell Power fließt über die 14:1-Regel voll in den Waffenanteil,
+                und der Elementanteil ignoriert Rüstung. Genau der Fall, für den es den
+                Path gibt.</td></tr>
+            <tr class="top"><td>Physisch <em>und</em> Zauber gemischt</td>
+              <td class="num">Duality</td>
+              <td>Der einzige Path, der beide Seiten gleichzeitig hebt — und der die
+                Crit-Trennung aufhebt.</td></tr>
+            <tr><td>Fast nur Zauber</td><td class="num">Intelligence</td>
+              <td>×2 Spell Power schlägt alles andere, solange du keine Waffenangriffe
+                brauchst.</td></tr>
+            <tr><td>Rein physisch, schwere Treffer, Zweihand</td><td class="num">Strength</td>
+              <td>Heavy Swings gibt pauschal +10 % auf alles Physische.</td></tr>
+            <tr><td>Rein physisch, schnell, Crit-lastig</td><td class="num">Agility</td>
+              <td>Agility ist das einzige Attribut, das dir Crit-<em>Chance</em> und
+                Crit-<em>Schaden</em> gleichzeitig gibt.</td></tr>
+            <tr><td>Heilen</td><td class="num">Healing</td>
+              <td>Ohne diesen Path wird deine Spell Power nie in Healing Power umgerechnet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="srcnote">Die Path-Empfehlung oben im Builder wendet genau diese Regeln auf
+        deine Auswahl an. Sie zählt, wie viele deiner Einträge Waffenschaden, eine
+        Magieschule, beides oder Heilung nennen, und nennt dir die Skills beim Namen.
+        Klick in der Rangliste auf einen anderen Path, dann siehst du, was <em>der</em>
+        mit deinem Build machen würde.</p></div>
+      <div class="tabp" id="rStats">
+      <div class="headline">
+        <b>Das Wichtigste zuerst</b>
+        1 Spell Power = 1 Attack Power. Waffenschaden auf Ascension skaliert aus <em>beidem</em>,
+        und zwar im exakt gleichen Verhältnis: <strong>14 Punkte = +1 Waffen-DPS</strong>.
+        Gemessen: 608&nbsp;Bonus&nbsp;Damage → +43,4&nbsp;Waffen-DPS. 54&nbsp;Attack&nbsp;Power → +3,9&nbsp;Waffen-DPS.
+        Beides 1&nbsp;:&nbsp;14. Der Waffentooltip sagt es wörtlich:
+        „Weapon damage scales from Attack Power and Spell Power.“ Dass die 608 bei Gegenstandsstufe 18 überhaupt zustande kommen, liegt am Path: Path of Intelligence verdoppelt Spell Power aus Items.
+      </div>
+
+      <div class="tblwrap">
+        <table class="stat">
+          <thead><tr><th>#</th><th>Stat</th><th>1 Punkt gibt</th><th>Gemessen</th><th>Für wen</th></tr></thead>
+          <tbody>
+            <tr class="top">
+              <td class="rank">1</td><td class="num">Spell Power</td>
+              <td>+0,071 Waffen-DPS <em>und</em> vollen Zauberschaden</td>
+              <td class="num">608 → +43,4 DPS</td>
+              <td>Für jeden. Der einzige Stat, der doppelt zählt.</td>
+            </tr>
+            <tr class="top">
+              <td class="rank">2</td><td class="num">Intellect</td>
+              <td>+0,0275&nbsp;% Spell-Crit, +13,8 Mana</td>
+              <td class="num">240 → +6,60&nbsp;%, +3.320</td>
+              <td>Caster und Hybriden. Gibt <strong>0,00&nbsp;% Melee-Crit</strong>.</td>
+            </tr>
+            <tr>
+              <td class="rank">3</td><td class="num">Crit Rating</td>
+              <td>+0,086&nbsp;% Crit</td>
+              <td class="num">10 → +0,86&nbsp;%</td>
+              <td>Für alle. 11,6 Rating = 1&nbsp;% auf Stufe 51.</td>
+            </tr>
+            <tr>
+              <td class="rank">4</td><td class="num">Agility</td>
+              <td>+0,100&nbsp;% Melee-Crit, +2 Armor, +0,038&nbsp;% Dodge</td>
+              <td class="num">51 → +5,11&nbsp;%, +102</td>
+              <td>Waffen-Builds. Gibt <strong>0,00&nbsp;% Spell-Crit</strong>.</td>
+            </tr>
+            <tr>
+              <td class="rank">5</td><td class="num">Haste Rating</td>
+              <td>+0,121&nbsp;% Spell Haste</td>
+              <td class="num">19 → +2,30&nbsp;%</td>
+              <td>Caster. 8,3 Rating = 1&nbsp;%.</td>
+            </tr>
+            <tr>
+              <td class="rank">6</td><td class="num">Stamina</td>
+              <td>+9 Health</td>
+              <td class="num">178 → +1.600 HP</td>
+              <td>Überleben. Bringt keinen Schaden.</td>
+            </tr>
+            <tr class="dead">
+              <td class="rank">7</td><td class="num">Strength</td>
+              <td>+1,71 Attack Power = +0,12 Waffen-DPS</td>
+              <td class="num">69 → +118 AP</td>
+              <td>Sobald du Spell Power hast, ist das dein schwächster Offensiv-Stat.</td>
+            </tr>
+            <tr class="dead">
+              <td class="rank">8</td><td class="num">Spirit</td>
+              <td>Manaregeneration</td>
+              <td class="num">63 → 82/5s (35 beim Casten)</td>
+              <td>Nur wenn dir wirklich das Mana ausgeht.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="srcnote">Basis: Charakterfenster Lazra, Stufe 51, Path of Intelligence, Prestige 36,
+        Gegenstandsstufe 18,00. Rating-pro-Prozent skaliert mit der Stufe — die Verhältnisse
+        (Str→AP, Agi→Crit, SP↔AP) bleiben, die Rating-Kurse ändern sich beim Leveln.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h2>WAS DAS FÜR DEINEN BUILD HEISST</h2></div>
+
+      <div class="flag syn"><b>Bonus Damage ist schulenneutral</b>
+        Holy, Fire, Nature, Frost, Shadow, Arcane — alle sechs stehen auf demselben Wert (608).
+        Es gibt keinen Stat, den du pro Schule getrennt sammeln müsstest. Welche Schule du
+        spielst, ist eine reine Geschmacksfrage — dein Gear ändert sich dadurch nicht.</div>
+
+      <div class="flag syn"><b>Elementare Waffenvarianten sind keine schwächeren Kopien</b>
+        Laut den Entwicklern ignorieren elementare Sprüche Armor, dafür ist ihre reine
+        Waffen-DPS niedriger. Armor in dieser Größenordnung schluckt rund 28&nbsp;% vom
+        physischen Schaden — also genau den Anteil, den die elementare Variante gar nicht
+        erst verliert. Zusammen mit „Spell Power = Attack Power“ heißt das: die Feuerversion von
+        Slam ist bei gleichem Gear oft die <em>stärkere</em> Wahl, nicht die schwächere.</div>
+
+      <div class="flag pre"><b>Crit ist zweigeteilt — und das kostet dich</b>
+        Agility gibt ausschließlich Melee-Crit, Intellect ausschließlich Spell-Crit.
+        Auf demselben Charakter: 5,97&nbsp;% Melee gegen 12,47&nbsp;% Spell. Wenn dein Build
+        mit der Waffe zuschlägt, du aber auf Path of Intelligence sitzt, kritten deine
+        Waffenangriffe nur halb so oft wie deine Sprüche. Crit-Rating ist der
+        einzige Stat, der beide Seiten gleichzeitig hebt — und <strong>Path of Duality</strong> der einzige Path, der die Trennung ganz aufhebt: dort gibt Intellect Melee-Crit und Agility Spell-Crit.</div>
+
+      <div class="flag pre"><b>Strength ist auf einem Intelligence-Path fast tot</b>
+        1,71 Attack Power pro Punkt sind 0,12 Waffen-DPS. Dasselbe Item mit Spell Power gibt
+        dir pro Punkt das Vierzehnfache — und den vollen Zauberschaden obendrauf.
+        Str-Items nur nehmen, wenn nichts anderes da ist. Der Grund steht im Path-Tooltip: Path of Intelligence gibt Bonus auf Spell Power, Intellect und Spirit — Stärke und Agility gehen leer aus.</div>
+
+      <div class="flag syn"><b>Stat-Prio in einem Satz</b>
+        Spell Power &gt; Crit Rating &gt; Intellect &gt; Agility &gt; Haste &gt; Stamina &gt; Strength &gt; Spirit.
+        Wer auf Waffenangriffe baut, tauscht Intellect und Agility. Wer castet, lässt es
+        so stehen.</div></div>
+      <div class="tabp" id="rScale">      <div class="headline">
+        <b>Was in den Abzeichen steht</b>
+        Jede Zeile im Katalog trägt, was sich aus ihrem Tooltip herauslesen lässt.
+        Das sind keine geschätzten Werte — es ist wörtlich das, was im Spiel
+        im Tooltip steht, nur als Zahl statt als Satz.
+      </div>
+
+      <div class="tblwrap">
+        <table class="stat">
+          <thead><tr><th>Abzeichen</th><th>Bedeutet</th><th>Warum es zählt</th></tr></thead>
+          <tbody>
+            <tr class="top"><td><span class="bdg w">150 % Waffe</span></td>
+              <td>Der Angriff macht 150 % deines Waffenschadens.</td>
+              <td>Der verlässlichste Wert überhaupt: dein Waffenschaden im
+                Charakterfenster enthält Attack Power <em>und</em> Spell Power
+                schon. Mal 1,5 — fertig.</td></tr>
+            <tr class="top"><td><span class="bdg s">Fire</span></td>
+              <td>Der Schaden zählt als diese Schule.</td>
+              <td>Elementare Schulen ignorieren Armor. Bei rund 28 % Mitigation
+                ist das der Unterschied, den die niedrigere Grund-DPS wieder
+                aufwiegt.</td></tr>
+            <tr><td><span class="bdg f">14–22</span></td>
+              <td>Fester Grundschaden.</td>
+              <td>Wie stark Spell Power hier draufrechnet, steht im Tooltip
+                <strong>nicht</strong> — und wird hier auch nicht geraten.</td></tr>
+            <tr><td><span class="bdg d">8 s</span></td>
+              <td>Wirkt über 8 Sekunden.</td>
+              <td>Schaden über Zeit. Zwei davon auf demselben Ziel überschreiben
+                sich oft gegenseitig.</td></tr>
+            <tr><td><span class="bdg m">+20 %</span></td>
+              <td>Ein Multiplikator auf etwas anderes.</td>
+              <td>Das sind die Talente, die deinen Schaden hochziehen. Der
+                Reiter <em>Skalierung</em> stapelt sie für deinen Build.</td></tr>
+            <tr><td><span class="bdg p">15 % Proc</span></td>
+              <td>Löst mit 15 % Wahrscheinlichkeit aus.</td>
+              <td>Rechne mit dem Durchschnitt, nicht mit dem Bestfall.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flag pre"><b>Wo die Rechnung aufhört</b>
+        Die Seite multipliziert Waffenprozente mit deinem echten Waffenschaden,
+        sobald du deinen Charakter importiert hast. Sie rechnet <em>nicht</em>
+        aus, was Crit, Haste, Rüstung des Ziels und Procs daraus machen — und
+        sie kennt die Spell-Power-Koeffizienten der Flat-Damage-Zauber nicht,
+        weil die nirgends im Tooltip stehen. Für die Frage „welcher meiner
+        Angriffe schlägt härter zu“ reicht es. Für ein DPS-Ranking nicht.</div>
+</div>
+      <div class="tabp" id="rAddon">
+      <div class="headline">
+        <b>Warum du es willst</b>
+        Ohne das Addon klickst du deinen Build hier von Hand zusammen. Mit dem Addon
+        tippst du im Spiel <code>/bs</code>, kopierst einen Textblock und fügst ihn
+        oben unter „Aus dem Spiel einfügen“ ein. Die Seite kennt dann deine
+        <strong>echten</strong> Skills, deinen Path, deine Stats und dein Gear —
+        und sagt dir, was daran kritisch ist.
+      </div>
+
+      <div class="steps">
+        <ol>
+          <li><a class="dl" href="https://github.com/Lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip">AscBuildschmiede.zip herunterladen</a></li>
+          <li>Entpacken nach
+            <code>Interface\AddOns\</code> in deinem Ascension-Ordner. Danach muss es
+            <code>Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc</code> geben —
+            ein Ordner zu tief ist der häufigste Fehler.</li>
+          <li>Spiel neu starten (oder <code>/reload</code>, falls es schon lief).</li>
+          <li>Im Spiel <code>/bs</code> tippen. Der Text ist schon markiert:
+            <kbd>Strg</kbd>+<kbd>C</kbd>.</li>
+          <li>Hier oben ins Feld einfügen, <em>Build übernehmen</em> klicken.</li>
+        </ol>
+      </div>
+
+      <div class="tblwrap">
+        <table class="stat">
+          <thead><tr><th>Befehl</th><th>Was er macht</th></tr></thead>
+          <tbody>
+            <tr><td class="num">/bs</td><td>Fenster auf oder zu.</td></tr>
+            <tr><td class="num">/bs gear</td>
+              <td>Gear im Export an- oder abschalten. Aus, wenn dir der Block zu lang ist.</td></tr>
+            <tr><td class="num">/bs stats</td>
+              <td>Stats und Waffe an- oder abschalten.</td></tr>
+            <tr><td class="num">/bs help</td><td>Kurzhilfe im Chat.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flag syn"><b>Was das Addon nicht tut</b>
+        Es schickt nichts ins Internet. Es liest deinen Charakter aus, schreibt den
+        Text in ein Fenster — fertig. Was damit passiert, entscheidest du mit
+        <kbd>Strg</kbd>+<kbd>C</kbd>.</div>
+
+      <p class="srcnote">Ausgelesen werden: gelernte Abilities und Talente samt Rang
+        (<code>C_CharacterAdvancement</code>), dein Path (heißt im Client
+        <code>C_PrimaryStat</code>), Attribute, Spell Power, Attack Power, Crit,
+        Hit, Armor, deine Waffe samt Einhand/Zweihand und alle belegten
+        Ausrüstungsplätze. Wenn Ascension eine dieser Funktionen mal umbenennt,
+        fehlt die betroffene Zeile im Export — der Rest funktioniert weiter.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Datenbasis: Season-10-Katalog, 3.071 Einträge (1.321 Abilities, 1.750 Talente).
+      Der Link enthält deinen kompletten Build. Wer ihn öffnet, sieht genau deine Auswahl.
+      Es wird nichts gespeichert und nichts hochgeladen.</p>
+    <p style="margin-top:10px"><strong>Was der Builder nicht kann:</strong> Schaden berechnen.
+      Er prüft die Struktur: Plätze, doppelte Skills, Voraussetzungen und Verweise
+      zwischen deinen Auswahlen. Ob ein Build stark ist, entscheidet die Übungspuppe.</p>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>

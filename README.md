@@ -40,3 +40,16 @@ keine externen Anfragen außer Google Fonts. Öffnen reicht.
 Datenbasis: Season-10-Katalog (1.321 Abilities, 1.750 Talente). Die Stat-Zahlen
 sind an einem Charakter der Stufe 51 auf Path of Intelligence gemessen, die
 Path-Tooltips wortgetreu aus dem Client übernommen.
+
+## Für Entwickler
+
+Die Seite wird gebaut, nicht von Hand bearbeitet:
+
+```bash
+python3 pipeline/assemble.py
+```
+
+`src/` enthält die Quelle, `data/` die aufbereiteten Daten, `pipeline/` die
+Skripte, `addon/` die Lua-Quelle des Companions. Arbeitsweise, Datenherkunft
+und die Fallen, die schon zugeschnappt sind, stehen in
+**[AGENTS.md](AGENTS.md)** — vor der ersten Änderung einmal lesen.

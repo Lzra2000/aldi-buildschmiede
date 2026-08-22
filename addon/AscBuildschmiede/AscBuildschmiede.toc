@@ -1,0 +1,12 @@
+## Interface: 30300
+## Title: Buildschmiede Companion
+## Notes: Exportiert deinen kompletten Build - Abilities, Talente, Path, Stats und Gear - als Text fuer die Buildschmiede.|nSlash: /bs, /bs target
+## Author: Aldi Ehrfuerchtig
+## Version: 1.2.0
+## SavedVariables: AscBuildschmiedeDB
+
+Core.lua
+Quality.lua
+Collect.lua
+Inspect.lua
+UI.lua

@@ -1,0 +1,19 @@
+=== BUILDSCHMIEDE v1 ===
+CHAR|Lazra|51|Troll|Hero
+PATH|Intelligence
+ESSENCE|A:1|T:1
+STAT|STR:69|AGI:51|STA:178|INT:240|SPI:63|SP:608|HEAL:254|AP:54|RAP:0|CRIT:5.97|SCRIT:12.47|HASTERATING:19|CRITRATING:10|HITRATING:0|ARMOR:1882|DODGE:3.54|PARRY:3.29|ARPEN:0.00
+WEAPON|MH|Tempest of the Sea|ilvl18|speed2.68|287-315|dps115.7|INVTYPE_2HWEAPON|Staff
+WEAPON|OH|Emberfang Dagger|ilvl18|speed1.80|94-121|dps59.7|INVTYPE_WEAPONOFFHAND|Dagger
+WEAPON|RANGED|Stormcaller Bow|ilvl18|speed2.90|140-176|dps54.5|INVTYPE_RANGEDRIGHT|Bow
+ILVL|18.00
+GEAR|Head|Flamewreath Crown|18|3|Cloth
+GEAR|Chest|Emberweave Robe|18|3|Cloth
+GEAR|MainHand|Tempest of the Sea|18|3|Staff
+QUALITY|Uncommon:4/12|Rare:3/8|Epic:2/4|Legendary:1/2
+QCOST|Uncommon:1|Rare:1|Epic:1|Legendary:1
+ABI|Voltaic Bite;Eldritch Weapon;Lava Sweep;Forbidden Technique;Seal of Fervor;Ice Lash;Conduit;Thunder Hide;The Eye of the Storm;Mass Razorlash
+TAL|Deep Wounds:1;Anticipation:1;Toughness:1;Survival of the Fittest:1;Glyph of Bestial Wrath:1;Ward of Light:1;Endurance:1;Scent of Blood:1;Voellig Erfundenes Talent:1
+COUNT|A:10|T:9
+CODE|abc123DEF456ghi789
+=== ENDE ===

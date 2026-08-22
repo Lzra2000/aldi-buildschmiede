@@ -1,0 +1,644 @@
+<title>Wildcard Synergiekompendium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;700&display=swap">
+
+<style>
+:root{
+  --ground:#EDEFF4; --raised:#FFFFFF; --sunken:#E3E7EF;
+  --ink:#171A26; --ink-soft:#4A5063; --ink-faint:#767D92;
+  --rule:#CFD5E2; --rule-soft:#DFE3EC;
+  --accent:#0E7C8C; --accent-ink:#FFFFFF; --accent-soft:#D6EDF1;
+  --fire:#C24A18; --frost:#2C7FBF; --shadow:#7444B8;
+  --nature:#3C8A48; --holy:#A8811A; --arcane:#AB3E8C; --physical:#5C6274;
+  --warn:#B24A12; --good:#2F7D4F;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12141F; --raised:#1B1E2C; --sunken:#0C0E16;
+    --ink:#E2E6F0; --ink-soft:#A7AEC2; --ink-faint:#767D92;
+    --rule:#2C3145; --rule-soft:#222637;
+    --accent:#4FC3D6; --accent-ink:#0B1418; --accent-soft:#16323A;
+    --fire:#F0783C; --frost:#5FADEA; --shadow:#A87BE8;
+    --nature:#63C070; --holy:#E0BC4A; --arcane:#DE72BC; --physical:#98A0B4;
+    --warn:#F0904A; --good:#5BC488;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12141F; --raised:#1B1E2C; --sunken:#0C0E16;
+  --ink:#E2E6F0; --ink-soft:#A7AEC2; --ink-faint:#767D92;
+  --rule:#2C3145; --rule-soft:#222637;
+  --accent:#4FC3D6; --accent-ink:#0B1418; --accent-soft:#16323A;
+  --fire:#F0783C; --frost:#5FADEA; --shadow:#A87BE8;
+  --nature:#63C070; --holy:#E0BC4A; --arcane:#DE72BC; --physical:#98A0B4;
+  --warn:#F0904A; --good:#5BC488;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif; font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"Archivo Black",Impact,sans-serif; font-weight:400; text-wrap:balance; line-height:1.1; margin:0}
+code,.mono,.lvl,.qual,th,.tag{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
+.layout{display:grid; grid-template-columns:1fr; gap:40px}
+@media(min-width:1000px){.layout{grid-template-columns:210px minmax(0,1fr)}}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:3px solid var(--ink); padding:clamp(36px,7vw,72px) 0 28px}
+.kicker{font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 18px}
+.mast h1{font-size:clamp(34px,7vw,68px); letter-spacing:-.02em}
+.dek{max-width:62ch; margin:20px 0 0; font-size:clamp(17px,2vw,20px); color:var(--ink-soft)}
+
+.limits{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); margin:32px 0 0}
+.limit{background:var(--raised); padding:16px 18px}
+.limit .n{font-family:"Archivo Black",sans-serif; font-size:32px; line-height:1; display:block}
+.limit .l{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-faint); margin-top:6px; display:block}
+
+/* ---------- nav ---------- */
+nav{align-self:start}
+@media(min-width:1000px){nav{position:sticky; top:24px}}
+nav ol{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px}
+@media(min-width:1000px){nav ol{display:block}}
+nav a{display:block; padding:5px 0; font-family:"JetBrains Mono",monospace; font-size:12px;
+  color:var(--ink-soft); text-decoration:none; border-bottom:1px solid transparent}
+nav a:hover,nav a:focus-visible{color:var(--accent); border-bottom-color:var(--accent)}
+
+/* ---------- sections ---------- */
+section{padding:52px 0; border-bottom:1px solid var(--rule-soft)}
+section:last-of-type{border-bottom:none}
+h2{font-size:clamp(24px,3.4vw,36px); letter-spacing:-.01em}
+h2 .num{font-family:"JetBrains Mono",monospace; font-size:13px; color:var(--accent);
+  display:block; margin-bottom:10px; letter-spacing:.12em}
+h3{font-size:19px; margin:34px 0 12px}
+p{max-width:66ch}
+section > p:first-of-type{margin-top:18px}
+
+.lede{font-size:19px; color:var(--ink-soft)}
+
+/* ---------- school grid ---------- */
+.schools{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:12px; margin:26px 0 0}
+.school{background:var(--raised); border:1px solid var(--rule); border-left:5px solid var(--c); padding:14px 16px}
+.school .name{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:14px; color:var(--c)}
+.school .count{font-family:"Archivo Black",sans-serif; font-size:26px; line-height:1.2}
+.school .eg{font-size:14px; color:var(--ink-faint)}
+
+/* ---------- chains ---------- */
+.chain{background:var(--raised); border:1px solid var(--rule); padding:16px 18px; margin:14px 0}
+.chain-flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px}
+.node{font-family:"JetBrains Mono",monospace; font-size:13px; font-weight:700;
+  background:var(--sunken); border:1px solid var(--rule); padding:3px 9px}
+.node.src{border-color:var(--accent); color:var(--accent)}
+.arrow{color:var(--ink-faint); font-size:14px}
+.chain p{margin:0; font-size:15px; color:var(--ink-soft); max-width:none}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto; margin:20px 0; border:1px solid var(--rule)}
+table{border-collapse:collapse; width:100%; min-width:560px; background:var(--raised)}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--rule-soft); font-size:14px}
+th{background:var(--sunken); font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-faint); font-weight:700; position:sticky; top:0}
+td{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums}
+td.txt{font-family:"Source Serif 4",serif; color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+
+.qual{font-size:11px; padding:2px 6px; border:1px solid currentColor}
+.q-Legendary{color:var(--warn)} .q-Epic{color:var(--arcane)}
+.q-Rare{color:var(--frost)} .q-Normal{color:var(--ink-faint)} .q-Uncommon{color:var(--good)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--accent); background:var(--accent-soft);
+  padding:16px 20px; margin:24px 0}
+.note.warn{border-left-color:var(--warn); background:transparent; border:1px solid var(--warn); border-left-width:4px}
+.note p{margin:0; max-width:none}
+.note .hd{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; margin-bottom:7px; font-weight:700}
+
+/* ---------- build columns ---------- */
+.cols{display:grid; grid-template-columns:1fr; gap:26px; margin-top:24px}
+@media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
+.col h3{margin-top:0}
+.col ul{list-style:none; margin:0; padding:0}
+.col li{display:flex; justify-content:space-between; gap:12px; padding:5px 0;
+  border-bottom:1px solid var(--rule-soft); font-size:14px}
+.col li .nm{font-family:"JetBrains Mono",monospace}
+.col li .meta{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink-faint); white-space:nowrap}
+.grp{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent); margin:18px 0 6px}
+.grp:first-child{margin-top:0}
+
+footer{padding:40px 0 64px; color:var(--ink-faint); font-size:14px}
+footer p{max-width:70ch}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="kicker">Project Ascension · Season 10 Wildcard</p>
+    <h1>Wildcard Synergiekompendium</h1>
+    <p class="dek">Der Katalog hat 3.071 Einträge. Mitnehmen darfst du 55. Diese Seite handelt
+      davon, welche Kombinationen diese 55 Plätze verdienen — und welche nur so aussehen.</p>
+    <div class="limits">
+      <div class="limit"><span class="n">30</span><span class="l">Abilities</span></div>
+      <div class="limit"><span class="n">25</span><span class="l">Talente</span></div>
+      <div class="limit"><span class="n">3.071</span><span class="l">Katalog gesamt</span></div>
+      <div class="limit"><span class="n">1,8 %</span><span class="l">davon nutzbar</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Inhalt">
+      <ol>
+        <li><a href="#budget">01 · Das Budget</a></li>
+        <li><a href="#schulen">02 · Die sechs Schulen</a></li>
+        <li><a href="#dubletten">03 · Dubletten-Fallen</a></li>
+        <li><a href="#modifier">04 · Modifier-Vererbung</a></li>
+        <li><a href="#gates">05 · Harte Sperren</a></li>
+        <li><a href="#ketten">06 · Trigger-Ketten</a></li>
+        <li><a href="#schaden">07 · Schadens-Skalierung</a></li>
+        <li><a href="#heilung">08 · Heilungs-Skalierung</a></li>
+        <li><a href="#beispiel">09 · Beispiel: Shuriken</a></li>
+        <li><a href="#builder" style="color:var(--accent)">→ Buildschmiede</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <section id="budget">
+        <h2><span class="num">01</span>Das Budget ist die eigentliche Mechanik</h2>
+        <p class="lede">Jede Entscheidung in diesem System ist eine Verdrängungsentscheidung.
+          Nicht „ist das gut?“, sondern „ist das besser als das, was dafür rausfliegt?“</p>
+        <p>Der Katalog enthält 1.321 Spells und 1.750 Talente. Du nimmst 30 und 25 mit. Alles,
+          was du an Redundanz mitschleppst — zwei Fähigkeiten, die dasselbe tun, ein Talent ohne
+          seine Voraussetzung — kostet dich einen Platz, den ein wirksamer Effekt haben könnte.</p>
+        <div class="note">
+          <p class="hd">Die drei teuren Fehler</p>
+          <p><strong>1. Dubletten.</strong> Dieselbe Attacke in sechs Schadensschulen sieht nach
+            sechs Optionen aus, ist aber eine. <strong>2. Waisen-Talente.</strong> Manche Talente
+            nennen im Tooltip eine harte Voraussetzung; ohne sie sind sie tot.
+            <strong>3. Gestreute Skalierung.</strong> Boni auf fünf verschiedene Schulen
+            addieren sich nicht — sie verdünnen sich.</p>
+        </div>
+      </section>
+
+      <section id="schulen">
+        <h2><span class="num">02</span>Die sechs Schulen</h2>
+        <p class="lede">Ascension hat die meisten Grundfähigkeiten in sechs Schadensschulen
+          gespiegelt. Das ist keine Deko — es ist der Hebel, mit dem du deinen gesamten Schaden
+          auf einen Typ bündelst.</p>
+        <div class="schools">
+          <div class="school" style="--c:var(--fire)"><span class="name">Firestrike</span>
+            <span class="count">43</span><span class="eg">z. B. Charred Bite</span></div>
+          <div class="school" style="--c:var(--frost)"><span class="name">Froststrike</span>
+            <span class="count">40</span><span class="eg">z. B. Rime Strike</span></div>
+          <div class="school" style="--c:var(--shadow)"><span class="name">Shadowstrike</span>
+            <span class="count">40</span><span class="eg">z. B. Sunder Soul</span></div>
+          <div class="school" style="--c:var(--nature)"><span class="name">Stormstrike</span>
+            <span class="count">66</span><span class="eg">z. B. Voltaic Bite</span></div>
+          <div class="school" style="--c:var(--holy)"><span class="name">Holystrike</span>
+            <span class="count">40</span><span class="eg">z. B. Holy Shot</span></div>
+          <div class="school" style="--c:var(--arcane)"><span class="name">Spellstrike</span>
+            <span class="count">40</span><span class="eg">z. B. Aether Strike</span></div>
+        </div>
+        <p style="margin-top:24px"><strong>417 Vererbungspaare</strong> und <strong>49 vollständige Dublettengruppen</strong> stecken im Katalog — Schul-Varianten von rund 30 Grundfähigkeiten. <strong>Stormstrike ist mit 66 Erwähnungen die am dichtesten
+          ausgebaute Schule</strong> — wer dort bündelt, findet am meisten Anschlussmaterial.</p>
+      </section>
+
+      <section id="dubletten">
+        <h2><span class="num">03</span>Dubletten-Fallen</h2>
+        <p class="lede">Diese Gruppen sehen aus wie Auswahl, sind aber eine einzige Fähigkeit.
+          Nimm genau eine pro Gruppe.</p>
+
+        <h3>Slam-Familie — identisch bis auf die Schule</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Fähigkeit</th><th>Schule</th><th>Effekt laut Tooltip</th></tr></thead>
+            <tbody>
+              <tr><td>Arcane Slam</td><td>Spellstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Shadow Slam</td><td>Shadowstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Burning Slam</td><td>Firestrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Frozen Slam</td><td>Froststrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Storm Slam</td><td>Stormstrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+              <tr><td>Brilliant Slam</td><td>Holystrike</td><td class="txt">65 % Waffenschaden + 11</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Alle sechs tragen den Zusatz <code>This uses Slam modifiers</code> — sie erben also
+          dieselben Talente. Sechs Plätze für denselben Angriff.</p>
+
+        <h3>Weitere Dubletten-Gruppen</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Gruppe</th><th>Mitglieder</th><th>Warum nur eine</th></tr></thead>
+            <tbody>
+              <tr><td>Flurry of …</td><td>Fire · Ice · Lightning · Shadow · Light · Magic</td>
+                <td class="txt">Alle „uses Fan of Knives modifiers“</td></tr>
+              <tr><td>… Shield Slam</td><td>Blazing · Glacial · Tempest · Umbral · Mystic</td>
+                <td class="txt">Alle „uses Shield Slam modifiers“</td></tr>
+              <tr><td>Glaive</td><td>Glaive Toss · Zandalari Glaive</td>
+                <td class="txt">Teilen sich den Cooldown</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn">
+          <p class="hd">Sonderfall Zandalari Glaive</p>
+          <p>Der Tooltip sagt wörtlich <em>„shares a cooldown with Glaive Toss“</em>. Beide zu
+            nehmen erhöht deinen Schaden um exakt null — der zweite ist nur ein anderer Knopf für
+            dieselbe Abklingzeit.</p>
+        </div>
+      </section>
+
+      <section id="modifier">
+        <h2><span class="num">04</span>Modifier-Vererbung</h2>
+        <p class="lede">Der Satz <code>This uses X modifiers</code> ist die wichtigste Zeile im
+          ganzen Katalog. Er heißt: diese Fähigkeit erbt jedes Talent, das X verbessert.</p>
+        <p>Damit kannst du ein Talent einmal nehmen und es auf mehrere Fähigkeiten wirken lassen —
+          oder umgekehrt eine exotische Fähigkeit nehmen, die von deinem bestehenden Talentbaum
+          bereits versorgt wird, ohne einen einzigen zusätzlichen Talentplatz.</p>
+        <h3>Die ergiebigsten Basis-Fähigkeiten</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Basis</th><th>Varianten</th><th>Bedeutung</th></tr></thead>
+            <tbody>
+              <tr><td>Swipe</td><td>12</td><td class="txt">Breitester Vererbungsbaum im Katalog</td></tr>
+              <tr><td>Eviscerate</td><td>9</td><td class="txt">Finisher-Skalierung greift überall</td></tr>
+              <tr><td>Sinister Strike</td><td>9</td><td class="txt">Combopunkt-Aufbau</td></tr>
+              <tr><td>Revenge</td><td>8</td><td class="txt">Tank-Kern</td></tr>
+              <tr><td>Lava Lash</td><td>8</td><td class="txt">Waffen-Imbue-Synergie</td></tr>
+              <tr><td>Slam</td><td>8</td><td class="txt">Nahkampf-Grundschlag</td></tr>
+              <tr><td>Bloodthirst</td><td>7</td><td class="txt">Selbstheilung gekoppelt</td></tr>
+              <tr><td>Aimed Shot · Steady Shot · Kill Shot</td><td>je 7</td><td class="txt">Distanz-Kern</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <p class="hd">So nutzt du das</p>
+          <p>Suche zuerst die <em>Basis</em>, um die du bauen willst, und nimm dann deren Talente.
+            Jede Variante, die „uses &lt;Basis&gt; modifiers“ trägt, kommt danach gratis dazu — du
+            zahlst nur den Ability-Platz, nicht nochmal Talente.</p>
+        </div>
+      </section>
+
+      <section id="gates">
+        <h2><span class="num">05</span>Harte Sperren</h2>
+        <p class="lede">76 Einträge im Katalog funktionieren nur, wenn eine Bedingung außerhalb
+          deiner 55 Plätze erfüllt ist. Steht sie nicht, passiert schlicht nichts — ohne
+          Fehlermeldung, ohne Hinweis im Spiel.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Art der Sperre</th><th>Anzahl</th><th>Beispiel</th></tr></thead>
+            <tbody>
+              <tr><td>Pfad</td><td>37</td><td class="txt"><strong>Path of Healing</strong> sperrt
+                Atonement, Cryotherapist, Beacon of Shadow, Blooming Shot …</td></tr>
+              <tr><td>Waffe</td><td>9</td><td class="txt">Backstab und Ambush brauchen einen
+                <strong>Dolch in der Haupthand</strong></td></tr>
+              <tr><td>Item</td><td>9</td><td class="txt"><strong>Duelist's Glove</strong> sperrt
+                Blurred Blade, Panache, En Garde! und die Swashbuckler-Einträge</td></tr>
+              <tr><td>Rang</td><td>7</td><td class="txt">Chosen of Elune braucht
+                <strong>Eclipse Rang 1</strong></td></tr>
+              <tr><td>Stat</td><td>4</td><td class="txt">Careful Aim braucht
+                <strong>Primärstat Beweglichkeit</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn">
+          <p class="hd">Path of Healing ist die größte einzelne Sperre</p>
+          <p>37 Fähigkeiten und Talente hängen daran. Wer sie einplant, ohne den Pfad zu haben,
+            verliert bis zu 37 potenzielle Plätze an tote Einträge. Umgekehrt: wer den Pfad hat,
+            öffnet ein Sortiment, das anderen komplett verschlossen bleibt.</p>
+        </div>
+
+        <h3>Geteilte Abklingzeiten</h3>
+        <p>Zehn Gruppen im Katalog teilen sich jeweils einen Cooldown. Eine zweite Fähigkeit aus
+          derselben Gruppe bringt <strong>keine zusätzliche Uptime</strong> — nur einen zweiten
+          Knopf für dieselbe Wartezeit.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Gruppe</th><th>Mitglieder</th><th>Betroffene</th></tr></thead>
+            <tbody>
+              <tr><td>Unterbrecher</td><td>8</td><td class="txt">Kick · Pummel · Shield Bash ·
+                Counterspell · Wind Shear · Mind Freeze · Silencing Shot · Silence in the Library</td></tr>
+              <tr><td>Tonics</td><td>6</td><td class="txt">Witch-Hunter-Tränke, u. a. Dark Tonic
+                und Vampiric Tonic</td></tr>
+              <tr><td>Shaman Shocks</td><td>4</td><td class="txt">Earth Shock · Flame Shock ·
+                Frost Shock · Frostflame Shock</td></tr>
+              <tr><td>Seismic</td><td>2</td><td class="txt">Seismic-Zauber untereinander</td></tr>
+              <tr><td>Glaive</td><td>2</td><td class="txt">Glaive Toss · Zandalari Glaive</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn">
+          <p class="hd">Der teuerste Griff daneben</p>
+          <p>Acht Unterbrecher auf einem gemeinsamen Cooldown. Wer Kick <em>und</em> Counterspell
+            mitnimmt, weil „einer ist magisch, einer physisch“, verschenkt einen Platz vollständig.
+            Nimm genau einen — den, dessen Ressource du ohnehin führst.</p>
+        </div>
+      </section>
+
+      <section id="ketten">
+        <h2><span class="num">06</span>Trigger-Ketten</h2>
+        <p class="lede">Der zweite Synergietyp: Fähigkeit A gewährt einen Buff, der Fähigkeit B
+          verstärkt. Diese Ketten sind der Grund, warum manche Builds überproportional
+          skalieren — und warum ein fehlendes Glied den Rest wertlos macht.</p>
+        <p>Der Katalog enthält <strong>755 solcher Ketten</strong> — 403 mit eindeutig benannter Quelle, weitere 352 in unschärferer Formulierung.
+          Bemerkenswert daran: fast alle sind <em>Klassenbrücken</em>. Sie verbinden Fähigkeiten,
+          die im normalen WoW nie zusammen auf einer Leiste lägen — und genau darin liegt der
+          Sinn des klassenlosen Systems.</p>
+
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Lava Lash</span><span class="arrow">→</span>
+            <span class="node">Solid Ice</span><span class="arrow">→</span>
+            <span class="node">Ice Lance · Frostbolt · Deep Freeze</span></div>
+          <p><strong>Lava Freeze</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 20 —
+            Schamanen-Nahkampf befeuert Magier-Frostzauber. +8 % Schaden.</p>
+        </div>
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Sinister Strike</span><span class="arrow">→</span>
+            <span class="node">Knight of the Eclipse</span><span class="arrow">→</span>
+            <span class="node">Wrath · Starfire · Starsurge</span></div>
+          <p><strong>Knight of the Eclipse</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 10 —
+            Schurken-Combopunkte verkürzen Druiden-Zauberzeiten.</p>
+        </div>
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Bloodthirst + Execute</span><span class="arrow">→</span>
+            <span class="node">Draconic Slam</span><span class="arrow">→</span>
+            <span class="node">Slam</span></div>
+          <p><strong>Draconic Slam</strong> <span class="qual q-Epic">Epic</span> · Lvl 30 —
+            Nächster Slam wird sofort gewirkt und trifft 40 % härter. Verwandelt Slam vom
+            Lückenfüller zum Auszahlungsknopf.</p>
+        </div>
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Instant Poison</span><span class="arrow">→</span>
+            <span class="node">Toxic Strikes</span><span class="arrow">→</span>
+            <span class="node">Slam · Overpower · …</span></div>
+          <p><strong>Toxic Strikes</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 24 —
+            Schurkengift befeuert Krieger-Nahkampf. Krits gewähren zusätzlich Hydra's Fang.</p>
+        </div>
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Shadow Dance</span><span class="arrow">→</span>
+            <span class="node">5× Shadow Mark</span><span class="arrow">→</span>
+            <span class="node">Ambush · Ravage · Deadly Throw</span></div>
+          <p><strong>Gloaming Embrace</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 30 —
+            Im Shuriken-Build unten verbaut: markiert alles im Umkreis und macht Deadly Throw
+            zum Auslöser.</p>
+        </div>
+        <div class="chain">
+          <div class="chain-flow"><span class="node src">Titanic Strike</span><span class="arrow">→</span>
+            <span class="node">Titan's Fury</span><span class="arrow">→</span>
+            <span class="node">alle Nahkampfangriffe</span></div>
+          <p><strong>Titan's Fury</strong> <span class="qual q-Legendary">Legendary</span> · Lvl 10 —
+            +150 % Angriffstempo, <em>verbrennt aber Wut, Energie und Runen für 4 Sekunden</em>.
+            Der Tooltip belegt nebenbei, dass ein Wildcard-Charakter alle drei Ressourcen
+            gleichzeitig führt.</p>
+        </div>
+
+        <div class="note">
+          <p class="hd">Warum das für dein Budget zählt</p>
+          <p>Eine Kette kostet dich mindestens zwei Plätze — Auslöser und Nutznießer — plus das
+            Talent selbst. Drei Plätze für einen Effekt lohnen sich nur, wenn beide Fähigkeiten
+            ohnehin in deiner Rotation stehen. Ketten sind kein Grund, eine Fähigkeit
+            aufzunehmen; sie sind eine Belohnung dafür, dass sie schon da ist.</p>
+        </div>
+      </section>
+
+      <section id="schaden">
+        <h2><span class="num">07</span>Was deinen Schaden hochskaliert</h2>
+        <p class="lede">Skalierung wirkt multiplikativ, wenn sie auf <em>dieselbe</em> Fähigkeit
+          trifft, und verwässert, wenn sie sich über viele verteilt.</p>
+        <h3>Die vier Skalierungsebenen</h3>
+        <p>Sie greifen unterschiedlich weit. Von unten nach oben wird der Effekt seltener,
+          aber wirksamer:</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Ebene</th><th>Wirkt auf</th><th>Beispiel</th><th>Wert</th></tr></thead>
+            <tbody>
+              <tr><td>Attribut</td><td class="txt">Alles</td><td class="txt">Blessing of Kings</td><td>+10 % Werte</td></tr>
+              <tr><td>Schule</td><td class="txt">Eine Schadensart</td><td class="txt">Lava Freeze → Frost</td><td>+8 %</td></tr>
+              <tr><td>Fähigkeit</td><td class="txt">Ein Angriff</td><td class="txt">Improved Glaive Toss</td><td>+15 %</td></tr>
+              <tr><td>Kette</td><td class="txt">Nächster Treffer</td><td class="txt">Master of Kunai</td><td>+70 % ×3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Ketten-Boni sind mit Abstand die stärksten</strong> — aber sie gelten nur für
+          den nächsten Treffer und setzen voraus, dass du den Auslöser tatsächlich spielst.
+          Attribut-Boni sind schwach, aber immer aktiv. Ein guter Build hat beides.</p>
+
+        <h3>Krit als Multiplikator</h3>
+        <p>Krit-Skalierung ist deshalb besonders wertvoll, weil sie sich mit jeder anderen Ebene
+          multipliziert. Im Katalog gibt es acht Epic/Legendary-Talente, die gezielt Krit-Chance
+          oder Krit-Schaden anheben:</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Talent</th><th>Qual.</th><th>Lvl</th><th>Wirkung</th></tr></thead>
+            <tbody>
+              <tr><td>Fatal Vanguard</td><td><span class="qual q-Epic">Epic</span></td><td>24</td>
+                <td class="txt">+25 % Krit-Chance <em>und</em> Krit-Schaden auf Execute</td></tr>
+              <tr><td>Biting Drain</td><td><span class="qual q-Epic">Epic</span></td><td>10</td>
+                <td class="txt">+35 % Krit-Schaden auf Drain Life / Drain Soul</td></tr>
+              <tr><td>Eruption</td><td><span class="qual q-Legendary">Legendary</span></td><td>20</td>
+                <td class="txt">Lava Lash → +15 % Krit auf nächsten Pyroblast</td></tr>
+              <tr><td>Flame On!</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
+                <td class="txt">Feuerzauber stapeln Krit-Chance</td></tr>
+              <tr><td>Flame Born</td><td><span class="qual q-Epic">Epic</span></td><td>36</td>
+                <td class="txt">Krits von Corruption / Unstable Affliction stapeln weiter</td></tr>
+              <tr><td>Tethered Power</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
+                <td class="txt">Elementar-Krits → Elemental Blast verstärkt</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn">
+          <p class="hd">Der teuerste Anfängerfehler</p>
+          <p>Krit-Talente auf sechs verschiedene Fähigkeiten verteilen. Jedes einzelne wirkt dann
+            nur auf ein Sechstel deines Schadens. <strong>Bündle Krit auf die Fähigkeit, die du
+            am häufigsten drückst</strong> — bei einem Combopunkt-Build ist das der Aufbau, nicht
+            der Finisher.</p>
+        </div>
+      </section>
+
+      <section id="heilung">
+        <h2><span class="num">08</span>Was deine Heilung hochskaliert</h2>
+        <p class="lede">Im Wildcard-System kommt Heilung selten aus reinen Heilzaubern — meist
+          hängt sie am Schaden.</p>
+        <p>Im Katalog stehen <strong>27 Fähigkeiten, die dich beim Schadenmachen heilen</strong>,
+          aber nur 29 Talente, die Heilung prozentual erhöhen — und die meisten davon setzen einen
+          echten Heilzauber voraus. Für einen Schadensbuild heißt das: deine Selbstheilung kommt
+          fast immer als Nebenprodukt, nicht als eigene Investition.</p>
+
+        <h3>Heilung, die am Schaden hängt</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Fähigkeit</th><th>Qual.</th><th>Lvl</th><th>Kopplung</th></tr></thead>
+            <tbody>
+              <tr><td>Blood Presence</td><td><span class="qual q-Rare">Rare</span></td><td>1</td>
+                <td class="txt">+2 % Schaden und heilt 1 % des angerichteten Schadens — dauerhaft</td></tr>
+              <tr><td>Devour Mind</td><td><span class="qual q-Rare">Rare</span></td><td>20</td>
+                <td class="txt">Krankheit heilt dich um 15 % ihres Schadens</td></tr>
+              <tr><td>Blood Arrow</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
+                <td class="txt">Distanzangriff mit Lebensraub</td></tr>
+              <tr><td>Death Strike</td><td><span class="qual q-Rare">Rare</span></td><td>14</td>
+                <td class="txt">5 % Maximalleben je Krankheit auf dem Ziel</td></tr>
+              <tr><td>Carnage Incarnate</td><td><span class="qual q-Legendary">Legendary</span></td><td>10</td>
+                <td class="txt">Heilt und schadet gleichzeitig, jede Sekunde</td></tr>
+              <tr><td>Sever</td><td><span class="qual q-Epic">Epic</span></td><td>16</td>
+                <td class="txt">Saugt 336 Leben und unterbricht</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <p class="hd">Blood Presence ist der beste Deal für Schadensbuilds</p>
+          <p>Ein einziger Platz, permanent aktiv, gibt <strong>+2 % Schaden und Lebensraub
+            gleichzeitig</strong>. Es gibt im Katalog kaum eine zweite Fähigkeit, die beide Achsen
+            ohne Bedingung bedient.</p>
+        </div>
+
+        <div class="note warn">
+          <p class="hd">Noch eine Dublettengruppe</p>
+          <p><strong>Death Strike · Flame Siphon · Frost Siphon · Storm Siphon</strong> sind
+            derselbe Angriff in verschiedenen Schulen — alle „heilt dich um 5 % deines
+            Maximallebens je Krankheit“. Nimm den, dessen Schule zu deinem restlichen Schaden
+            passt, und lass die anderen drei liegen.</p>
+        </div>
+      </section>
+
+      <section id="beispiel">
+        <h2><span class="num">09</span>Durchgerechnet: der Shuriken-Build</h2>
+        <p class="lede">Ein vollständiger Build, der die vier Regeln oben anwendet: eine Schule,
+          keine Dubletten, jede Voraussetzung erfüllt, Skalierung gebündelt.
+          Alle 55 Einträge gegen den Katalog geprüft.</p>
+
+        <div class="cols">
+          <div class="col">
+            <h3>30 Abilities</h3>
+            <p class="grp">Wurf-Kern · 5</p>
+            <ul>
+              <li><span class="nm">Shuriken Toss</span><span class="meta">Normal · 14</span></li>
+              <li><span class="nm">Deadly Throw</span><span class="meta">Rare · 24</span></li>
+              <li><span class="nm">Glaive Toss</span><span class="meta">Normal · 12</span></li>
+              <li><span class="nm">Fan of Knives</span><span class="meta">Normal · 50</span></li>
+              <li><span class="nm">Thunder Slam</span><span class="meta">Rare · 30</span></li>
+            </ul>
+            <p class="grp">Cooldowns &amp; Positionierung · 7</p>
+            <ul>
+              <li><span class="nm">Adrenaline Rush</span><span class="meta">Epic · 30</span></li>
+              <li><span class="nm">Sprint</span><span class="meta">Leg · 10</span></li>
+              <li><span class="nm">Shadow Dance</span><span class="meta">Epic · 40</span></li>
+              <li><span class="nm">Stealth</span><span class="meta">Epic · 1</span></li>
+              <li><span class="nm">Vanish</span><span class="meta">Epic · 22</span></li>
+              <li><span class="nm">Preparation</span><span class="meta">Epic · 22</span></li>
+              <li><span class="nm">Shadowstep</span><span class="meta">Epic · 36</span></li>
+            </ul>
+            <p class="grp">Combopunkte &amp; Finisher · 7</p>
+            <ul>
+              <li><span class="nm">Roll the Bones</span><span class="meta">Epic · 26</span></li>
+              <li><span class="nm">Slice and Dice</span><span class="meta">Rare · 1</span></li>
+              <li><span class="nm">Rupture</span><span class="meta">Normal · 20</span></li>
+              <li><span class="nm">Eviscerate</span><span class="meta">Normal · 1</span></li>
+              <li><span class="nm">Expose Armor</span><span class="meta">Rare · 14</span></li>
+              <li><span class="nm">Killing Spree</span><span class="meta">Leg · 40</span></li>
+              <li><span class="nm">Blade Flurry</span><span class="meta">Epic · 22</span></li>
+            </ul>
+            <p class="grp">Verteidigung &amp; Kontrolle · 7</p>
+            <ul>
+              <li><span class="nm">Evasion</span><span class="meta">Epic · 10</span></li>
+              <li><span class="nm">Cloak of Shadows</span><span class="meta">Leg · 50</span></li>
+              <li><span class="nm">Feint</span><span class="meta">Rare · 12</span></li>
+              <li><span class="nm">Kick</span><span class="meta">Epic · 12</span></li>
+              <li><span class="nm">Kidney Shot</span><span class="meta">Epic · 20</span></li>
+              <li><span class="nm">Cheap Shot</span><span class="meta">Epic · 26</span></li>
+              <li><span class="nm">Blind</span><span class="meta">Epic · 34</span></li>
+            </ul>
+            <p class="grp">Permanente Buffs · 4</p>
+            <ul>
+              <li><span class="nm">Aspect of the Hawk</span><span class="meta">Rare · 1</span></li>
+              <li><span class="nm">Battle Stance</span><span class="meta">Rare · 1</span></li>
+              <li><span class="nm">Trueshot Aura</span><span class="meta">Rare · 30</span></li>
+              <li><span class="nm">Blessing of Kings</span><span class="meta">Uncom · 20</span></li>
+            </ul>
+          </div>
+
+          <div class="col">
+            <h3>25 Talente</h3>
+            <p class="grp">Wurf-Kern · 8</p>
+            <ul>
+              <li><span class="nm">Master of Kunai</span><span class="meta">Leg · 30</span></li>
+              <li><span class="nm">Physics in Practice</span><span class="meta">Leg · 34</span></li>
+              <li><span class="nm">Critical Serration</span><span class="meta">Leg · 20</span></li>
+              <li><span class="nm">Toss and Throw</span><span class="meta">Epic · 24</span></li>
+              <li><span class="nm">Unseen Assassin</span><span class="meta">Epic · 34</span></li>
+              <li><span class="nm">I'm a Fan of Knives</span><span class="meta">Epic · 14</span></li>
+              <li><span class="nm">Throwing Specialization</span><span class="meta">Normal · 34</span></li>
+              <li><span class="nm">Improved Glaive Toss</span><span class="meta">Normal · 12</span></li>
+            </ul>
+            <p class="grp">Combopunkte &amp; Schatten · 7</p>
+            <ul>
+              <li><span class="nm">Gloaming Embrace</span><span class="meta">Leg · 30</span></li>
+              <li><span class="nm">Swift Shadows</span><span class="meta">Epic · 36</span></li>
+              <li><span class="nm">Goremaw's Bite</span><span class="meta">Leg · 10</span></li>
+              <li><span class="nm">Violent Combo</span><span class="meta">Rare · 40</span></li>
+              <li><span class="nm">Aggression</span><span class="meta">Normal · 18</span></li>
+              <li><span class="nm">Surprise Attacks</span><span class="meta">Normal · 20</span></li>
+              <li><span class="nm">Seal Fate</span><span class="meta">Normal · 10</span></li>
+            </ul>
+            <p class="grp">Voraussetzungen &amp; Slam · 4</p>
+            <ul>
+              <li><span class="nm">Piercing Shots</span><span class="meta">Normal · 30</span></li>
+              <li><span class="nm">Survival Instincts</span><span class="meta">Normal · 12</span></li>
+              <li><span class="nm">Killer Instinct</span><span class="meta">Normal · 22</span></li>
+              <li><span class="nm">Improved Slam</span><span class="meta">Normal · 10</span></li>
+            </ul>
+            <p class="grp">Skalierung · 6</p>
+            <ul>
+              <li><span class="nm">Relentless Strikes</span><span class="meta">Normal · 10</span></li>
+              <li><span class="nm">Ruthlessness</span><span class="meta">Normal · 10</span></li>
+              <li><span class="nm">Improved Sprint</span><span class="meta">Normal · 18</span></li>
+              <li><span class="nm">Malice</span><span class="meta">Normal · 10</span></li>
+              <li><span class="nm">Vitality</span><span class="meta">Normal · 30</span></li>
+              <li><span class="nm">Find Weakness</span><span class="meta">Normal · 34</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="note warn" style="margin-top:30px">
+          <p class="hd">Zwei harte Abhängigkeiten</p>
+          <p><strong>Critical Serration</strong> trägt im Tooltip <em>„Unlocked by Piercing Shots
+            (Rank 1)“</em> — deshalb steht Piercing Shots im Build, obwohl kein einziger Schuss
+            benutzt wird. <strong>Physics in Practice</strong> skaliert mit dem Tempobonus deines
+            <em>aktiven</em> Sprint; ohne laufenden Sprint ist das Talent wirkungslos.</p>
+        </div>
+      </section>
+
+      <section id="builder">
+        <h2><span class="num">→</span>Selbst bauen</h2>
+        <p class="lede">Alles auf dieser Seite steckt auch in der Buildschmiede — dort aber
+          interaktiv: Katalog durchsuchen, Plätze zählen lassen, und bei jeder Auswahl sofort
+          sehen, was zusammenspielt und was ins Leere läuft.</p>
+        <div class="note">
+          <p class="hd">Buildschmiede der Gilde Aldi Ehrfürchtig</p>
+          <p><a href="https://claude.ai/code/artifact/b4789853-146a-4417-82fc-52b67bc3072c">
+            Zur interaktiven Buildschmiede →</a><br>
+            Alle 3.071 Einträge mit Original-Icons, Warnungen bei Dubletten, fehlenden
+            Voraussetzungen, geteilten Cooldowns und ungenutzter Skalierung. Fertige Builds
+            lassen sich per Link teilen — der komplette Build steckt in der URL.</p>
+        </div>
+      </section>
+
+      <footer>
+        <p>Datenbasis: Katalog des Season-10-Builders (3.071 Einträge, generiert am 27.07.2026),
+          gegengeprüft am Client-Spelltable mit 209.334 Einträgen. Alle genannten Fähigkeiten und
+          Talente wurden maschinell gegen den Katalog verifiziert.</p>
+        <p style="margin-top:12px"><strong>Was diese Seite nicht kann:</strong> Zahlen vergleichen.
+          Der Katalog liefert Tooltip-Texte, keine Schadensformeln. Dass Synergien ineinandergreifen,
+          ist belegt; dass ein Build stärker ist als ein anderer, ist es nicht — das entscheidet die
+          Übungspuppe.</p>
+      </footer>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,11 @@
+=== BUILDSCHMIEDE v1 ===
+INSPECT|1
+CHAR|Chibah|53|Orc|Hero
+PATH|Strength
+ILVL|21.40
+GEAR|Head|Ironbark Helm|22|3|Plate
+GEAR|Chest|Ironbark Plate|21|3|Plate
+ABI|Battle Charge;Titanic Mutilate;Savage Blade;Titanic Strike;Thrust;Javelin;Eclipse Strike
+TAL|Survival of the Fittest:1;Glyph of Bestial Wrath:1;Ward of Light:1;Endurance:1;Scent of Blood:1;Enrage:1;Improved Barkskin:1;Veteran of the Third War:1;Ursine Frenzy:1
+COUNT|A:7|T:9
+=== ENDE ===
