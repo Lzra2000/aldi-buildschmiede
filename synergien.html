@@ -180,8 +180,10 @@ a{color:var(--accent)}
           seine Voraussetzung — kostet dich einen Platz, den ein wirksamer Effekt haben könnte.</p>
         <div class="note">
           <p class="hd">Die drei teuren Fehler</p>
-          <p><strong>1. Dubletten.</strong> Dieselbe Attacke in sechs Schadensschulen sieht nach
-            sechs Optionen aus, ist aber eine. <strong>2. Waisen-Talente.</strong> Manche Talente
+          <p><strong>1. Dubletten.</strong> Dieselbe Attacke in sechs Schadensschulen belegt
+            sechs Plätze für eine Rolle — nimm eine davon. <em>Welche</em>, ist allerdings
+            keine Geschmacksfrage: elementare Schulen ignorieren Armor.
+            <strong>2. Waisen-Talente.</strong> Manche Talente
             nennen im Tooltip eine harte Voraussetzung; ohne sie sind sie tot.
             <strong>3. Gestreute Skalierung.</strong> Boni auf fünf verschiedene Schulen
             addieren sich nicht — sie verdünnen sich.</p>
@@ -213,10 +215,27 @@ a{color:var(--accent)}
 
       <section id="dubletten">
         <h2><span class="num">03</span>Dubletten-Fallen</h2>
-        <p class="lede">Diese Gruppen sehen aus wie Auswahl, sind aber eine einzige Fähigkeit.
-          Nimm genau eine pro Gruppe.</p>
+        <p class="lede">Diese Gruppen füllen dieselbe Rolle — nimm genau eine pro Gruppe.
+          Sie sind aber nicht austauschbar: die Schule entscheidet, ob Armor
+          den Schaden schluckt und welche Talente darauf einzahlen.</p>
 
-        <h3>Slam-Familie — identisch bis auf die Schule</h3>
+        
+        <div class="note">
+          <p class="hd">Nachtrag: die Schule ist kein Kosmetikwert</p>
+          <p>Die erste Fassung dieser Seite nannte diese Gruppen „identisch bis auf
+            die Schule“. Das war zu grob. Ein Entwickler hat es inzwischen klargestellt:
+            elementare Sprüche <strong>ignorieren Armor</strong>, dafür ist ihre reine
+            Waffen-DPS etwas niedriger. In der Levelphase schluckt Armor rund 28 % des
+            physischen Schadens — genau den Anteil, den die elementare Variante gar nicht
+            erst verliert. Bei gleichem Gear ist die Feuerversion von Slam deshalb oft
+            die <em>stärkere</em> Wahl, nicht die schwächere.</p>
+          <p>Dazu kommt: Spell Power und Attack Power zählen für Waffenschaden gleich
+            (14 Punkte = 1 Waffen-DPS). Eine Waffenattacke, die als Element zählt, zieht
+            also vollen Nutzen aus Spell Power <em>und</em> umgeht die Rüstung. Die
+            <a href="./">Buildschmiede</a> rechnet das pro Fähigkeit vor.</p>
+        </div>
+
+        <h3>Slam-Familie — gleicher Effekt, unterschiedliche Schule</h3>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Fähigkeit</th><th>Schule</th><th>Effekt laut Tooltip</th></tr></thead>

@@ -1526,6 +1526,19 @@
     if (b) toggle(+b.dataset.add);
   });
 
+  // Vorschlags- und Vergleichszeilen sind keine <button>, tragen aber
+  // role="button" und tabindex. Ohne diesen Handler waeren sie mit der
+  // Tastatur erreichbar, aber nicht bedienbar - schlimmer als gar nicht
+  // fokussierbar, weil der Screenreader sie als Schaltflaeche ansagt.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (!e.target.closest) return;
+    var b = e.target.closest('[data-add][role="button"]');
+    if (!b) return;
+    e.preventDefault();
+    toggle(+b.dataset.add);
+  });
+
   // ---------- Build-Generator ----------
   // Baut aus dem gesamten Katalog einen vollstaendigen Build zu einer
   // Ausrichtung. Kein Zufall und kein Sprachmodell: jeder Eintrag wird
@@ -2419,7 +2432,10 @@
     if (!box) return;
     if (!RIVAL) {
       hd.textContent = "—"; hd.className = "cnt";
-      return;   // Eingabefeld bleibt stehen, nur das Ergebnis fehlt
+      box.innerHTML = '<div class="empty">Noch nichts zu vergleichen. Oben einen ' +
+        "Build-Link oder einen Export einfügen — <code>/bs target</code> im Spiel " +
+        "liest den Build deines Ziels aus.</div>";
+      return;
     }
 
     var mine = Object.keys(picked).map(Number);

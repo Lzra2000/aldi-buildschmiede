@@ -402,8 +402,9 @@ table.stat tr.dead td{color:var(--ink-faint)}
         <p class="guild">Gilde Aldi Ehrfürchtig · Season 10 Wildcard</p>
         <h1>Buildschmiede</h1>
       </div>
-      <p class="masthint">3.071 Fähigkeiten und Talente · 30 Ability- und
-        25 Talent-Plätze · Path-Empfehlung · Build per Link teilen</p>
+      <p class="masthint">3.071 Fähigkeiten und Talente · Build-Generator ·
+        Path- und Stat-Empfehlung<br>Import aus dem Spiel · KI-Beratung ·
+        Build per Link teilen</p>
     </div>
   </header>
 
@@ -878,9 +879,15 @@ table.stat tr.dead td{color:var(--ink-faint)}
     <p>Datenbasis: Season-10-Katalog, 3.071 Einträge (1.321 Abilities, 1.750 Talente).
       Der Link enthält deinen kompletten Build. Wer ihn öffnet, sieht genau deine Auswahl.
       Es wird nichts gespeichert und nichts hochgeladen.</p>
-    <p style="margin-top:10px"><strong>Was der Builder nicht kann:</strong> Schaden berechnen.
-      Er prüft die Struktur: Plätze, doppelte Skills, Voraussetzungen und Verweise
-      zwischen deinen Auswahlen. Ob ein Build stark ist, entscheidet die Übungspuppe.</p>
+    <p style="margin-top:10px"><strong>Wie weit die Zahlen tragen.</strong> Mit
+      importiertem Charakter rechnet der Builder den Treffer jeder Waffenfähigkeit
+      aus deinem echten Waffenschaden und, wo ein Cooldown bekannt ist, den Schaden
+      pro Sekunde über diesen Cooldown. Beide Werte sind gemessen, nicht geschätzt.</p>
+    <p style="margin-top:8px"><strong>Was er nicht kann:</strong> ein DPS-Ranking.
+      Crit, Haste, die Rüstung des Ziels, Procs und deine tatsächliche Rotation
+      gehen nicht ein — und die Spell-Power-Anteile der Flat-Damage-Zauber stehen
+      in keinem Tooltip. Für „welcher meiner Angriffe schlägt härter zu“ reicht es.
+      Ob ein Build stark ist, entscheidet die Übungspuppe.</p>
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2417,6 +2424,19 @@ table.stat tr.dead td{color:var(--ink-faint)}
     if (b) toggle(+b.dataset.add);
   });
 
+  // Vorschlags- und Vergleichszeilen sind keine <button>, tragen aber
+  // role="button" und tabindex. Ohne diesen Handler waeren sie mit der
+  // Tastatur erreichbar, aber nicht bedienbar - schlimmer als gar nicht
+  // fokussierbar, weil der Screenreader sie als Schaltflaeche ansagt.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (!e.target.closest) return;
+    var b = e.target.closest('[data-add][role="button"]');
+    if (!b) return;
+    e.preventDefault();
+    toggle(+b.dataset.add);
+  });
+
   // ---------- Build-Generator ----------
   // Baut aus dem gesamten Katalog einen vollstaendigen Build zu einer
   // Ausrichtung. Kein Zufall und kein Sprachmodell: jeder Eintrag wird
@@ -3310,7 +3330,10 @@ table.stat tr.dead td{color:var(--ink-faint)}
     if (!box) return;
     if (!RIVAL) {
       hd.textContent = "—"; hd.className = "cnt";
-      return;   // Eingabefeld bleibt stehen, nur das Ergebnis fehlt
+      box.innerHTML = '<div class="empty">Noch nichts zu vergleichen. Oben einen ' +
+        "Build-Link oder einen Export einfügen — <code>/bs target</code> im Spiel " +
+        "liest den Build deines Ziels aus.</div>";
+      return;
     }
 
     var mine = Object.keys(picked).map(Number);
