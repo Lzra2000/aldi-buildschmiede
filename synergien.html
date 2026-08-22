@@ -630,9 +630,9 @@ body:has(#synTipPanel:not([hidden])) .mast{padding-top:clamp(6px,1.2vw,12px)}
 a.school,a.limit,[data-jump]{transition:border-color var(--hover-fade) var(--ease-out),color var(--hover-fade) var(--ease-out)}
 a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--c,var(--accent)) 55%,var(--rule))}
 #hoverTip{
-  position:fixed;z-index:var(--hover-z);max-width:min(28ch,calc(100vw - 24px));
+  position:fixed;z-index:var(--hover-z);max-width:min(32ch,calc(100vw - 24px));
   padding:7px 10px 8px 12px;background:var(--raised);color:var(--ink);
-  border:1px solid var(--metal,var(--rule));pointer-events:none;
+  border:1px solid var(--metal,var(--rule));pointer-events:none;white-space:pre-line;
   box-shadow:0 1px 0 var(--edge),inset 0 1px 0 var(--metal-hi,rgba(255,255,255,.06));
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;line-height:1.35;
   opacity:0;visibility:hidden}

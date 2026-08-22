@@ -1094,7 +1094,10 @@
             : "keine reinen Waffenangriffe")
       }
     ];
-    s.sort(function (a, b) { return b.v - a.v || a.k.localeCompare(b.k); });
+    s.sort(function (a, b) {
+      if (b.v !== a.v) return b.v - a.v;
+      return pathTieRank(b.k, p) - pathTieRank(a.k, p);
+    });
     return s;
   }
 
