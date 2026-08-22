@@ -6633,7 +6633,7 @@
 
     var need = REL[i][1];
     if (need !== null && need !== undefined) {
-      rows.push(["Braucht", pill(need, !!have[need], !have[need])]);
+      rows.push(["Braucht", pill(need, !!have[need], !have[need], have)]);
       if (have[need]) live++; else dead++;
     }
 
@@ -6786,6 +6786,8 @@
       } else if (m.proc) foot.push(fmt(m.proc) + " % Proc");
       if (m.cd) foot.push("CD " + secs(m.cd));
       if (m.cost) foot.push(m.cost + " " + m.res);
+      var trigFoot = methTriggerLine(i);
+      if (trigFoot) foot.push(trigFoot.replace(/^Trigger: /, ""));
 
       var meta = (CAT[i][1] ? "TAL" : "ABI") + " · lvl" + CAT[i][4];
       if (c.live) meta += " · " + c.live + (c.live === 1 ? " Kante" : " Kanten");
@@ -6824,7 +6826,7 @@
       if (detRows.length === 1 && detRows[0][0] === "Erbt Talente") {
         detLabel = c.fromUses ? "Talente der Basis" : "Vererbung";
       }
-      var cardTip = chainNodeTip(i);
+      var cardTip = chainNodeTip(i, have);
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
         '<div class="chn-hd" tabindex="0"' +
         (cardTip ? ' data-tip="' + esc(cardTip) + '"' : "") +
@@ -7950,12 +7952,22 @@
   // werk. Beide über denselben Parameter erreichbar halten, sonst zeigen
   // ältere geteilte Links ins Leere.
   var applyingHash = false;
+  var tutHashBoot = false;
   function applyHashTarget() {
     if (applyingHash) return;
     applyingHash = true;
     try {
       var raw = (location.hash || "").replace(/^#/, "");
-      if (tutWantHash()) tutOpen(true);
+      if (tutWantHash()) {
+        tutState.done = false;
+        tutShow(true);
+        if (!tutHashBoot) {
+          tutState.step = 0;
+          tutHashBoot = true;
+        }
+        renderTutorial();
+        tutSave();
+      }
       if (!raw || /^b=/.test(raw)) return;
       var ht = raw.match(/(?:^|[?&])t=([A-Za-z]+)/);
       if (ht) {
@@ -8109,6 +8121,47 @@
       if (e.key === "Escape") hide(true);
     });
     window.addEventListener("scroll", function () { hide(true); }, true);
+
+    var dwellTimer = null, dwellEl = null;
+    function clearDwell() {
+      if (dwellTimer) { clearTimeout(dwellTimer); dwellTimer = null; }
+      if (dwellEl) { dwellEl.classList.remove("dwell"); dwellEl = null; }
+    }
+    function dwellHost(t) {
+      return t && t.closest ? t.closest(".row, .scard") : null;
+    }
+    document.addEventListener("pointerover", function (e) {
+      var el = dwellHost(e.target);
+      if (!el || coarse()) return;
+      if (dwellEl === el) return;
+      clearDwell();
+      dwellEl = el;
+      var wait = delayMs();
+      if (!wait) { el.classList.add("dwell"); return; }
+      dwellTimer = setTimeout(function () {
+        dwellTimer = null;
+        if (dwellEl === el) el.classList.add("dwell");
+      }, wait);
+    });
+    document.addEventListener("pointerout", function (e) {
+      var el = dwellHost(e.target);
+      if (!el) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (dwellEl === el) clearDwell();
+    });
+    document.addEventListener("focusin", function (e) {
+      var el = dwellHost(e.target);
+      if (!el) return;
+      clearDwell();
+      dwellEl = el;
+      el.classList.add("dwell");
+    });
+    document.addEventListener("focusout", function (e) {
+      var el = dwellHost(e.target);
+      if (!el) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (dwellEl === el) clearDwell();
+    });
   }
 
   renderArchetypes();
