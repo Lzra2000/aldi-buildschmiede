@@ -1,27 +1,34 @@
 ---
-description: Website UI chrome must be original CSS/SVG/PNG/WebP — no Ascension/WoW BLP frame kits; spell/item icons only from client extracts
+description: Agents may invent original website chrome (CSS/SVG/PNG/WebP); never copy Ascension/WoW BLP or 1:1 client UI; spell/item icons only via existing pipelines
 alwaysApply: true
 ---
 
 # Website assets (Buildschmiede site)
 
-## Own chrome only
+## Original chrome — invent / generate freely
 
-Develop **own** UI chrome and textures for the website (`src/`, assembled `index.html` / `synergien.html`):
+Agents **MAY invent and generate** original UI chrome and textures for the website
+(`src/`, assembled `index.html` / `synergien.html`) from their own ideas:
 
-- CSS, SVG, hand-made PNG/WebP
-- Layout, panels, tabs, borders, corners, backgrounds — all original
+- CSS, SVG, hand-made or AI-generated PNG/WebP
+- Layout, panels, tabs, borders, corners, backgrounds, ornaments — all original
 
-## Do NOT embed Ascension / WoW BLP UI chrome
+No need to wait for hand-drawn assets or to mimic client art. Prefer coherent,
+site-owned visuals over looking like the game client.
 
-Never copy or embed client **BLP** (or BLP-converted) panel chrome into the site, including but not limited to:
+## Forbidden: Ascension / WoW BLP and 1:1 client chrome
+
+Never copy or embed client **BLP** (or BLP-converted) panel chrome into the site,
+and never ship **1:1** client UI frame kits, including but not limited to:
 
 - DialogFrame / UI-Panel / PaperDoll tab art
 - `caCorner` and similar frame-kit corners/borders
 - Full UI frame kits from Interface extracts
 
-Read-only research in client extracts is fine; shipping those textures as site chrome is not.
+Read-only research in client extracts is fine; shipping those textures (or
+pixel-identical recreations) as site chrome is not.
 
 ## Allowed from client extracts
 
-**Spell and item icons only** — via the existing pipeline (`sprite.webp` / `spriteindex.json`, `D.iic` icon names → icons). Not full UI frame kits.
+**Spell and item icons only** — via the existing pipeline (`sprite.webp` /
+`spriteindex.json`, `D.iic` icon names → icons). Not full UI frame kits.
