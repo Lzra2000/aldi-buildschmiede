@@ -35,7 +35,11 @@ Pages: Branch `main`, Ordner `/`. Ohne Push der gebauten HTML-Dateien bleibt die
 | `check.sh` / `check.ps1` | JS-Syntax + optional `luac` auf Addon-Lua |
 | `pipeline-all.sh` / `pipeline-all.ps1` | Offline- (+ optional DBC-) Datenpipelines |
 | `package-addon.sh` / `package-addon.ps1` | `AscBuildschmiede.zip` aus `addon/` neu bauen |
-| `sync-addon.ps1` | Live-AddOns-Sync (Windows) + Zip |
+| `sync-addon.ps1` | `luac` → Live-AddOns-Sync (Windows) + Zip |
+
+`make build|check|test|zip|pipeline` wrappt die `.sh`-Runner.  
+Optional: `ASCENSION_DBC`, `ASCENSION_SPELL_DBC`, `ASCENSION_ADDONS`, `SEASON10_DIR`.  
+`pipeline-all.*` überspringt DBC-/Miner-Schritte ohne Abbruch, wenn Pfade fehlen.
 
 ## `tests/`
 
