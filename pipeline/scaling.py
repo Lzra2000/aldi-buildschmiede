@@ -56,6 +56,18 @@ RX_INC = re.compile(
 RX_RED = re.compile(
     r"[Rr]educ(?:es|ing)\s+(?:the\s+)?(?:your\s+)?(.{2,46}?)\s+by\s+(\d+(?:\.\d+)?)\s*%")
 
+# Ressourcen, die eine Faehigkeit EINBRINGT. Die DBC kennt nur die Kosten;
+# was etwas zurueckgibt, steht ausschliesslich im Beschreibungstext.
+RES_DE = {"rage": "Wut", "energy": "Energie", "mana": "Mana",
+          "focus": "Fokus", "runic power": "Runenmacht"}
+RX_GEN = re.compile(
+    r"(?:generat\w*|restor\w*|grant\w*(?:\s+you)?|gain\w*|award\w*)"
+    r"\s+(\d+)\s+(rage|energy|mana|focus|runic power)", re.I)
+# Prozentuale Manarueckgabe wird als negative Zahl abgelegt, damit die
+# Seite sie als Prozent statt als Punkte anzeigen kann.
+RX_GENPCT = re.compile(
+    r"(\d+)\s*%\s+of\s+(?:your\s+)?(?:total\s+|base\s+)?mana", re.I)
+
 # Formulierungen, die zwar "increases ... by N%" sind, aber nichts mit
 # Schaden oder Heilung zu tun haben. Die aus der Multiplikatorliste halten.
 NOISE = re.compile(
@@ -156,6 +168,17 @@ def extract(desc):
             inc.append([float(pct), what, kindOf(what)])
     if inc:
         o["inc"] = inc[:4]
+
+    gen = []
+    for amount, res in RX_GEN.findall(d):
+        key = RES_DE.get(res.lower())
+        if key:
+            gen.append([int(amount), key])
+    m = RX_GENPCT.search(d)
+    if m:
+        gen.append([-int(m.group(1)), "Mana"])
+    if gen:
+        o["gen"] = gen[:3]
 
     red = []
     for what, pct in RX_RED.findall(d):

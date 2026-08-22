@@ -871,18 +871,40 @@
 
     // 5b. Ressourcen. Auf Ascension existieren alle Pools gleichzeitig -
     //     wer von Retail kommt, erwartet das nicht.
-    var pools = {};
+    //     Kosten kennt die Client-DBC, was etwas EINBRINGT steht nur im
+    //     Beschreibungstext - beide Quellen laufen hier zusammen.
+    var pools = {}, gens = {};
     ids.forEach(function (i) {
       var m = MC[i];
       if (m && m.cost && m.res) pools[m.res] = (pools[m.res] || 0) + 1;
+      ((SC[i] || {}).gen || []).forEach(function (g) {
+        gens[g[1]] = (gens[g[1]] || 0) + 1;
+      });
     });
     var pn = Object.keys(pools);
+
+    // Mana und Energie fuellen sich von allein wieder auf, Wut und
+    // Runenmacht nicht. Nur dort ist ein fehlender Generator ein Problem.
+    var SELF_REFILL = { Mana: 1, Energie: 1, Fokus: 1 };
+    var dry = pn.filter(function (r) { return !SELF_REFILL[r] && !gens[r]; });
+    if (dry.length) {
+      push("krit", dry.join(" und ") + " ohne Generator",
+        " Dein Build gibt " + dry.map(function (r) {
+          return pools[r] + "× " + r;
+        }).join(" und ") + " aus, hat aber nichts, das " +
+        (dry.length === 1 ? "sie" : "sie") + " auffüllt. " +
+        dry.join(" und ") + " regeneriert nicht von selbst — ohne " +
+        "Generator stehst du nach den ersten Sekunden mit leerer Leiste da.");
+    }
+
     if (pn.length > 1) {
       push("ok", "Dein Build zieht aus " + pn.length + " Ressourcen",
-        " " + pn.map(function (r) { return pools[r] + "× " + r; }).join(", ") +
+        " " + pn.map(function (r) {
+          return pools[r] + "× " + r + (gens[r] ? " (" + gens[r] + " Generator" +
+            (gens[r] > 1 ? "en" : "") + ")" : "");
+        }).join(", ") +
         ". Das ist auf Ascension kein Fehler: alle Pools existieren " +
-        "gleichzeitig nebeneinander. Achte nur darauf, dass du für jede auch " +
-        "etwas hast, das sie auffüllt.");
+        "gleichzeitig nebeneinander.");
     }
 
     // 6. Hit - direkt aus dem Client-Tooltip
@@ -1096,6 +1118,10 @@
     (o.red || []).forEach(function (x) {
       b.push('<span class="bdg f">−' + fmt(x[0]) + " % " + esc(short(x[1])) + "</span>");
     });
+    (o.gen || []).forEach(function (g) {
+      b.push('<span class="bdg g">+' +
+        (g[0] < 0 ? -g[0] + " % " : g[0] + " ") + esc(g[1]) + "</span>");
+    });
     if (o.proc) b.push('<span class="bdg p">' + fmt(o.proc) + " % Proc</span>");
     // Cooldown kommt aus der DBC, nicht aus dem Text - der Tooltip
     // nennt ihn fast nie und die DBC immer.
@@ -1124,6 +1150,7 @@
     if (mode === "m") return !!(o.inc && o.inc.length);
     if (mode === "h") return !!o.heal;
     if (mode === "d") return !!(o.dot || o.tick);
+    if (mode === "g") return !!(o.gen && o.gen.length);
     if (mode === "cd" || mode === "nocd" || mode === "free") {
       return mechMatch(i, mode);
     }

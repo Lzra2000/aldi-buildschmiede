@@ -130,6 +130,29 @@ Label-Klasse anlegt, macht es genauso.
   Werte ≤ 0 verwerfen.
 - **`procChance` steht meist auf 101** („immer"). Nur Werte zwischen 1 und
   99 sind echte Proc-Chancen.
+- **`EffectBasePoints` taugt nicht als Schadensquelle.** Schon untersucht,
+  Ergebnis negativ, Details in `pipeline/effects.py`. Kurzfassung: bei
+  eigenständigen Zaubern stimmt die DBC fast mit dem Tooltip überein, bei
+  Schulvarianten („uses X modifiers") ist der DBC-Eintrag ein Stummel —
+  Water Nova zeigt 496 Schaden, in der DBC stehen 14–17, die Werte von
+  Frost Nova Rang 1. Die Faktoren reichen von 0,4× bis 197×, es gibt also
+  keinen Umrechnungsfaktor. **Der Beschreibungstext bleibt die Quelle für
+  Schadenszahlen.** Bitte nicht ein zweites Mal untersuchen.
+
+### Was wo steht
+
+Die beiden Datenquellen ergänzen sich, sie überlappen kaum:
+
+| | Client-DBC | Beschreibungstext |
+|---|---|---|
+| Cooldown, Castzeit, Reichweite, Wirkdauer | **ja** | fast nie |
+| Ressourcen**kosten** | **ja** | nein |
+| Ressourcen**gewinn** | nein | **ja** |
+| Schadenszahlen | unbrauchbar (s.&nbsp;o.) | **ja** |
+| Waffenprozente, Multiplikatoren, Procs | nein | **ja** |
+
+Wer eine neue Zahl braucht, sieht zuerst hier nach, welche Seite sie
+überhaupt führt.
 
 ### Spielmechanik
 
