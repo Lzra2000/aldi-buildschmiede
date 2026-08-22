@@ -78,6 +78,13 @@
 --                                         (GetRapidRoll*BreakpointInfo)
 --   WC|…|RepurchAbi:n|RepurchTal:n|CanRepurch:0/1
 --                                         (GetNumRepurchasable* / CanRepurchaseAnyRolls)
+--
+-- 1.5.9 (FORMAT bleibt 1): SkillCards :sSPELLID robuster (InfoAtIndex + extra
+--   GetCardAtIndex-Werte). Token-Form unveraendert.
+-- 1.5.8 (FORMAT bleibt 1, Token-Form unveraendert):
+--   ABI/TAL hydrieren Stubs via GetEntryByInternalID; Spell-ID auch aus SpellID
+--   und GetKnownSpells-Nachzug. @entryId auch ohne #spellId. Name bevorzugt
+--   GetSpellInfo (wie Inspect-UI / Skill Cards) — sonst entry.Name.
 
 local BS = AscBuildschmiede
 local Safe, Clean, Num = BS.Safe, BS.Clean, BS.Num
@@ -413,22 +420,32 @@ end
 local function entryList(getter)
     local list = Safe(getter)
     if type(list) ~= "table" then return {} end
-    return list
+    -- ipairs zuerst (stabile Array-Reihenfolge); pairs faengt Loecher
+    -- und id-indizierte Tabellen — sonst fehlen Eintraege still.
+    local out, seen = {}, {}
+    for _, e in ipairs(list) do
+        if type(e) == "table" and not seen[e] then
+            seen[e] = true
+            out[#out + 1] = e
+        end
+    end
+    for _, e in pairs(list) do
+        if type(e) == "table" and not seen[e] then
+            seen[e] = true
+            out[#out + 1] = e
+        end
+    end
+    return out
 end
 
--- Spell-ID aus dem Entry: Spells[rank], sonst Spells[1].
-local function spellFromEntry(e, rank)
-    if type(e) ~= "table" or type(e.Spells) ~= "table" then return nil end
-    rank = tonumber(rank) or 1
-    return tonumber(e.Spells[rank]) or tonumber(e.Spells[1])
-end
-
--- Fallback: SpellID am Entry oder GetEntryBySpellID (nur lesen).
-local function spellFromEntryOrApi(e, rank)
-    local sid = spellFromEntry(e, rank)
-    if sid then return sid end
-    sid = e and (tonumber(e.SpellID) or tonumber(e.spellID))
-    if sid then return sid end
+function BS.EntryByInternalID(entryId)
+    entryId = tonumber(entryId)
+    if not entryId then return nil end
+    local entry = Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetEntryByInternalID
+            and C_CharacterAdvancement.GetEntryByInternalID(entryId)
+    end)
+    if type(entry) == "table" then return entry end
     return nil
 end
 
@@ -443,20 +460,165 @@ function BS.EntryBySpellID(spellId)
     return nil
 end
 
--- Encoding: Name#spellId[@entryId] bzw. Name:rank#spellId[@entryId].
--- Ohne spellId bleibt der Name (bzw. Name:rank) — alte Parser lesen das weiter.
-local function encodeToken(name, rank, spellId, entryId)
+-- Stubs (nur ID/Rank) mit GetEntryByInternalID auffuellen — sonst fehlen
+-- Name und Spells[] und ABI/TAL gehen ohne IDs raus oder ganz verloren.
+function BS.HydrateEntry(e)
+    if type(e) ~= "table" then return nil end
+    local eid = tonumber(e.ID or e.EntryId or e.InternalID or e.internalID)
+    local hasName = e.Name and tostring(e.Name) ~= ""
+    local hasSpells = type(e.Spells) == "table"
+    if eid and (not hasName or not hasSpells) then
+        local full = BS.EntryByInternalID(eid)
+        if type(full) == "table" then
+            return {
+                ID = eid,
+                Name = (hasName and e.Name) or full.Name,
+                Spells = hasSpells and e.Spells or full.Spells,
+                Rank = e.Rank or full.Rank,
+                Type = e.Type or full.Type,
+                Class = e.Class or full.Class,
+                Tab = e.Tab or full.Tab,
+                Spec = e.Spec or full.Spec,
+                SpecID = e.SpecID or full.SpecID,
+                SpellID = e.SpellID or e.spellID or full.SpellID or full.spellID,
+            }
+        end
+    end
+    if eid and not e.ID then
+        e = {
+            ID = eid,
+            Name = e.Name,
+            Spells = e.Spells,
+            Rank = e.Rank,
+            Type = e.Type,
+            Class = e.Class,
+            Tab = e.Tab,
+            Spec = e.Spec,
+            SpecID = e.SpecID,
+            SpellID = e.SpellID or e.spellID,
+        }
+    end
+    return e
+end
+
+-- Spell-ID: Spells[rank], Spells[1], SpellID-Feld, hydrierter Entry.
+function BS.SpellFromEntry(e, rank)
+    e = BS.HydrateEntry(e) or e
+    if type(e) ~= "table" then return nil end
+    rank = tonumber(rank) or tonumber(e.Rank) or 1
+    if type(e.Spells) == "table" then
+        local sid = tonumber(e.Spells[rank]) or tonumber(e.Spells[1])
+        if sid then return sid end
+    end
+    local sid = tonumber(e.SpellID) or tonumber(e.spellID)
+    if sid then return sid end
+    return nil
+end
+
+-- Anzeigename wie die Client-UI: GetSpellInfo(sid), sonst entry.Name.
+function BS.SpellDisplayName(sid, entry)
+    sid = tonumber(sid)
+    if sid then
+        local n = Safe(function()
+            return GetSpellInfo(sid)
+        end)
+        n = Clean(n)
+        if n ~= "" then return n end
+    end
+    if type(entry) == "table" and entry.Name then
+        local n = Clean(entry.Name)
+        if n ~= "" then return n end
+    end
+    return nil
+end
+
+local function spellFromEntry(e, rank)
+    return BS.SpellFromEntry(e, rank)
+end
+
+local function spellFromEntryOrApi(e, rank)
+    return BS.SpellFromEntry(e, rank)
+end
+
+-- Encoding: Name[:rank][#spellId][@entryId].
+-- @entryId auch ohne Spell-ID (Seite liest @ zuerst). Leerer Name wird ein
+-- Leerzeichen — der Parser braucht ein Zeichen vor #/@, trimmt dann leer
+-- und akzeptiert eid/sid (namesCompatible).
+function BS.EncodeAbiTalToken(name, rank, spellId, entryId)
+    name = Clean(name)
+    if name == "" then name = " " end
     local tag = name
     if rank then
         tag = tag .. ":" .. Num(rank)
     end
+    spellId = tonumber(spellId)
+    entryId = tonumber(entryId)
     if spellId then
         tag = tag .. "#" .. Num(spellId)
-        if entryId then
-            tag = tag .. "@" .. Num(entryId)
-        end
+    end
+    if entryId then
+        tag = tag .. "@" .. Num(entryId)
     end
     return tag
+end
+
+local function encodeToken(name, rank, spellId, entryId)
+    return BS.EncodeAbiTalToken(name, rank, spellId, entryId)
+end
+
+local function isTalentEntry(e, sid)
+    if type(e) == "table" then
+        local kind = e.Type
+        if kind == "Talent" or kind == "TalentAbility" then
+            return true
+        end
+        local eid = tonumber(e.ID)
+        if eid then
+            local yes = Safe(function()
+                return C_CharacterAdvancement.IsTalentID
+                    and (C_CharacterAdvancement.IsTalentID(eid)
+                        or (C_CharacterAdvancement.IsTalentAbilityID
+                            and C_CharacterAdvancement.IsTalentAbilityID(eid)))
+            end)
+            if yes then return true end
+        end
+    end
+    sid = tonumber(sid)
+    if sid then
+        local rank = Safe(function()
+            return C_CharacterAdvancement.GetTalentRankBySpellID
+                and C_CharacterAdvancement.GetTalentRankBySpellID(sid)
+        end)
+        if tonumber(rank) then return true end
+        local yes = Safe(function()
+            return (C_CharacterAdvancement.IsTalentSpellID
+                    and C_CharacterAdvancement.IsTalentSpellID(sid))
+                or (C_CharacterAdvancement.IsTalentAbilitySpellID
+                    and C_CharacterAdvancement.IsTalentAbilitySpellID(sid))
+        end)
+        if yes then return true end
+    end
+    return false
+end
+
+-- GetKnownSpells = vollstaendige Spell-ID-Liste (Build-Editor ImportCurrentBuild).
+-- Faengt Eintraege, die in GetKnown*Entries fehlen.
+local function knownSpellIds()
+    local list = Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetKnownSpells
+            and C_CharacterAdvancement.GetKnownSpells()
+    end)
+    if type(list) ~= "table" then return {} end
+    local out, seen = {}, {}
+    local function add(sid)
+        sid = tonumber(sid)
+        if not sid or seen[sid] then return end
+        seen[sid] = true
+        out[#out + 1] = sid
+    end
+    for _, sid in ipairs(list) do add(sid) end
+    for _, sid in pairs(list) do add(sid) end
+    return out
 end
 
 -- |Hitem:itemId:ench:gem1:gem2:gem3:gem4:…|h  — Stock-3.3.5a Linkformat.
@@ -491,37 +653,85 @@ local function appendLinkIds(line, link)
     return line
 end
 
+local function talentRankOf(e)
+    local eid = e and tonumber(e.ID)
+    if eid then
+        local rank = Safe(function()
+            return C_CharacterAdvancement.GetTalentRankByID(eid)
+        end)
+        rank = tonumber(rank)
+        if rank then return rank end
+    end
+    return tonumber(e and e.Rank) or 1
+end
+
 function BS.CollectAbilities()
-    local out = {}
+    local out, seenEid, seenSid = {}, {}, {}
+    local function add(e, sid, eid)
+        e = BS.HydrateEntry(e) or e
+        sid = tonumber(sid) or spellFromEntry(e, tonumber(e and e.Rank) or 1)
+        eid = tonumber(eid) or (e and tonumber(e.ID))
+        if not sid and not eid then return end
+        if eid and seenEid[eid] then return end
+        if sid and seenSid[sid] then return end
+        local name = BS.SpellDisplayName(sid, e)
+        -- Ohne Name/ID nichts exportieren — ein leeres Token wuerde nur rauschen.
+        if not name and not sid and not eid then return end
+        if eid then seenEid[eid] = true end
+        if sid then seenSid[sid] = true end
+        out[#out + 1] = encodeToken(name, nil, sid, eid)
+    end
+
     for _, e in ipairs(entryList(C_CharacterAdvancement and C_CharacterAdvancement.GetKnownSpellEntries)) do
-        if e and e.Name then
-            local rank = tonumber(e.Rank) or 1
-            out[#out + 1] = encodeToken(
-                Clean(e.Name), nil,
-                spellFromEntry(e, rank),
-                tonumber(e.ID)
-            )
+        if e then add(e) end
+    end
+
+    -- Nachzug: Spell-IDs, die der Build-Editor kennt, Entries aber weglassen.
+    for _, sid in ipairs(knownSpellIds()) do
+        if not seenSid[sid] then
+            local e = BS.EntryBySpellID(sid)
+            if not isTalentEntry(e, sid) then
+                add(e, sid, e and e.ID)
+            end
         end
     end
+
     table.sort(out)
     return out
 end
 
 function BS.CollectTalents()
-    local out = {}
+    local out, seenEid, seenSid = {}, {}, {}
+    local function add(e, sid, eid, rank)
+        e = BS.HydrateEntry(e) or e
+        rank = tonumber(rank) or talentRankOf(e)
+        sid = tonumber(sid) or spellFromEntry(e, rank)
+        eid = tonumber(eid) or (e and tonumber(e.ID))
+        if not sid and not eid then return end
+        if eid and seenEid[eid] then return end
+        if sid and seenSid[sid] then return end
+        local name = BS.SpellDisplayName(sid, e)
+        if not name and not sid and not eid then return end
+        if eid then seenEid[eid] = true end
+        if sid then seenSid[sid] = true end
+        out[#out + 1] = encodeToken(name, rank, sid, eid)
+    end
+
     for _, e in ipairs(entryList(C_CharacterAdvancement and C_CharacterAdvancement.GetKnownTalentEntries)) do
-        if e and e.Name then
+        if e then add(e) end
+    end
+
+    for _, sid in ipairs(knownSpellIds()) do
+        if not seenSid[sid] and isTalentEntry(BS.EntryBySpellID(sid), sid) then
+            local e = BS.EntryBySpellID(sid)
             local rank = Safe(function()
-                return C_CharacterAdvancement.GetTalentRankByID(e.ID)
+                return C_CharacterAdvancement.GetTalentRankBySpellID
+                    and C_CharacterAdvancement.GetTalentRankBySpellID(sid)
             end)
-            rank = tonumber(rank) or tonumber(e.Rank) or 1
-            out[#out + 1] = encodeToken(
-                Clean(e.Name), rank,
-                spellFromEntry(e, rank),
-                tonumber(e.ID)
-            )
+            add(e, sid, e and e.ID, tonumber(rank))
         end
     end
+
     table.sort(out)
     return out
 end
@@ -531,12 +741,8 @@ end
 function BS.CollectOwnedQuality()
     local out, seen = {}, {}
     local function add(e, rank)
-        local sid = spellFromEntryOrApi(e, rank)
-        -- Wenn Spells[] fehlt: Entry per ID schon da; sonst Spell→Entry.
-        if not sid and e and e.ID and type(e.Spells) ~= "table" then
-            local via = BS.EntryBySpellID(tonumber(e.SpellID) or tonumber(e.spellID))
-            if via then sid = spellFromEntry(via, rank) end
-        end
+        e = BS.HydrateEntry(e) or e
+        local sid = spellFromEntry(e, rank)
         if not sid or seen[sid] then return end
         seen[sid] = true
         local q, cost = Safe(function()

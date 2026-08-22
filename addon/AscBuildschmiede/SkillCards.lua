@@ -10,6 +10,7 @@
 --   C_SkillCard.GetSkillCardQuality(cardId, rank) -> Qualitaet (SCARD :qN)
 -- Optional (nur Aufloesung, Safe):
 --   C_SkillCard.GetSkillCardInfo(cardId[, rank]) -> .SpellID
+--   C_SkillCard.GetSkillCardInfoAtIndex(cardType, index) -> .SpellID (SkillCardsFrame)
 --   C_SkillCard.GetCardSpellID(cardId, rank)
 --   C_CharacterAdvancement.GetEntryBySpellID(sid) -> Entry-Fallback
 -- Pending (Collection, read-only):
@@ -25,7 +26,7 @@
 --     index ist 0-basiert (wie GetCardAtIndex)
 --     nur belegte Slots (cardId ~= 0); blockierte leere Slots: TAG:B@index
 --     :qN = GetSkillCardQuality (wenn API greift); :A = IsCardAtIndexActive
---     :sSPELLID = Spell der Karte (GetCardSpellID / GetSkillCardInfo) —
+--     :sSPELLID = Spell der Karte (InfoAtIndex / GetCardSpellID / GetSkillCardInfo) —
 --       Website loest Namen ueber Katalog-spellId (nameBySid), nicht ueber cardId
 --   CARDED|spellId;spellId;…
 --     Spell-IDs aus IsCardedSpellID / IsCardedID auf bekannten ABI/TAL + Slot-Spells
@@ -62,13 +63,12 @@ local function maxCount(cardType)
     return tonumber(n) or 0
 end
 
--- Nur den ersten Rueckgabewert: GetCardAtIndex kann Mehrfachwerte liefern;
--- tonumber(f()) wuerde den zweiten als base (2–36) lesen → "base out of range".
+-- Mehrfachwerte getrennt halten: tonumber(f()) wuerde den zweiten als base lesen.
 local function cardAt(cardType, index)
-    local id = Safe(function()
+    local id, extra, extra2 = Safe(function()
         return C_SkillCard.GetCardAtIndex(cardType, index)
     end)
-    return id
+    return id, extra, extra2
 end
 
 local function blockedAt(cardType, index)
@@ -97,24 +97,84 @@ local function cardQuality(cardId)
     return tonumber(q)
 end
 
-local function spellFromCard(cardId)
+-- Spell-ID 0 ist kein Katalogeintrag (Seite braucht echte sid fuer nameBySid).
+local function validSid(sid)
+    sid = tonumber(sid)
+    if sid and sid > 0 then return sid end
+    return nil
+end
+
+local function sidFromInfo(info)
+    if type(info) == "number" then return validSid(info) end
+    if type(info) ~= "table" then return nil end
+    return validSid(info.SpellID or info.spellID or info.Spell or info.spellId)
+end
+
+-- Extra-Rueckgaben von GetCardAtIndex: nur Tabellen mit Spell-Feld.
+-- Rohe Zahlen sind oft Rang/Flags — :s1 waere kein Katalog-Spell.
+local function sidFromSlotExtra(extra)
+    if type(extra) ~= "table" then return nil end
+    return sidFromInfo(extra)
+end
+
+local function spellFromCard(cardId, cardType, index)
     cardId = tonumber(cardId)
     if not cardId or cardId == 0 then return nil end
+
+    -- Belegter Slot: GetSkillCardInfoAtIndex liefert SpellID (SkillCardsFrame, 1-basiert).
+    if cardType and index ~= nil and C_SkillCard.GetSkillCardInfoAtIndex then
+        local idx = tonumber(index)
+        if idx ~= nil then
+            local info = Safe(function()
+                return C_SkillCard.GetSkillCardInfoAtIndex(cardType, idx + 1)
+            end)
+            local sid = sidFromInfo(info)
+            if sid then return sid end
+            info = Safe(function()
+                return C_SkillCard.GetSkillCardInfoAtIndex(cardType, idx)
+            end)
+            sid = sidFromInfo(info)
+            if sid then return sid end
+        end
+    end
+
     local sid = Safe(function()
         if C_SkillCard.GetCardSpellID then
             return C_SkillCard.GetCardSpellID(cardId, 1)
         end
     end)
-    sid = tonumber(sid)
+    sid = validSid(sid)
     if sid then return sid end
+    sid = Safe(function()
+        if C_SkillCard.GetCardSpellID then
+            return C_SkillCard.GetCardSpellID(cardId)
+        end
+    end)
+    sid = validSid(sid)
+    if sid then return sid end
+
     local info = Safe(function()
+        return C_SkillCard.GetSkillCardInfo and C_SkillCard.GetSkillCardInfo(cardId, 1)
+    end)
+    sid = sidFromInfo(info)
+    if sid then return sid end
+    if type(info) == "table" then
+        local rank = tonumber(info.CollectedRank or info.Rank)
+        if rank and rank > 0 then
+            sid = validSid(Safe(function()
+                return C_SkillCard.GetCardSpellID and C_SkillCard.GetCardSpellID(cardId, rank)
+            end))
+            if sid then return sid end
+            sid = sidFromInfo(Safe(function()
+                return C_SkillCard.GetSkillCardInfo(cardId, rank)
+            end))
+            if sid then return sid end
+        end
+    end
+    info = Safe(function()
         return C_SkillCard.GetSkillCardInfo and C_SkillCard.GetSkillCardInfo(cardId)
     end)
-    if type(info) == "table" then
-        sid = tonumber(info.SpellID)
-        if sid then return sid end
-    end
-    return nil
+    return sidFromInfo(info)
 end
 
 local function isCardedSpell(spellId)
@@ -153,14 +213,17 @@ function BS.CollectSkillCardSlots()
         if max > 0 then
             -- DraftCardMixin: Index 0 .. max-1
             for i = 0, max - 1 do
-                local cardId = tonumber(cardAt(def.type, i)) or 0
+                local rawId, extra, extra2 = cardAt(def.type, i)
+                local cardId = tonumber(rawId) or 0
                 if cardId and cardId ~= 0 then
                     local tok = def.tag .. ":" .. Num(cardId) .. "@" .. Num(i)
                     local q = cardQuality(cardId)
                     if q then tok = tok .. ":q" .. Num(q) end
                     if activeAt(def.type, i) then tok = tok .. ":A" end
                     -- Spell-ID fuer Namensaufloesung auf der Seite (Katalog via sid).
-                    local sid = spellFromCard(cardId)
+                    local sid = spellFromCard(cardId, def.type, i)
+                        or sidFromSlotExtra(extra)
+                        or sidFromSlotExtra(extra2)
                     if sid then tok = tok .. ":s" .. Num(sid) end
                     out[#out + 1] = tok
                 elseif blockedAt(def.type, i) then
@@ -178,7 +241,7 @@ function BS.CollectCardedSpellIDs()
     if not apiReady() then return out end
 
     local function add(sid)
-        sid = tonumber(sid)
+        sid = validSid(sid)
         if not sid or seen[sid] then return end
         seen[sid] = true
         out[#out + 1] = Num(sid)
@@ -188,9 +251,12 @@ function BS.CollectCardedSpellIDs()
     for _, def in ipairs(CARD_TYPES) do
         local max = maxCount(def.type)
         for i = 0, max - 1 do
-            local cardId = tonumber(cardAt(def.type, i)) or 0
+            local rawId, extra, extra2 = cardAt(def.type, i)
+            local cardId = tonumber(rawId) or 0
             if cardId ~= 0 then
-                add(spellFromCard(cardId))
+                add(spellFromCard(cardId, def.type, i)
+                    or sidFromSlotExtra(extra)
+                    or sidFromSlotExtra(extra2))
             end
         end
     end
@@ -199,31 +265,61 @@ function BS.CollectCardedSpellIDs()
     local function scanEntries(getter)
         local list = Safe(getter)
         if type(list) ~= "table" then return end
-        for _, e in ipairs(list) do
-            if type(e) == "table" then
-                local rank = tonumber(e.Rank) or 1
-                local sid = nil
-                if type(e.Spells) == "table" then
-                    sid = tonumber(e.Spells[rank]) or tonumber(e.Spells[1])
-                end
-                local eid = tonumber(e.ID)
-                if (sid and isCardedSpell(sid)) or (eid and isCardedEntry(eid)) then
-                    if not sid and eid then
-                        local via = Safe(function()
-                            return C_CharacterAdvancement.GetEntryByInternalID
-                                and C_CharacterAdvancement.GetEntryByInternalID(eid)
-                        end)
-                        if type(via) == "table" and type(via.Spells) == "table" then
-                            sid = tonumber(via.Spells[1])
-                        end
+        local function eachEntry(src)
+            if type(src) ~= "table" then return end
+            local seen = {}
+            for _, e in ipairs(src) do
+                if type(e) == "table" and not seen[e] then
+                    seen[e] = true
+                    local hyd = BS.HydrateEntry and BS.HydrateEntry(e) or e
+                    local rank = tonumber(hyd and hyd.Rank) or tonumber(e.Rank) or 1
+                    local sid = BS.SpellFromEntry and BS.SpellFromEntry(hyd, rank) or nil
+                    if not sid and type(hyd) == "table" and type(hyd.Spells) == "table" then
+                        sid = tonumber(hyd.Spells[rank]) or tonumber(hyd.Spells[1])
                     end
-                    add(sid)
+                    local eid = tonumber(hyd and hyd.ID) or tonumber(e.ID)
+                    if (sid and isCardedSpell(sid)) or (eid and isCardedEntry(eid)) then
+                        if not sid and eid then
+                            local via = BS.EntryByInternalID and BS.EntryByInternalID(eid)
+                            if type(via) == "table" and type(via.Spells) == "table" then
+                                sid = tonumber(via.Spells[1])
+                            end
+                        end
+                        add(sid)
+                    end
+                end
+            end
+            for _, e in pairs(src) do
+                if type(e) == "table" and not seen[e] then
+                    seen[e] = true
+                    local hyd = BS.HydrateEntry and BS.HydrateEntry(e) or e
+                    local rank = tonumber(hyd and hyd.Rank) or tonumber(e.Rank) or 1
+                    local sid = BS.SpellFromEntry and BS.SpellFromEntry(hyd, rank) or nil
+                    local eid = tonumber(hyd and hyd.ID) or tonumber(e.ID)
+                    if (sid and isCardedSpell(sid)) or (eid and isCardedEntry(eid)) then
+                        add(sid)
+                    end
                 end
             end
         end
+        eachEntry(list)
     end
     scanEntries(C_CharacterAdvancement and C_CharacterAdvancement.GetKnownSpellEntries)
     scanEntries(C_CharacterAdvancement and C_CharacterAdvancement.GetKnownTalentEntries)
+
+    -- Nachzug: Spell-IDs, die nur GetKnownSpells kennt.
+    local known = Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetKnownSpells
+            and C_CharacterAdvancement.GetKnownSpells()
+    end)
+    if type(known) == "table" then
+        for _, sid in ipairs(known) do
+            if isCardedSpell(sid) then add(sid) end
+        end
+        for _, sid in pairs(known) do
+            if isCardedSpell(sid) then add(sid) end
+        end
+    end
 
     table.sort(out, function(a, b) return tonumber(a) < tonumber(b) end)
     return out

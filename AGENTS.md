@@ -12,7 +12,8 @@ vollständiger Builder für 10–60 sein.
 Wenn Levelrun und L60/Endgame kollidieren: Lösungen bevorzugen, die **beiden**
 dienen (gemeinsame Daten/Logik, oder UI-Modi „Levelrun“ / „Endgame“). L60 nicht
 verwerfen, nur weil der Levelrun gerade wichtiger wirkt. Details und Agenten-
-Verhalten: `.cursor/rules/full-agent-utilization.mdc`, Calc-RE:
+Verhalten: `.cursor/rules/full-agent-utilization.mdc`, Multitask:
+`.cursor/rules/multitask-max-agents.mdc`, Calc-RE:
 `.cursor/rules/ascension-calc-re.mdc`.
 
 ---
@@ -68,6 +69,11 @@ generieren. Verboten: Ascension-/WoW-BLP oder 1:1-Client-UI-Rahmen (DialogFrame,
 PaperDoll-Tabs, caCorner usw.). Aus Client-Extracts nur Spell-/Item-Icons
 (`sprite.webp` / `D.iic`). Details: `.cursor/rules/website-assets.mdc`.
 
+**Tour / Farben:** Erste-Schritte-Texte in `pipeline/NOTES-tutorial.md`.
+Farbsemantik (kritisch / verbesserbar / ok / accent, Q-Farben gedämpft) in
+`pipeline/NOTES-ui-colors.md` — Tokens in `builder-head.html`, gleiche
+Bedeutung auf Synergien.
+
 ### Aufbau der Oberfläche
 
 **Zwei Pages-Oberflächen:** Builder (`index.html`) und Synergien
@@ -79,7 +85,7 @@ schaltet um, sonst nichts.
 |---|---|
 | `vBuild` | Katalog links, Build und Vorschläge rechts |
 | `vAnalyse` | Befund, Path, Stat-Priorität, Skalierung, Struktur — als Karten nebeneinander |
-| `vChain` | Wirkungsketten: was zahlt auf was ein |
+| `vChain` | Wirkungsketten: was zahlt auf was ein — Quellen in `pipeline/NOTES-wirkungsketten.md` |
 | `vTools` | Import, Generator, KI, Vergleich, Archetypen, Teilen |
 | `vWissen` | Nachschlagewerk (vier Reiter) |
 
@@ -133,6 +139,8 @@ kein Vollscan von Item.dbc),
 
 Kern-Payload zusätzlich: `bm` ← `basemods.json`, `ub` ← `usesbase.json`
 (Variante→Basis aus Katalogtext „uses X modifiers“ — `pipeline/NOTES-basemods.md`).
+Ketten (`vChain`): `rel` / `ub` / `bm` / `sc` / `mc.proc` / `meth` —
+`pipeline/NOTES-wirkungsketten.md`.
 
 `mechanics.json` (Kern-Payload `mc`): pro Katalogindex u. a. `cd`/`cast`/`cost`/`res`/
 `dur`/`range`/`proc`; Ascension-Charges wenn vorhanden: **`ch`** (max. Ladungen),
@@ -290,7 +298,8 @@ Wer eine neue Zahl braucht, sieht zuerst hier nach, welche Seite sie
   sind **eine** GCD — nicht parallel stapelbar. Das gilt für Analyse,
   Ketten, Methods und Generator. Das ist **nicht** dasselbe wie
   Talentvererbung (Punkt oben): Talente der Basis vs. gemeinsamer
-  GCD-Slot. Details: `.cursor/rules/ascension-calc-re.mdc`.
+  GCD-Slot. Details: `.cursor/rules/ascension-calc-re.mdc`,
+  `pipeline/NOTES-wirkungsketten.md`.
 - **Spell Power und Attack Power zählen für Waffenschaden gleich**, im
   Verhältnis 14 : 1 pro Waffen-DPS. Der Waffenschaden im Charakterfenster
   enthält beide bereits — nicht doppelt draufrechnen.
@@ -362,7 +371,7 @@ Zeilenbasiert, Felder mit `|`, Listen mit `;`. Der Parser in
 `builder-app.js` (`parseExport`) ist **absichtlich nachsichtig**:
 unbekannte Zeilen werden übersprungen, nicht abgelehnt. Ein neues Feld im
 Addon bricht also keine ältere Seite. `BS.FORMAT` bleibt **1** (additiv);
-Addon-Version aktuell **1.5.7**. Manuelle Testexporte: `data/testexport-*.txt`.
+Addon-Version aktuell **1.5.9**. Manuelle Testexporte: `data/testexport-*.txt`.
 
 ```
 === BUILDSCHMIEDE v1 ===
