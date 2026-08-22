@@ -60,10 +60,13 @@ local function maxCount(cardType)
     return tonumber(n) or 0
 end
 
+-- Nur den ersten Rueckgabewert: GetCardAtIndex kann Mehrfachwerte liefern;
+-- tonumber(f()) wuerde den zweiten als base (2–36) lesen → "base out of range".
 local function cardAt(cardType, index)
-    return Safe(function()
+    local id = Safe(function()
         return C_SkillCard.GetCardAtIndex(cardType, index)
     end)
+    return id
 end
 
 local function blockedAt(cardType, index)
@@ -149,7 +152,7 @@ function BS.CollectSkillCardSlots()
             -- DraftCardMixin: Index 0 .. max-1
             for i = 0, max - 1 do
                 local cardId = tonumber(cardAt(def.type, i)) or 0
-                if cardId ~= 0 then
+                if cardId and cardId ~= 0 then
                     local tok = def.tag .. ":" .. Num(cardId) .. "@" .. Num(i)
                     local q = cardQuality(cardId)
                     if q then tok = tok .. ":q" .. Num(q) end
@@ -256,14 +259,15 @@ function BS.SkillCardExportLines()
 end
 
 -- Collect.lua besitzt BuildExport; wir haengen additiv vor === ENDE === an,
--- ohne Collect anzufassen (parallele Agenten).
+-- ohne Collect anzufassen (parallele Agenten). Skill-Card-Fehler duerfen den
+-- Rest-Export nicht verschlucken — pcall, dann nur ohne SCARD/CARDED/SCARDPEND.
 do
     local prev = BS.BuildExport
     if type(prev) == "function" then
         function BS.BuildExport()
             local text = prev()
-            local extra = BS.SkillCardExportLines()
-            if not extra or #extra == 0 then
+            local ok, extra = pcall(BS.SkillCardExportLines)
+            if not ok or type(extra) ~= "table" or #extra == 0 then
                 return text
             end
             local block = table.concat(extra, "\n")

@@ -321,7 +321,8 @@ function BS.CollectWildcardStatus()
     end
     local function num(key, fn)
         if type(fn) ~= "function" then return end
-        local v = tonumber(Safe(fn))
+        -- Safe kann Mehrfachwerte liefern; Klammern → nur erstes an tonumber.
+        local v = tonumber((Safe(fn)))
         if v == nil then return end
         parts[#parts + 1] = key .. ":" .. Num(v)
     end

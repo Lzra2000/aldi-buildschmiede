@@ -9,7 +9,7 @@ local ADDON = ...
 AscBuildschmiede = AscBuildschmiede or {}
 local BS = AscBuildschmiede
 
-BS.VERSION = "1.5.5"
+BS.VERSION = "1.5.6"
 BS.FORMAT = 1
 BS.SITE = "https://lzra2000.github.io/aldi-buildschmiede/"
 
