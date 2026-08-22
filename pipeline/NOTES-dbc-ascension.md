@@ -378,8 +378,10 @@ Neue / erweiterte Muster in `pipeline/scaling.py`:
 `methods.py` Gaps: Buff-only-Filter, Form-Einschraenkung („only use spells that deal…“),
 Mastery-Unlocks. Scale-Keys: `w/flat/ap/sp/heal/healpct/absorb/tick/echo/relpct`.
 
-Restluecken (~20): Schule ohne Zahl (Earthquake, Heroic Leap, …), Mangle-Schulvarianten
-nur mit Bleed-`inc`, Stampede ohne Tickzahl, Envenom ohne Flat.
+Restluecken (~19): Schule ohne Zahl (Earthquake, Heroic Leap, …), Mangle-Schulvarianten
+nur mit Bleed-`inc`, Stampede ohne Tickzahl. Viele SP/AP-Luecken geschlossen durch
+DBC-Faktor-Mine in `scaling.py` (`$SP*0.24` → `sp=24`) — Katalogtext bleibt ohne
+`$`-Reste; siehe `NOTES-scaling-sp.md`.
 
 ## 11. Shared GCD (Dubletten) vs. geteilter Ability-CD
 

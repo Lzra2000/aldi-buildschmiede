@@ -82,12 +82,17 @@ Parser-Nachzug in `scaling.py` (ohne SP/AP zu erfinden):
 | `take N% additional damage from bleeds` | `inc` |
 | `block value plus an additional N` | `flat` |
 
-`sync_tooltips.py` gegen AscensionDBC: Katalog bereits aktuell (0 Diffs);
-512 Eintraege bleiben wegen SP/AP/PL-`$`-Formeln bewusst unaufgeloest.
+`sync_tooltips.py` gegen AscensionDBC: Katalog-Klartext wo `$m/$s/…` sicher;
+SP/AP/PL-`$`-Formeln bleiben unaufgelöst. **Zusätzlich** liest `scaling.py`
+die Faktoren (`$SP*0.24` → `sp=24`) in `scaling.json` — ohne Katalogtext
+umzuschreiben und ohne Koeffizienten zu erfinden. Details:
+`pipeline/NOTES-scaling-sp.md`.
 
 **Assemble:** bei parallelen `src/`-Aenderungen anderer Lanes nur
 `data/scaling.json` + `data/methods.json` committen; `pipeline/assemble.py`
 spaeter von der src-Lane oder nach Merge — sonst Index-Konflikt.
+Wenn diese Lane Daten+Parser shippt und UI schon SP/AP zeigt: assemble
+beide Pages mitcommitten.
 
 ## Zusatz: Ressourcenkarte (`resmap`)
 

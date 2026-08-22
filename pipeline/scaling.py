@@ -263,12 +263,15 @@ _RX_DBC_AP_CP = re.compile(
     r"(\d+(?:\.\d+)?)\s*\)\s*\*\s*([1-5])",
     re.I)
 _RX_DBC_BOTH_L = re.compile(
-    r"(\d+(?:\.\d+)?)\s*\*\s*\(\s*\$?(?:AP|ap|RAP|rap)\s*\+\s*\$?(?:SP|sp)\s*\)"
+    r"(\d+(?:\.\d+)?)\s*\*\s*\(\s*\$?(?:AP|ap|RAP|rap|SP|sp)\s*\+\s*"
+    r"\$?(?:AP|ap|RAP|rap|SP|sp)\s*\)"
     r"(?:\s*\*\s*(\d+))?(?:\s*\*\s*(\d+))?",
     re.I)
+# Nur mit Dezimalfaktor: ($AP+$SP)*0.024 oder ($AP+$SP)*5*5*0.02
+# Reines ($AP+$SP)*5*5 ohne Basis-Faktor ist CP-Zeile — nicht als 500%% werten.
 _RX_DBC_BOTH_R = re.compile(
-    r"\(\s*\$?(?:AP|ap|RAP|rap)\s*\+\s*\$?(?:SP|sp)\s*\)\s*\*"
-    r"(?:(\d+)\s*\*\s*)?(?:(\d+)\s*\*\s*)?(\d+(?:\.\d+)?)",
+    r"\(\s*\$?(?:AP|ap|RAP|rap|SP|sp)\s*\+\s*\$?(?:AP|ap|RAP|rap|SP|sp)\s*\)\s*\*"
+    r"(?:(\d+)\s*\*\s*)?(?:(\d+)\s*\*\s*)?(\d+\.\d+)",
     re.I)
 RX_PROC = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+chance", re.I)
 # Nur echte Stapel, nicht "up to 5 nearby enemies".
@@ -446,27 +449,28 @@ def extract_dbc_power_coeffs(raw):
         sp_fs.append(eff)
 
     for m in _RX_DBC_BOTH_R.finditer(raw):
-        # ($AP+$SP)*5*5*0.02 → Faktor 0.02 × CP 5 × 5
+        # ($AP+$SP)*5*5*0.02 → Faktor 0.02 × CP 5 × 5 (Dezimal Pflicht)
         cp1, cp2, factor_s = m.group(1), m.group(2), m.group(3)
         factor = float(factor_s)
-        mul = _cp_mult(cp1, cp2)
-        # Nur CP-Ziffer ohne echten Koeffizienten (kein Dezimal, 1–5)
-        if mul == 1 and factor == int(factor) and 1 <= factor <= 5:
-            continue
-        eff = factor * mul
+        eff = factor * _cp_mult(cp1, cp2)
         ap_fs.append(eff)
         sp_fs.append(eff)
 
+    def _pick_pct(factors):
+        # Nur plausible Prozente; Ausreisser (falsche CP-Parses) verwerfen
+        ok = [f for f in factors if 0 < f * 100 <= 500]
+        if not ok:
+            return None
+        pct = round(max(ok) * 100, 4)
+        return pct if pct != int(pct) else int(pct)
+
     out = {}
-    # Prozent = Faktor * 100 (0.24 → 24). Cap 500 %% gegen Parser-Ausreisser.
-    if ap_fs:
-        pct = round(max(ap_fs) * 100, 4)
-        if 0 < pct <= 500:
-            out["ap"] = pct if pct != int(pct) else int(pct)
-    if sp_fs:
-        pct = round(max(sp_fs) * 100, 4)
-        if 0 < pct <= 500:
-            out["sp"] = pct if pct != int(pct) else int(pct)
+    ap_pct = _pick_pct(ap_fs)
+    sp_pct = _pick_pct(sp_fs)
+    if ap_pct is not None:
+        out["ap"] = ap_pct
+    if sp_pct is not None:
+        out["sp"] = sp_pct
     return out
 
 

@@ -7,7 +7,7 @@ markiert — nicht geraten.
 
 Ausgabe: data/methods.json  (ein Block, drei Methoden)
 
-  tempo    Levelrun-Tempo-Score (Waffen-% / CD, Level 10–59)
+  tempo    Tempo-Score (Waffen-% / CD, Level 10–60; Levelrun + Endgame)
   modheat  Modifier-Ketten-Hitze (basemods × Schulvarianten)
   gaps     Ehrliche Zahlenluecken (Schadenstext ohne messbare Skalierung)
 
@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(os.path.dirname(HERE), "data")
 
 GCD = 1.5          # Fallback nur wenn DBC keinen CD liefert
-LVL_LO, LVL_HI = 10, 59
+LVL_LO, LVL_HI = 10, 60
 TEMPO_TOP = 80
 HEAT_TOP = 40
 GAPS_TOP = 100
@@ -261,8 +261,8 @@ def build_tempo(cat, sc, mc, rel=None):
             "effektiven Takt: DBC-CD, sonst Charges chr/ch, sonst GCD %.1fs. "
             "Flat-Schaden ohne genannten Koeffizienten wird nicht gerankt. "
             "topHigh = nur conf=high. "
-            "range/cast aus mechanics.json (Spell.dbc) — Levelrun-Kontext "
-            "(Nah vs Fern), kein zusaetzlicher Score-Faktor. "
+            "range/cast aus mechanics.json (Spell.dbc) — Levelrun/Endgame-"
+            "Kontext (Nah vs Fern), kein zusaetzlicher Score-Faktor. "
             "Schulvarianten mit derselben dupGroup teilen sich einen GCD — "
             "ihre Scores nicht als parallelen Takt addieren."
             % GCD
@@ -393,7 +393,7 @@ def build_gaps(cat, sc):
             "band": 1 if LVL_LO <= lvl <= LVL_HI else 0,
         })
 
-    # Levelrun zuerst, dann ehrliche Restluecken
+    # Level 10–60 zuerst, dann ehrliche Restluecken (z. B. >60)
     items.sort(key=lambda r: (-r["band"], r["lvl"], r["i"]))
     by_why = {}
     for it in items:
