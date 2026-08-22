@@ -71,6 +71,31 @@ local function cardAt(cardType, index)
     return id, extra, extra2
 end
 
+local function cardIdFrom(raw)
+    if type(raw) == "number" then
+        if raw > 0 then return raw end
+        return nil
+    end
+    if type(raw) == "string" then
+        local n = tonumber(raw)
+        if n and n > 0 then return n end
+        return nil
+    end
+    if type(raw) ~= "table" then return nil end
+    return tonumber(raw.ID or raw.CardID or raw.cardID or raw.CardId
+        or raw.SkillCardID or raw.skillCardID)
+end
+
+local function resolveCardType(def)
+    if Enum and Enum.SkillCardType then
+        local e = Enum.SkillCardType
+        if e[def.type] ~= nil then return e[def.type] end
+        local short = tostring(def.type or ""):gsub("^SKILL_CARD_", "")
+        if e[short] ~= nil then return e[short] end
+    end
+    return def.type
+end
+
 local function blockedAt(cardType, index)
     local yes = Safe(function()
         return C_SkillCard.IsCardAtIndexBlocked
@@ -209,24 +234,38 @@ function BS.CollectSkillCardSlots()
     if not apiReady() then return out end
 
     for _, def in ipairs(CARD_TYPES) do
-        local max = maxCount(def.type)
+        local ctype = resolveCardType(def)
+        local max = maxCount(ctype)
         if max > 0 then
             -- DraftCardMixin: Index 0 .. max-1
             for i = 0, max - 1 do
-                local rawId, extra, extra2 = cardAt(def.type, i)
-                local cardId = tonumber(rawId) or 0
-                if cardId and cardId ~= 0 then
+                local rawId, extra, extra2 = cardAt(ctype, i)
+                local cardId = cardIdFrom(rawId) or cardIdFrom(extra) or 0
+                local sid = nil
+                if cardId ~= 0 then
+                    sid = spellFromCard(cardId, ctype, i)
+                        or sidFromSlotExtra(extra)
+                        or sidFromSlotExtra(extra2)
+                        or sidFromInfo(rawId)
+                else
+                    sid = sidFromSlotExtra(extra) or sidFromSlotExtra(extra2)
+                        or sidFromInfo(rawId)
+                    if not sid and C_SkillCard.GetSkillCardInfoAtIndex then
+                        sid = sidFromInfo(Safe(function()
+                            return C_SkillCard.GetSkillCardInfoAtIndex(ctype, i + 1)
+                        end)) or sidFromInfo(Safe(function()
+                            return C_SkillCard.GetSkillCardInfoAtIndex(ctype, i)
+                        end))
+                    end
+                end
+                if cardId ~= 0 or sid then
                     local tok = def.tag .. ":" .. Num(cardId) .. "@" .. Num(i)
                     local q = cardQuality(cardId)
                     if q then tok = tok .. ":q" .. Num(q) end
-                    if activeAt(def.type, i) then tok = tok .. ":A" end
-                    -- Spell-ID fuer Namensaufloesung auf der Seite (Katalog via sid).
-                    local sid = spellFromCard(cardId, def.type, i)
-                        or sidFromSlotExtra(extra)
-                        or sidFromSlotExtra(extra2)
+                    if activeAt(ctype, i) then tok = tok .. ":A" end
                     if sid then tok = tok .. ":s" .. Num(sid) end
                     out[#out + 1] = tok
-                elseif blockedAt(def.type, i) then
+                elseif blockedAt(ctype, i) then
                     out[#out + 1] = def.tag .. ":B@" .. Num(i)
                 end
             end
@@ -249,14 +288,19 @@ function BS.CollectCardedSpellIDs()
 
     -- Aus Slots (auch wenn IsCardedSpellID auf dem Realm fehlt).
     for _, def in ipairs(CARD_TYPES) do
-        local max = maxCount(def.type)
+        local ctype = resolveCardType(def)
+        local max = maxCount(ctype)
         for i = 0, max - 1 do
-            local rawId, extra, extra2 = cardAt(def.type, i)
-            local cardId = tonumber(rawId) or 0
+            local rawId, extra, extra2 = cardAt(ctype, i)
+            local cardId = cardIdFrom(rawId) or cardIdFrom(extra) or 0
             if cardId ~= 0 then
-                add(spellFromCard(cardId, def.type, i)
+                add(spellFromCard(cardId, ctype, i)
                     or sidFromSlotExtra(extra)
-                    or sidFromSlotExtra(extra2))
+                    or sidFromSlotExtra(extra2)
+                    or sidFromInfo(rawId))
+            else
+                add(sidFromSlotExtra(extra) or sidFromSlotExtra(extra2)
+                    or sidFromInfo(rawId))
             end
         end
     end

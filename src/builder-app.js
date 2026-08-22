@@ -348,6 +348,12 @@
       if (it && it.i !== undefined) METH_GAP[it.i] = it;
     });
   }
+  var METH_TRIG = Object.create(null);
+  if (METH && METH.triggers && METH.triggers.entries) {
+    METH.triggers.entries.forEach(function (it) {
+      if (it && it.i !== undefined) METH_TRIG[it.i] = it;
+    });
+  }
   function isDesireEligIdx(i) {
     if (ROLLGATE_BLOCK[i]) return false;
     return !DES || DES[i] !== 0;
@@ -6385,10 +6391,51 @@
     return REFBY;
   }
 
-  function chainNodeTip(i) {
-    if (i === null || i === undefined || !CAT[i]) return "";
-    var r = CAT[i];
-    var lines = [r[0] + " · " + (r[1] ? "Talent" : "Fähigkeit")];
+  var TRIG_DE = {
+    chance: "Trefferchance", onhit: "Autoangriff", when: "Bedingung",
+    trig: "löst aus", crit: "Crit", icd: "Abklingung",
+    next: "dein nächster Treffer", pulse: "Impuls"
+  };
+
+  function chainTooltipText(i) {
+    var raw = CAT[i] && CAT[i][5];
+    if (!raw) return "";
+    var tip = String(raw).replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
+    if (!tip) return "";
+    if (tip.length <= 120) return tip;
+    var parts = tip.match(/[^.!?]+[.!?]+/g);
+    if (!parts || !parts.length) {
+      return tip.slice(0, 180) + (tip.length > 180 ? "…" : "");
+    }
+    var lines = [], len = 0, pi;
+    for (pi = 0; pi < parts.length && lines.length < 4; pi++) {
+      var p = parts[pi].trim();
+      if (!p) continue;
+      if (len + p.length > 300 && lines.length >= 2) break;
+      lines.push(p);
+      len += p.length;
+    }
+    if (!lines.length) return tip.slice(0, 180) + "…";
+    if (pi < parts.length) {
+      var last = lines[lines.length - 1];
+      if (last.charAt(last.length - 1) !== "…") lines[lines.length - 1] = last + "…";
+    }
+    return lines.join("\n");
+  }
+
+  function methTriggerLine(i) {
+    var tr = METH_TRIG[i];
+    if (!tr || !tr.t || !tr.t.length) return "";
+    var bits = [];
+    if (tr.pct != null) bits.push(fmt(tr.pct) + " %");
+    tr.t.forEach(function (tag) {
+      bits.push(TRIG_DE[tag] || tag);
+    });
+    if (tr.icd != null) bits.push("max. alle " + secs(tr.icd));
+    return "Trigger: " + bits.join(" · ");
+  }
+
+  function chainDoesLines(i) {
     var s = SC[i] || {};
     var m = MC[i] || {};
     var does = [];
@@ -6396,41 +6443,164 @@
       does.push(fmt(s.w) + " % " +
         (s.wh && HAND[s.wh] ? HAND[s.wh] : "Waffe"));
     }
+    if (s.ap) does.push(fmt(s.ap) + " % AP");
+    if (s.sp) does.push(fmt(s.sp) + " % SP");
     if (s.sch) does.push(schoolDe(s.sch));
     else if (s.fsch) does.push(schoolDe(s.fsch));
+    if (s.flat && !(s.tick && s.tick === s.flat[0] && s.flat[0] === s.flat[1])) {
+      does.push(fmt(s.flat[0]) +
+        (s.flat[1] !== s.flat[0] ? "–" + fmt(s.flat[1]) : "") + " Schaden");
+    }
     if (s.heal) {
       does.push("Heilung " + fmt(s.heal[0]) +
         (s.heal[1] !== s.heal[0] ? "–" + fmt(s.heal[1]) : ""));
     } else if (s.healpct) {
       does.push("Heilung " + fmt(s.healpct) + " % Max");
     }
-    var refs = (REL[i] && REL[i][2]) || [];
-    if (r[1] === 1 && refs.length) {
-      var names = refs.slice(0, 2).map(function (x) {
-        return CAT[x] ? short(CAT[x][0]) : "";
-      }).filter(Boolean);
-      if (names.length) does.push("wirkt auf " + names.join(", "));
+    if (s.absorb) {
+      does.push("Absorb " + fmt(s.absorb[0]) +
+        (s.absorb[1] !== s.absorb[0] ? "–" + fmt(s.absorb[1]) : ""));
+    }
+    if (s.dot) does.push("DoT " + s.dot + " s");
+    if (s.tick) does.push(fmt(s.tick) + "/s");
+    (s.inc || []).slice(0, 2).forEach(function (x) {
+      does.push("+" + fmt(x[0]) + " % " + short(x[1]));
+    });
+    (s.red || []).slice(0, 1).forEach(function (x) {
+      does.push("−" + fmt(x[0]) + " % " + short(x[1]));
+    });
+    (s.gen || []).slice(0, 2).forEach(function (x) {
+      does.push("+" + (x[0] < 0 ? fmt(-x[0]) + " % " : fmt(x[0]) + " ") + x[1]);
+    });
+    if (s.echo) {
+      does.push(fmt(s.echo[0]) + " % Echo" +
+        (s.echo[1] ? " " + short(s.echo[1]) : ""));
     }
     if (s.proc) does.push(fmt(s.proc) + " % Proc");
-    else if (m.proc) does.push(fmt(m.proc) + " % Proc");
-    if (does.length) lines.push(does.slice(0, 3).join(" · "));
-    var base = inheritBase(i);
-    var relBits = [];
-    if (base !== null && base !== undefined && CAT[base]) {
-      relBits.push("erbt Talente von " + short(CAT[base][0]));
+    else if (METH_GAP[i] && METH_GAP[i].why === "proc_ohne_schaden") {
+      does.push("Proc · Zahl fehlt");
+    } else if (m.proc) does.push(fmt(m.proc) + " % Proc");
+    var trig = methTriggerLine(i);
+    if (trig) does.push(trig.replace(/^Trigger: /, ""));
+    if (m.cd) does.push("CD " + secs(m.cd));
+    if (m.cast) does.push(fmt(m.cast) + " s Cast");
+    if (m.cost && m.res) does.push(fmt(m.cost) + " " + m.res);
+    if (m.ch) {
+      does.push(m.ch + (m.ch === 1 ? " Ladung" : " Ladungen"));
     }
-    if (REL[i] && REL[i][3] >= 0) relBits.push("gleicher GCD");
-    if (relBits.length) lines.push(relBits.join(" — "));
-    var mech = [];
-    if (m.cd) mech.push("CD " + secs(m.cd));
-    if (m.cost && m.res) mech.push(fmt(m.cost) + " " + m.res);
-    if (m.ch) mech.push(m.ch + (m.ch === 1 ? " Ladung" : " Ladungen"));
-    if (mech.length) lines.push(mech.join(" · "));
-    return lines.slice(0, 4).join("\n");
+    if (m.chr) does.push("Aufladung " + secs(m.chr));
+    if (m.range) does.push(m.range + " m");
+    return does;
   }
 
-  function pill(i, live, takeable) {
-    var tip = chainNodeTip(i);
+  function chainLinkLines(i, have) {
+    var lines = [];
+    var base = inheritBase(i);
+    var usesOnly = (REL[i][0] === null || REL[i][0] === undefined) &&
+      base !== null && base !== undefined;
+    if (base !== null && base !== undefined && CAT[base]) {
+      lines.push(usesOnly
+        ? "uses-Basis: erbt Talente von " + short(CAT[base][0]) +
+          " — die Basis selbst muss nicht im Build stehen"
+        : "erbt Talente von " + short(CAT[base][0]));
+    }
+    var need = REL[i][1];
+    if (need !== null && need !== undefined && CAT[need]) {
+      var needBit = "braucht " + short(CAT[need][0]);
+      if (have) needBit += have[need] ? " · im Build" : " · fehlt bei dir";
+      lines.push(needBit);
+    }
+    var mods = [];
+    bmOf(i).forEach(function (t) { pushUniq(mods, t); });
+    if (base !== null && base !== undefined) {
+      bmOf(base).forEach(function (t) { pushUniq(mods, t); });
+    }
+    if (mods.length) {
+      var modNames = mods.slice(0, 4).map(function (t) {
+        return CAT[t] ? short(CAT[t][0]) : "";
+      }).filter(Boolean);
+      if (modNames.length) {
+        var modLine = "verbessert durch " + modNames.join(", ");
+        if (mods.length > 4) modLine += " +" + (mods.length - 4);
+        if (have) {
+          var on = mods.filter(function (t) { return have[t]; }).length;
+          if (on) modLine += " · " + on + "/" + mods.length + " im Build";
+        }
+        lines.push(modLine);
+      }
+    }
+    var out = [];
+    (REL[i][2] || []).forEach(function (r) { pushUniq(out, r); });
+    (MODOF[i] || []).forEach(function (r) { pushUniq(out, r); });
+    if (out.length) {
+      var outNames = out.slice(0, 4).map(function (r) {
+        return CAT[r] ? short(CAT[r][0]) : "";
+      }).filter(Boolean);
+      if (outNames.length) {
+        var outLine = "wirkt auf " + outNames.join(", ");
+        if (out.length > 4) outLine += " +" + (out.length - 4);
+        if (have) {
+          var won = liveFromBases(have, out).filter(function (t) {
+            return !sameGcdSlot(i, t);
+          }).length;
+          if (won) outLine += " · " + won + " im Build";
+        }
+        lines.push(outLine);
+      }
+    }
+    var back = [];
+    (refBy()[i] || []).forEach(function (r) {
+      if (mods.indexOf(r) < 0 && !sameGcdSlot(i, r)) pushUniq(back, r);
+    });
+    if (base !== null && base !== undefined) {
+      (refBy()[base] || []).forEach(function (r) {
+        if (mods.indexOf(r) < 0 && !sameGcdSlot(i, r)) pushUniq(back, r);
+      });
+    }
+    if (back.length) {
+      var backNames = back.slice(0, 4).map(function (r) {
+        return CAT[r] ? short(CAT[r][0]) : "";
+      }).filter(Boolean);
+      if (backNames.length) {
+        var backLine = "zahlt ein: " + backNames.join(", ");
+        if (back.length > 4) backLine += " +" + (back.length - 4);
+        if (have) {
+          var bon = back.filter(function (r) { return have[r]; }).length;
+          if (bon) backLine += " · " + bon + " im Build";
+        }
+        lines.push(backLine);
+      }
+    }
+    if (REL[i] && REL[i][3] >= 0) {
+      lines.push("gleicher GCD — ein Slot, nicht parallel");
+    }
+    if (REL[i] && REL[i][5] >= 0) {
+      lines.push("geteilter CD: " + (CDG[REL[i][5]] || "gemeinsam"));
+    }
+    var preq = pathReqKeys(i);
+    if (preq.length) lines.push("Path: braucht " + pathReqLabel(preq));
+    else if (pathReqRaw(i)) lines.push("Stat-Sperre: " + pathReqRaw(i));
+    return lines;
+  }
+
+  function chainNodeTip(i, have) {
+    if (i === null || i === undefined || !CAT[i]) return "";
+    var r = CAT[i];
+    var lines = [r[0] + " · " + (r[1] ? "Talent" : "Fähigkeit")];
+    var tip = chainTooltipText(i);
+    if (tip) lines.push(tip);
+    var does = chainDoesLines(i);
+    if (does.length) lines.push(does.slice(0, 5).join(" · "));
+    var links = chainLinkLines(i, have || null);
+    if (links.length) {
+      lines.push("— Verkettung —");
+      links.slice(0, 5).forEach(function (l) { lines.push(l); });
+    }
+    return lines.slice(0, 10).join("\n");
+  }
+
+  function pill(i, live, takeable, have) {
+    var tip = chainNodeTip(i, have);
     return '<span class="pill ' + (live ? "live" : "dead") +
       (takeable ? " take" : "") + '"' +
       (takeable ? ' data-add="' + i + '" role="button"' : "") +
@@ -6454,7 +6624,7 @@
     if (base !== null && base !== undefined) {
       var inheritOn = mods.some(function (t) { return have[t]; });
       rows.push(["Erbt Talente",
-        "<em>von</em> " + pill(base, inheritOn, false) +
+        "<em>von</em> " + pill(base, inheritOn, false, have) +
         ((REL[i][0] === null || REL[i][0] === undefined)
           ? " <em>uses-Basis — Talente, nicht die Fähigkeit selbst</em>"
           : "")]);
@@ -6470,9 +6640,9 @@
     var modsOn = mods.filter(function (t) { return have[t]; });
     var modsOff = mods.filter(function (t) { return !have[t]; });
     if (modsOn.length || (showMissing && modsOff.length)) {
-      var h = modsOn.map(function (t) { return pill(t, true, false); }).join("");
+      var h = modsOn.map(function (t) { return pill(t, true, false, have); }).join("");
       if (showMissing) {
-        h += modsOff.slice(0, 6).map(function (t) { return pill(t, false, true); }).join("");
+        h += modsOff.slice(0, 6).map(function (t) { return pill(t, false, true, have); }).join("");
         if (modsOff.length > 6) {
           h += '<span class="pill dead">+' + (modsOff.length - 6) + "</span>";
         }
@@ -6493,9 +6663,9 @@
       return !haveInherited(have, r) && !sameGcdSlot(i, r);
     });
     if (targetsOn.length || (showMissing && targetsOff.length)) {
-      var h2 = targetsOn.map(function (r) { return pill(r, true, false); }).join("");
+      var h2 = targetsOn.map(function (r) { return pill(r, true, false, have); }).join("");
       if (showMissing) {
-        h2 += targetsOff.slice(0, 6).map(function (r) { return pill(r, false, true); }).join("");
+        h2 += targetsOff.slice(0, 6).map(function (r) { return pill(r, false, true, have); }).join("");
         if (targetsOff.length > 6) {
           h2 += '<span class="pill dead">+' + (targetsOff.length - 6) + "</span>";
         }
@@ -6515,7 +6685,7 @@
     }
     if (back.length) {
       rows.push(["Zahlt ein", back.map(function (r) {
-        return pill(r, true, false);
+        return pill(r, true, false, have);
       }).join("")]);
       live += back.length;
     }
@@ -6537,7 +6707,7 @@
     });
     if (pathClash.length) {
       rows.push(["Andere Path-Sperre",
-        pathClash.map(function (r) { return pill(r, true, false); }).join("") +
+        pathClash.map(function (r) { return pill(r, true, false, have); }).join("") +
         " <em>— nicht frei tauschbar</em>"]);
     }
     var gcdPeers = [];
@@ -6548,7 +6718,7 @@
       });
       if (gcdPeers.length) {
         rows.push(["Gleicher GCD", "<em>ein Slot — nicht parallel</em> " +
-          gcdPeers.map(function (k) { return pill(k, false, false); }).join("")]);
+          gcdPeers.map(function (k) { return pill(k, false, false, have); }).join("")]);
         // bewusst kein live++ — Dubletten sind kein zusätzlicher Takt
         dead++;
       }
@@ -6561,7 +6731,7 @@
       });
       if (cdPeers.length) {
         rows.push(["Geteilter CD", '<em>' + esc(CDG[cg] || "gemeinsam") + "</em> " +
-          cdPeers.map(function (k) { return pill(k, false, false); }).join("")]);
+          cdPeers.map(function (k) { return pill(k, false, false, have); }).join("")]);
         dead++;
       }
     }
@@ -6628,13 +6798,13 @@
           "keine genannte Fähigkeit und keine Schulvariante im Build.</div>";
       } else if (c.gcdPeers.length) {
         lead += '<div class="chn-foot"><em>Gleicher GCD — ein Slot:</em> ' +
-          c.gcdPeers.map(function (k) { return pill(k, false, false); }).join("") +
+          c.gcdPeers.map(function (k) { return pill(k, false, false, have); }).join("") +
           "</div>";
       }
       if (!orphan && c.cdPeers.length) {
         lead += '<div class="chn-foot"><em>Geteilter CD</em> (' +
           esc(CDG[REL[i][5]] || "gemeinsam") + "): " +
-          c.cdPeers.map(function (k) { return pill(k, false, false); }).join("") +
+          c.cdPeers.map(function (k) { return pill(k, false, false, have); }).join("") +
           "</div>";
       }
       if (!orphan && foot.length) {
@@ -6838,7 +7008,8 @@
       if (d.c) {
         var p = parseExport(d.c);
         if (p) {
-          document.getElementById("pasteBox").value = d.c;
+          var paste = document.getElementById("pasteBox");
+          if (paste) paste.value = d.c;
           applyImport(p);
           any = true;
         }

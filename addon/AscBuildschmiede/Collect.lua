@@ -79,6 +79,9 @@
 --   WC|…|RepurchAbi:n|RepurchTal:n|CanRepurch:0/1
 --                                         (GetNumRepurchasable* / CanRepurchaseAnyRolls)
 --
+-- 1.5.19 (FORMAT bleibt 1): Desire/Undesire scannen ipairs+pairs und Type=0;
+--   Filtered-Desire-APIs als Nachzug. Skill Cards: cardId aus Tabelle + :s
+--   auch ohne cardId.
 -- 1.5.10 (FORMAT bleibt 1): QUALITY/QCOST nicht mehr an Quality.lua koppeln —
 --   Fallback-Collector in dieser Datei; fehlende BS.Collect*-Felder kosten
 --   eine Zeile, nie den ganzen Export.
@@ -284,26 +287,73 @@ function BS.CollectGameModes()
     return out
 end
 
--- Desire/Undesire: Katalog scannen (GetAllEntries), nur IsDesiredID / IsUndesiredID.
+-- Desire/Undesire: Katalog + bekannte Entries. Type=0 (Ability) nicht
+-- als fehlend werten — sonst bleibt die Wunschliste leer.
 local function collectWildcardFlagged(checker)
     if type(checker) ~= "function" then return nil end
-    local entries = Safe(function()
-        return C_CharacterAdvancement and C_CharacterAdvancement.GetAllEntries
-            and C_CharacterAdvancement.GetAllEntries()
-    end)
-    if type(entries) ~= "table" then return nil end
     local out, seen = {}, {}
-    for _, e in ipairs(entries) do
-        local eid = e and tonumber(e.ID)
-        local etype = e and e.Type
-        if eid and etype and not seen[eid] then
-            local yes = Safe(function()
+    local function consider(e)
+        local eid
+        if type(e) == "table" then
+            eid = tonumber(e.ID or e.EntryID or e.InternalID or e.internalID or e.entryId)
+        else
+            eid = tonumber(e)
+        end
+        if not eid or seen[eid] then return end
+        local etype = type(e) == "table" and (e.Type or e.EntryType) or nil
+        local yes = Safe(function()
+            return checker(eid)
+        end)
+        if not yes and etype ~= nil then
+            yes = Safe(function()
                 return checker(eid, etype)
             end)
-            if yes then
-                seen[eid] = true
-                out[#out + 1] = Num(eid)
-            end
+        end
+        if yes then
+            seen[eid] = true
+            out[#out + 1] = Num(eid)
+        end
+    end
+    local function scan(list)
+        if type(list) ~= "table" then return end
+        for _, e in ipairs(list) do consider(e) end
+        for _, e in pairs(list) do consider(e) end
+    end
+    scan(Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetAllEntries
+            and C_CharacterAdvancement.GetAllEntries()
+    end))
+    scan(Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetKnownSpellEntries
+            and C_CharacterAdvancement.GetKnownSpellEntries()
+    end))
+    scan(Safe(function()
+        return C_CharacterAdvancement and C_CharacterAdvancement.GetKnownTalentEntries
+            and C_CharacterAdvancement.GetKnownTalentEntries()
+    end))
+    if #out == 0 then return nil end
+    table.sort(out, function(a, b) return tonumber(a) < tonumber(b) end)
+    return out
+end
+
+local function mergeFilteredIds(out, nFn, atFn)
+    if type(nFn) ~= "function" or type(atFn) ~= "function" then return out end
+    local n = tonumber((Safe(nFn)))
+    if not n or n <= 0 then return out end
+    out = out or {}
+    local seen = {}
+    for _, id in ipairs(out) do seen[tonumber(id)] = true end
+    for i = 0, n do
+        local e = Safe(function() return atFn(i) end)
+        local eid
+        if type(e) == "table" then
+            eid = tonumber(e.ID or e.EntryID or e.InternalID or e.entryId)
+        else
+            eid = tonumber(e)
+        end
+        if eid and not seen[eid] then
+            seen[eid] = true
+            out[#out + 1] = Num(eid)
         end
     end
     if #out == 0 then return nil end
@@ -312,11 +362,23 @@ local function collectWildcardFlagged(checker)
 end
 
 function BS.CollectDesired()
-    return collectWildcardFlagged(C_Wildcard and C_Wildcard.IsDesiredID)
+    local out = collectWildcardFlagged(C_Wildcard and C_Wildcard.IsDesiredID)
+    if C_Wildcard then
+        out = mergeFilteredIds(out,
+            C_Wildcard.GetNumFilteredDesiredEntries,
+            C_Wildcard.GetFilteredDesiredEntryAtIndex)
+    end
+    return out
 end
 
 function BS.CollectUndesired()
-    return collectWildcardFlagged(C_Wildcard and C_Wildcard.IsUndesiredID)
+    local out = collectWildcardFlagged(C_Wildcard and C_Wildcard.IsUndesiredID)
+    if C_Wildcard then
+        out = mergeFilteredIds(out,
+            C_Wildcard.GetNumFilteredUndesiredEntries,
+            C_Wildcard.GetFilteredUndesiredEntryAtIndex)
+    end
+    return out
 end
 
 -- WC|… — nur Safe-bestaetigte Read-Getter (keine Roll/Add/Clear).
