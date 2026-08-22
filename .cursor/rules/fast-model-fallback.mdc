@@ -1,0 +1,58 @@
+---
+description: Automatischer Modell-Fallback wenn Task-Subagents zu langsam sind oder hängen
+alwaysApply: true
+---
+
+# Schnellmodell-Fallback (User-Mandat)
+
+User mandate — **immer** befolgen, nicht nachfragen:
+
+**Langsame oder hängende Subagents auf schnellere, passende Modelle neu starten.**
+
+Ein laufender Task kann **nicht** das Modell wechseln. Der Parent muss den langsamen Agenten **abbrechen oder interrupten** und als **neuen Task** mit schnellerem Modell neu starten — nie parallel dieselben Write-Pfade.
+
+Details: `.cursor/scripts/agent-speed-fallback.md` · Modellwahl: `python .cursor/scripts/agent-speed-fallback.py`
+
+## Standard-Start
+
+- Jeder neue Task: `cursor-grok-4.6-high-fast`
+- Multitask, max 50, Debug im Hintergrund bleiben aktiv (`.cursor/rules/multitask-max-agents.mdc`, `debug-background.mdc`)
+
+## Wann neu starten (Fallback)
+
+Der Parent prüft laufende Background-Tasks **nicht blockierend**, aber regelmäßig:
+
+| Signal | Schwelle | Aktion |
+|---|---|---|
+| Kein Fortschritt | ~2–3 min ohne Tool-Output / sichtbaren Schritt | Neu starten |
+| Wiederholte Interrupts | 2× unterbrochen, Aufgabe unvollständig | Neu starten |
+| Task resume timeout | Resume schlägt fehl oder antwortet nicht | Neu starten |
+| Subagent-Hook-Hinweis | `subagentStop`-Follow-up aus `.cursor/hooks/` | Script ausführen, ggf. neu starten |
+
+Vor dem Neustart: langsamen Task **interrupten** oder Lane als verlassen markieren — **kein Doppel-Schreiben** auf dieselben Dateien.
+
+## Modell nach Arbeitstyp (nur erlaubte Modelle)
+
+| Arbeit | Erststart | Bei Stall → Neu-Task |
+|---|---|---|
+| UI / CSS / Copy / Encoding / Organize | grok-4.6-high-fast | `composer-2.5-fast` |
+| JS- / Lua-Bugfix / Verify | grok-4.6-high-fast | `composer-2.5-fast`, dann `cursor-grok-4.5-high-fast` |
+| Harte Calc / RE / Path-Scoring / Methods | grok-4.6-high-fast | `cursor-grok-4.5-high-fast` (nicht Composer) |
+| Explore / Docs (read-only) | grok-4.6-high-fast | `composer-2.5-fast` |
+| Shell / Git (read-only) | grok-4.6-high-fast | `composer-2.5-fast` |
+
+**Nie** `claude-opus-5-thinking-high` für „schneller werden“. Opus nur bei explizit schwerer Reasoning-Aufgabe — nicht als Stall-Fallback.
+
+## Neustart-Ablauf (Parent)
+
+1. Langsamen Task interrupten (oder Hook meldet Stop).
+2. `python .cursor/scripts/agent-speed-fallback.py --work <typ> --from <aktuelles-modell> --reason stall` ausführen.
+3. **Neuen** Task mit empfohlenem Modell, gleichem Prompt + bisherigem Kontext — **ohne** `resume` auf den langsamen Agenten.
+4. Lane-Disziplin einhalten; andere Lanes weiter nutzen (max 50).
+
+## Nicht
+
+- Modell eines laufenden Tasks „umstellen“ (API existiert nicht)
+- Schnellen Twin starten, bevor der langsame die Lane freigegeben hat
+- Opus / `gpt-5.6-sol-medium` als generischen Speed-Fallback
+- Auf einen hängenden Agenten blockieren, während freie Lanes leer sind

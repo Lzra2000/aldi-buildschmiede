@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "subagentStart": [
+      {
+        "command": "python .cursor/hooks/subagent-start-track.py",
+        "timeout": 5
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python .cursor/hooks/subagent-stop-fallback.py",
+        "timeout": 10
+      }
+    ]
+  }
+}

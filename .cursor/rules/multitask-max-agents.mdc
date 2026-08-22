@@ -13,6 +13,7 @@ User mandate — **immer** befolgen, nicht nachfragen:
 4. **Modell für alle Subagents:** `cursor-grok-4.6-high-fast` (User: „alle auf grok fast 4.6 high fast“). Parent darf dasselbe nutzen; nicht still auf ein anderes Modell wechseln.
 5. **Debug im Hintergrund:** Jeder Agent (Parent und jeder Task) hält Verify durchgehend im Hintergrund — nicht optional, nicht erst nachträglich. Details: `.cursor/rules/debug-background.mdc`.
 6. **Addons immer syncen:** Nach jeder Addon-Änderung zwingend `luac5.1 -p` → Live-AddOns kopieren → Zip neu. Auch bei einer Datei. Details: `.cursor/rules/addon-always-sync.mdc`.
+7. **Schnellmodell-Fallback:** Hängende oder zu langsame Subagents interrupten und als **neuen Task** auf schnelleres Modell neu starten — `.cursor/rules/fast-model-fallback.mdc`.
 
 ## Lane-Disziplin (keine Schreibkonflikte)
 
