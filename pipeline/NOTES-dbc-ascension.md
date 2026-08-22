@@ -61,6 +61,8 @@ Katalog-Schnittmenge: **18** / 3071 Spells mit Charges.
 | Build: Firepot Drone | 289190 | 3 | 10.0s |
 
 Produkt: Felder `ch` / `chr` in `mechanics.json` (`pipeline/mechanics.py`).
+Website: Ability-Karten zeigen Badges „N Ladungen“ / „Aufladung Xs“ wenn gesetzt
+(`src/builder-app.js`); fehlende Keys = keine Badge (nichts erfinden).
 
 ## 3. SpellTagTypes / SpellTags
 
