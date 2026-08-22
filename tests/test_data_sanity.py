@@ -32,6 +32,7 @@ OPTIONAL_JSON = (
     ("weapons.json", "wpn"),
     ("formtags.json", "frm"),
     ("pathreq.json", "preq"),
+    ("logmeta.json", "lmeta"),
 )
 # Parallele Arrays: assemble-Deckel 64 KB (des / tree / frm).
 PARALLEL_EMBED_MAX_KB = 64
@@ -534,6 +535,38 @@ class TestDataSanity(unittest.TestCase):
             kb, PARALLEL_EMBED_MAX_KB,
             "spectags.json %.1f KB > %d KB" % (kb, PARALLEL_EMBED_MAX_KB),
         )
+
+    def test_logmeta_if_present(self):
+        """Darkmoon-Snapshot: Struktur und Spannen, keine geratenen Koeffizienten."""
+        lm = _load("logmeta.json")
+        if lm is None:
+            return
+        self.assertEqual(lm.get("v"), 1)
+        self.assertEqual(lm.get("realm"), "Darkmoon")
+        self.assertTrue(lm.get("src", "").startswith("https://darkmoon.ascensionlogs.gg"))
+        self.assertTrue(lm.get("classless"))
+        known = frozenset(("int", "dua", "str", "agi", "heal", "unk"))
+        dps = lm.get("dps") or {}
+        self.assertTrue(1 <= int(dps.get("parses") or 0) <= 5000)
+        self.assertTrue(1 <= int(dps.get("chars") or 0) <= 2000)
+        pct = 0
+        for row in dps.get("paths") or []:
+            self.assertIn(row.get("k"), known)
+            self.assertTrue(0 <= int(row.get("n") or 0) <= int(dps["parses"]))
+            pct += int(row.get("pct") or 0)
+        self.assertTrue(90 <= pct <= 110, "DPS-pct Summe %s" % pct)
+        hps = lm.get("hps") or {}
+        heal = [r for r in (hps.get("paths") or []) if r.get("k") == "heal"]
+        if heal:
+            self.assertGreaterEqual(int(heal[0].get("pct") or 0), 50)
+        ids = lm.get("ids") or {}
+        self.assertEqual(ids.get("strength"), 1)
+        self.assertEqual(ids.get("duality"), 6)
+        self.assertEqual(ids.get("healing"), 4)
+        self.assertNotIn("coeff", lm)
+        self.assertNotIn("sp", lm)
+        kb = os.path.getsize(os.path.join(DATA, "logmeta.json")) / 1024.0
+        self.assertLessEqual(kb, 16, "logmeta.json %.1f KB > 16 KB" % kb)
 
 
 if __name__ == "__main__":

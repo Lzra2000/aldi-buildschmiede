@@ -103,19 +103,18 @@ def main():
                       "pipeline/formtags.py kompakter halten"
                       % (kb, FORMTAGS_EMBED_MAX_KB))
                 continue
-        if key == "preq":
+        if key == "lmeta":
             kb = os.path.getsize(p) / 1024.0
-            if kb > PARALLEL_EMBED_MAX_KB:
-                print("  preq uebersprungen (%.0f KB > %d KB) — "
-                      "pipeline/pathreq.py kompakter halten"
-                      % (kb, PARALLEL_EMBED_MAX_KB))
+            if kb > 16:
+                print("  lmeta uebersprungen (%.0f KB > 16 KB) — "
+                      "pipeline/logmeta.py kompakter halten" % kb)
                 continue
-        if key in ("des", "tree"):
+        if key in ("des", "tree", "preq"):
             kb = os.path.getsize(p) / 1024.0
             if kb > PARALLEL_EMBED_MAX_KB:
                 raise SystemExit(
                     "data/%s %.0f KB > %d KB — nicht einbettbar "
-                    "(Desire-/Spec-Filter waere unvollstaendig)"
+                    "(Desire-/Spec-/Path-Filter waere unvollstaendig)"
                     % (fname, kb, PARALLEL_EMBED_MAX_KB)
                 )
         payload[key] = json.load(io.open(p, encoding="utf-8"))

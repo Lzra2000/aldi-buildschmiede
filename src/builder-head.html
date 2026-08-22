@@ -1143,10 +1143,13 @@ details.more[open]>summary::after,details.disclose[open]>summary::after{content:
 details.more:not([open]),details.disclose:not([open]){opacity:var(--quiet)}
 details.more[open],details.more:focus-within,
 details.disclose[open],details.disclose:focus-within{opacity:var(--quiet-focus)}
-details.more .more-body{padding:0 12px 10px;font-size:13px;color:var(--ink-soft);line-height:1.5}
-details.more .more-body>:first-child{margin-top:0}
-details.more .more-body>:last-child{margin-bottom:0}
+details.more .more-body,details.disclose .more-body{padding:0 12px 10px;font-size:13px;color:var(--ink-soft);line-height:1.5}
+details.more .more-body>:first-child,details.disclose .more-body>:first-child{margin-top:0}
+details.more .more-body>:last-child,details.disclose .more-body>:last-child{margin-bottom:0}
 details.more .more-body .wepline{padding-left:0;padding-right:0}
+details.disclose .more-body .headline{border-left:0;padding:10px 0;background:transparent}
+details.disclose .more-body .flag{border:0;padding:8px 0}
+details.disclose .more-body .srcnote{padding:8px 0}
 
 
 /* === LFM discipline (site-owned forge-slate) === */

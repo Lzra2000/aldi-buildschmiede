@@ -1725,6 +1725,119 @@ a.school:focus-within,a.limit:focus-within{border-color:color-mix(in srgb,var(--
   if (reopenBtn) reopenBtn.addEventListener("click", function(){ show(true); });
 })();
 </script>
+<div id="hoverTip" role="tooltip" hidden></div>
+<script>
+(function(){
+  var box = document.getElementById("hoverTip");
+  if (!box) return;
+  var timer = null, cur = null, pinned = null;
+  function delayMs(){
+    try {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
+    } catch (e) { /* */ }
+    return 240;
+  }
+  function coarse(){
+    try { return window.matchMedia("(pointer: coarse)").matches; }
+    catch (e) { return false; }
+  }
+  function host(t){
+    return t && t.closest ? t.closest("[data-tip], [data-jump], a.school, a.limit") : null;
+  }
+  function textOf(el){
+    var raw = (el.getAttribute("data-tip") || el.getAttribute("title") || "").replace(/\s+/g, " ").trim();
+    if (!raw) return "";
+    var vis = String(el.innerText || "").replace(/\s+/g, " ").trim();
+    return raw === vis ? "" : raw;
+  }
+  function hide(force){
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (!force && pinned) return;
+    box.classList.remove("on");
+    box.hidden = true;
+    box.textContent = "";
+    if (force && pinned) { pinned.classList.remove("pin"); pinned = null; }
+    cur = null;
+  }
+  function place(el){
+    var r = el.getBoundingClientRect();
+    var tw = box.offsetWidth, th = box.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.top - th - 8;
+    if (y < 8) y = r.bottom + 8;
+    if (x < 8) x = 8;
+    if (x + tw > window.innerWidth - 8) x = window.innerWidth - tw - 8;
+    box.style.left = Math.round(x) + "px";
+    box.style.top = Math.round(y) + "px";
+  }
+  function show(el, text){
+    if (el.getAttribute("title")) {
+      el.setAttribute("data-tip", el.getAttribute("title"));
+      el.removeAttribute("title");
+    }
+    cur = el;
+    box.textContent = text;
+    box.hidden = false;
+    box.classList.add("on");
+    place(el);
+  }
+  function arm(el){
+    var text = textOf(el);
+    if (!text) return;
+    if (cur === el && box.classList.contains("on")) { place(el); return; }
+    hide(false);
+    cur = el;
+    var wait = delayMs();
+    if (!wait) { show(el, text); return; }
+    timer = setTimeout(function(){
+      timer = null;
+      if (cur === el) show(el, textOf(el) || text);
+    }, wait);
+  }
+  document.addEventListener("pointerover", function(e){
+    var el = host(e.target);
+    if (!el || coarse()) return;
+    arm(el);
+  });
+  document.addEventListener("pointerout", function(e){
+    var el = host(e.target);
+    if (!el || el === pinned) return;
+    if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+    if (cur === el) hide(false);
+  });
+  document.addEventListener("focusin", function(e){
+    var el = host(e.target);
+    if (!el) return;
+    var text = textOf(el);
+    if (!text) return;
+    hide(true);
+    show(el, text);
+  });
+  document.addEventListener("focusout", function(e){
+    var el = host(e.target);
+    if (!el || el === pinned) return;
+    if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+    if (cur === el) hide(false);
+  });
+  document.addEventListener("click", function(e){
+    if (!coarse()) return;
+    var el = host(e.target);
+    if (!el) { hide(true); return; }
+    if (el.hasAttribute("data-jump") || el.tagName === "A") return;
+    var text = textOf(el);
+    if (!text) return;
+    if (pinned === el) { hide(true); return; }
+    if (pinned) pinned.classList.remove("pin");
+    pinned = el;
+    el.classList.add("pin");
+    show(el, text);
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape") hide(true);
+  });
+  window.addEventListener("scroll", function(){ hide(true); }, true);
+})();
+</script>
 </body>
 </html>
 

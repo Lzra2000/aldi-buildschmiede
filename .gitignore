@@ -6,5 +6,7 @@ tmp-s10-*
 .tmp-s10-*
 pipeline/_probe*.py
 pipeline/_audit_*.py
+_tmp_*
+pipeline/_tmp_*
 data/*.bak*
 data/itemicons-all.json

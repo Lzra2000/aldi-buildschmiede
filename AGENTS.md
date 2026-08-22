@@ -122,7 +122,9 @@ sie über die Tabelle `PAYLOAD` ein; im JS liegen sie als `D.<schlüssel>`.
 | `statsuggest.py` | `statsuggest.json` | `SpellStatSuggestions.dbc` ∩ Katalog | nein |
 | `spellsuggest.py` | `spellsuggest.json` | `SpellSpellSuggestions.dbc` ∩ Katalog (Top-N) | nein |
 | `desireelig.py` | `desireelig.json` | `CatalogData.lua` (`desiredEligible`) | nein |
+| `pathreq.py` | `pathreq.json` | CatalogData + Katalog + `relations` Gate Pfad/Stat | nein |
 | `formtags.py` | `formtags.json` | `catalog.json` (Name + Beschreibung) | nein |
+| `logmeta.py` | `logmeta.json` | Ascension Logs Darkmoon (öffentliche Rankings-API) | nein |
 | `itemicons.py` | `itemicons.json` | `Item.dbc` + `ItemDisplayInfo.dbc` (Testexport- + Seed-/Levelrun-ItemIds) | **ja** |
 | `ilvlbands.py` | `ilvlbands.json` | `ItemStat.dbc` ∩ `Item.dbc` (Mid-Schaden / ilvl / Rüstung p25–p75 je Stufe 10–60) | **ja** |
 | `weapons.py` | `weapons.json` | Seed-/Export-Waffen: ItemStat-Bänder 10–60 (`f1`=itemId; kein ItemAddon-Name) | **ja** |
@@ -139,7 +141,11 @@ kein Vollscan von Item.dbc),
 `ilb` ← `ilvlbands.json` (Stufen-Perzentilbänder 10–60 — `pipeline/NOTES-ilvl.md`),
 `wpn` ← `weapons.json` (ItemStat-Bänder 10–60 je Seed-itemId; ergänzt `ilb`),
 `frm` ← `formtags.json` (Form-Familie aus Katalogtext — `pipeline/NOTES-formtags.md`;
-Einbettung nur wenn Datei ≤ 64 KB; Generator: `formInfo()` liest `D.frm`).
+Einbettung nur wenn Datei ≤ 64 KB; Generator: `formInfo()` liest `D.frm`),
+`preq` ← `pathreq.json` (harte Path-Requires — `pipeline/NOTES-pathreq.md`;
+≠ `ssug`; Einbettung nur wenn Datei ≤ 64 KB, sonst harter Abbruch),
+`lmeta` ← `logmeta.json` (Darkmoon-Log-Meta — `pipeline/logmeta.py`,
+`pipeline/NOTES-ascensionlogs.md`; Top-Parse-Paths, kein Score-Override).
 
 Kern-Payload zusätzlich: `bm` ← `basemods.json`, `ub` ← `usesbase.json`
 (Variante→Basis aus Katalogtext „uses X modifiers“ — `pipeline/NOTES-basemods.md`).

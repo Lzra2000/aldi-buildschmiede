@@ -1076,22 +1076,35 @@
       },
       {
         k: "str", v: strV,
-        why: p.arpen
-          ? p.arpen + "× Armor Penetration im Build"
-          : (p.pw
-            ? p.pw + (p.pw === 1 ? " rein physischer Waffenangriff"
-                                 : " rein physische Waffenangriffe")
-            : "keine reinen Waffenangriffe")
+        why: p.preqStr
+          ? p.preqStr + (p.preqStr === 1 ? " Eintrag braucht" : " Einträge brauchen") +
+            " Path of Strength"
+          : (p.ssugStr
+            ? p.ssugStr + (p.ssugStr === 1 ? " Path-Hinweis Strength" : " Path-Hinweise Strength")
+            : (p.arpen
+              ? p.arpen + "× Armor Penetration im Build"
+              : (p.pw
+                ? p.pw + (p.pw === 1 ? " rein physischer Waffenangriff"
+                                     : " rein physische Waffenangriffe")
+                : "keine reinen Waffenangriffe")))
       },
       {
         k: "agi", v: agiV,
-        why: p.critMelee
-          ? p.critMelee + (p.critMelee === 1 ? " Waffen-Eintrag mit Crit-Fokus"
-                                            : " Waffen-Einträge mit Crit-Fokus")
-          : (p.pw
-            ? p.pw + (p.pw === 1 ? " rein physischer Waffenangriff"
-                                 : " rein physische Waffenangriffe")
-            : "keine reinen Waffenangriffe")
+        why: p.preqAgi
+          ? p.preqAgi + (p.preqAgi === 1 ? " Eintrag braucht" : " Einträge brauchen") +
+            " Path of Agility"
+          : (p.ssugAgi
+            ? p.ssugAgi + (p.ssugAgi === 1 ? " Path-Hinweis Agility" : " Path-Hinweise Agility")
+            : (p.bleed
+              ? p.bleed + (p.bleed === 1 ? " Bleed-Eintrag (Rake/Rip/Shred)"
+                                         : " Bleed-Einträge (Rake/Rip/Shred)")
+              : (p.critMelee
+                ? p.critMelee + (p.critMelee === 1 ? " Waffen-Eintrag mit Crit-Fokus"
+                                                  : " Waffen-Einträge mit Crit-Fokus")
+                : (p.pw
+                  ? p.pw + (p.pw === 1 ? " rein physischer Waffenangriff"
+                                       : " rein physische Waffenangriffe")
+                  : "keine reinen Waffenangriffe"))))
       }
     ];
     s.sort(function (a, b) {
@@ -6214,10 +6227,57 @@
     return REFBY;
   }
 
+  function chainNodeTip(i) {
+    if (i === null || i === undefined || !CAT[i]) return "";
+    var r = CAT[i];
+    var lines = [r[0] + " · " + (r[1] ? "Talent" : "Fähigkeit")];
+    var s = SC[i] || {};
+    var m = MC[i] || {};
+    var does = [];
+    if (s.w) {
+      does.push(fmt(s.w) + " % " +
+        (s.wh && HAND[s.wh] ? HAND[s.wh] : "Waffe"));
+    }
+    if (s.sch) does.push(schoolDe(s.sch));
+    else if (s.fsch) does.push(schoolDe(s.fsch));
+    if (s.heal) {
+      does.push("Heilung " + fmt(s.heal[0]) +
+        (s.heal[1] !== s.heal[0] ? "–" + fmt(s.heal[1]) : ""));
+    } else if (s.healpct) {
+      does.push("Heilung " + fmt(s.healpct) + " % Max");
+    }
+    var refs = (REL[i] && REL[i][2]) || [];
+    if (r[1] === 1 && refs.length) {
+      var names = refs.slice(0, 2).map(function (x) {
+        return CAT[x] ? short(CAT[x][0]) : "";
+      }).filter(Boolean);
+      if (names.length) does.push("wirkt auf " + names.join(", "));
+    }
+    if (s.proc) does.push(fmt(s.proc) + " % Proc");
+    else if (m.proc) does.push(fmt(m.proc) + " % Proc");
+    if (does.length) lines.push(does.slice(0, 3).join(" · "));
+    var base = inheritBase(i);
+    var relBits = [];
+    if (base !== null && base !== undefined && CAT[base]) {
+      relBits.push("erbt Talente von " + short(CAT[base][0]));
+    }
+    if (REL[i] && REL[i][3] >= 0) relBits.push("gleicher GCD");
+    if (relBits.length) lines.push(relBits.join(" — "));
+    var mech = [];
+    if (m.cd) mech.push("CD " + secs(m.cd));
+    if (m.cost && m.res) mech.push(fmt(m.cost) + " " + m.res);
+    if (m.ch) mech.push(m.ch + (m.ch === 1 ? " Ladung" : " Ladungen"));
+    if (mech.length) lines.push(mech.join(" · "));
+    return lines.slice(0, 4).join("\n");
+  }
+
   function pill(i, live, takeable) {
+    var tip = chainNodeTip(i);
     return '<span class="pill ' + (live ? "live" : "dead") +
       (takeable ? " take" : "") + '"' +
-      (takeable ? ' data-add="' + i + '" role="button" tabindex="0"' : "") +
+      (takeable ? ' data-add="' + i + '" role="button"' : "") +
+      ' tabindex="0"' +
+      (tip ? ' data-tip="' + esc(tip) + '"' : "") +
       ' style="border-left:3px solid var(--q' + CAT[i][3] + ')">' +
       (live ? "✓ " : "") + esc(CAT[i][0]) + "</span>";
   }
@@ -6436,8 +6496,11 @@
       if (detRows.length === 1 && detRows[0][0] === "Erbt Talente") {
         detLabel = c.fromUses ? "Talente der Basis" : "Vererbung";
       }
+      var cardTip = chainNodeTip(i);
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
-        '<div class="chn-hd"><span class="icon" style="width:22px;height:22px;' +
+        '<div class="chn-hd" tabindex="0"' +
+        (cardTip ? ' data-tip="' + esc(cardTip) + '"' : "") +
+        '><span class="icon" style="width:22px;height:22px;' +
         'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
         '<span class="nm q' + CAT[i][3] + '">' +
         esc(CAT[i][0]) + "</span>" +
@@ -6511,7 +6574,10 @@
     function bindJumpChip(el, key, title) {
       if (!el) return;
       el.setAttribute("data-jump", key);
-      if (title) el.title = title;
+      if (title) {
+        el.setAttribute("data-tip", title);
+        el.removeAttribute("title");
+      }
       el.classList.add("chip-jump");
       var nested = el.querySelector("a, button");
       var native = el.tagName === "A" || el.tagName === "BUTTON";
@@ -6551,13 +6617,17 @@
     var ketten = document.getElementById("tab-vChain");
     if (ketten) {
       ketten.setAttribute("data-jump", "chain");
-      ketten.title = "Zu den Wirkungsketten springen";
+      ketten.setAttribute("data-tip", "Zu den Wirkungsketten springen");
+      ketten.removeAttribute("title");
     }
     function bindCnt(id, key, title) {
       var el = document.getElementById(id);
       if (!el) return;
       el.setAttribute("data-jump", key);
-      if (title) el.title = title;
+      if (title) {
+        el.setAttribute("data-tip", title);
+        el.removeAttribute("title");
+      }
       if (el.tagName !== "A" && el.tagName !== "BUTTON" &&
           !el.closest("button, a")) {
         el.setAttribute("role", "button");
@@ -7580,6 +7650,11 @@
   renderGenerator();
   renderAI();
   renderMethods();
+  renderLogMetaWissen();
+  refresh();
+})();
+
+
   renderLogMetaWissen();
   refresh();
 })();
