@@ -145,9 +145,9 @@
   function pathReqLegal(i, mine, themeKey) {
     var keys = pathReqKeys(i);
     if (!keys.length) return true;
-    if (themeKey === "heal" && keys.indexOf("heal") >= 0) return true;
-    if (!mine) return true;
-    return keys.indexOf(mine) >= 0;
+    if (mine) return keys.indexOf(mine) >= 0;
+    if (themeKey === "heal") return keys.indexOf("heal") >= 0;
+    return false;
   }
   function pathReqOk(i, mine) {
     return pathReqLegal(i, mine);
@@ -367,6 +367,62 @@
     return "background-position:-" + x + "px -" + y + "px;" +
       "background-size:" + (SPR.cols * size) + "px auto";
   }
+
+  // Gemessen: inv_custom_abilityessence / inv_custom_talentessence (essicons.py).
+  var ESS_ICON = {
+    AE: "inv_custom_abilityessence",
+    TE: "inv_custom_talentessence"
+  };
+  function essIconStyle(kind, size) {
+    var key = ESS_ICON[kind];
+    if (!key || !SPR.extra) return "";
+    var t = SPR.extra[key];
+    if (typeof t !== "number" || t < 0) return "";
+    size = size || SPR.tile;
+    var x = (t % SPR.cols) * size, y = Math.floor(t / SPR.cols) * size;
+    return "background-position:-" + x + "px -" + y + "px;" +
+      "background-size:" + (SPR.cols * size) + "px auto";
+  }
+  function essIconHtml(kind, size) {
+    return namedIconHtml(ESS_ICON[kind], size);
+  }
+  function essInvestChip(kind, val, title) {
+    return '<span class="esschip invchip" title="' + esc(title || "") + '">' +
+      essIconHtml(kind, 14) + "<i>" + esc(kind) + "</i> " + val + "</span>";
+  }
+  function namedIconStyle(name, size) {
+    var extra = SPR.extra || {};
+    var t = extra[name];
+    if (t == null || t < 0) return "";
+    size = size || SPR.tile;
+    var x = (t % SPR.cols) * size, y = Math.floor(t / SPR.cols) * size;
+    return "background-position:-" + x + "px -" + y + "px;" +
+      "background-size:" + (SPR.cols * size) + "px auto";
+  }
+  function namedIconHtml(name, size, title) {
+    var st = namedIconStyle(name, size);
+    if (!st) return "";
+    size = size || 16;
+    var lab = title || name;
+    return '<span class="icon essico" role="img" aria-label="' + esc(lab) +
+      '" title="' + esc(lab) +
+      '" style="width:' + size + "px;height:" + size +
+      "px;flex:0 0 " + size + "px;" + st + '"></span>';
+  }
+  var ESS_AE_ICON = "inv_custom_abilityessence";
+  var ESS_TE_ICON = "inv_custom_talentessence";
+  function essIconHtml(kind, size) {
+    if (kind === "AE") return namedIconHtml(ESS_AE_ICON, size, "Ability Essence");
+    if (kind === "TE") return namedIconHtml(ESS_TE_ICON, size, "Talent Essence");
+    return "";
+  }
+  function essInvestChip(kind, n, title) {
+    var ico = essIconHtml(kind, 14);
+    var tip = title || (kind === "AE" ? "Ability Essence" :
+      kind === "TE" ? "Talent Essence" : kind);
+    return '<span class="esschip invchip" title="' + esc(tip + " " + n) + '">' +
+      ico + "<i>" + esc(kind) + "</i> " + n + "</span>";
+  }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -483,6 +539,7 @@
     var ft = el.fTree ? el.fTree.value : "";
     var fd = el.fDesire ? el.fDesire.value : "";
     var fs = el.fScale.value;
+    var fpr = el.fPathReq ? el.fPathReq.value : "";
     var hit = [], CAP = 300;
     for (var i = 0; i < CAT.length; i++) {
       var r = CAT[i];
@@ -492,6 +549,12 @@
       if (fq !== "" && String(r[3]) !== fq) continue;
       if (fd !== "" && String(isDesireEligIdx(i) ? 1 : 0) !== fd) continue;
       if (!scaleMatch(i, fs)) continue;
+      if (fpr) {
+        var pr = pathReqKeys(i);
+        if (fpr === "any" && !pr.length && !pathReqRaw(i)) continue;
+        if (fpr === "none" && (pr.length || pathReqRaw(i))) continue;
+        if (fpr !== "any" && fpr !== "none" && pr.indexOf(fpr) < 0) continue;
+      }
       if (q && r[0].toLowerCase().indexOf(q) < 0 && r[5].toLowerCase().indexOf(q) < 0) continue;
       hit.push(i);
     }
@@ -2266,7 +2329,8 @@
             gap < 0 ? " (+" + (-gap) + " über Soll)" : " — passt"));
       }
       if (total > 0 && spent !== null && rem !== null) tip.push("Summe " + total);
-      return '<div class="essrow"><span class="esslab">' + esc(label) +
+      return '<div class="essrow"><span class="esslab">' +
+        essIconHtml(label, 16) + esc(label) +
         "</span><span class=\"essbar\" title=\"" + esc(tip.join(" · ")) +
         '"><i class="spent" style="width:' + pctSpent + '%"></i></span>' +
         '<span class="essnum">' + bits.join("") + "</span></div>";
@@ -2641,10 +2705,20 @@
     }
     if (c.invest) {
       var inv = [];
-      if (c.invest.AE !== undefined) inv.push("AE " + c.invest.AE);
-      if (c.invest.TE !== undefined) inv.push("TE " + c.invest.TE);
-      if (c.invest.CP !== undefined) inv.push("CP " + c.invest.CP);
-      if (inv.length) meta.push("Investition " + inv.join(" · "));
+      if (c.invest.AE !== undefined) {
+        inv.push(essInvestChip("AE", c.invest.AE, "Ability Essence ausgegeben"));
+      }
+      if (c.invest.TE !== undefined) {
+        inv.push(essInvestChip("TE", c.invest.TE, "Talent Essence ausgegeben"));
+      }
+      if (c.invest.CP !== undefined) {
+        inv.push('<span class="esschip invchip" title="Class Points">' +
+          "<i>CP</i> " + c.invest.CP + "</span>");
+      }
+      if (inv.length) {
+        meta.push('<span class="invgroup">Investition ' +
+          inv.join(" ") + "</span>");
+      }
     }
     if (c.investTabs && c.investTabs.length) {
       meta.push("Talent-Tabs " + c.investTabs.slice(0, 6).map(function (t) {
@@ -2904,9 +2978,14 @@
     // 1. Ungenutzte Essence - das ist reiner, sofort abrufbarer Schaden.
     if (c.essA > 0 || c.essT > 0) {
       var bits = [];
-      if (c.essA > 0) bits.push(c.essA + " Ability Essence");
-      if (c.essT > 0) bits.push(c.essT + " Talent Essence");
-      push("krit", "Du hast noch " + bits.join(" und ") + " übrig",
+      if (c.essA > 0) {
+        bits.push(essIconHtml("AE", 14) + c.essA + " Ability Essence");
+      }
+      if (c.essT > 0) {
+        bits.push(essIconHtml("TE", 14) + c.essT + " Talent Essence");
+      }
+      push("krit", "Du hast noch Essence übrig",
+        " " + bits.join(" und ") + " —" +
         " Das ist Schaden, den du geschenkt bekommst, sobald du sie ausgibst. " +
         (endgame
           ? "Auch auf Stufe 60: freie Essence vor Feinschliff am Gear."
@@ -5829,7 +5908,14 @@
   });
 
   // ---------- Ansichten ----------
-  function showView(id) {
+  function isViewId(id) {
+    if (!id) return false;
+    var v = document.getElementById(id);
+    return !!(v && v.classList && v.classList.contains("view"));
+  }
+
+  function showView(id, opts) {
+    if (!isViewId(id)) id = "vBuild";
     [].forEach.call(document.querySelectorAll(".view"), function (v) {
       var on = v.id === id;
       v.classList.toggle("on", on);
@@ -5841,6 +5927,23 @@
       t.setAttribute("aria-selected", on ? "true" : "false");
       t.tabIndex = on ? 0 : -1;
     });
+    if (opts && opts.syncHash) syncViewHash(id);
+  }
+
+  // Tabwechsel schreibt den Hash neu, damit ein Reload dieselbe Ansicht
+  // oeffnet — nicht eine veraltete #t= vom Import-Chip. Share-Links (#b=)
+  // und #tut=1 bleiben unangetastet.
+  function syncViewHash(id) {
+    var raw = (location.hash || "").replace(/^#/, "");
+    if (/b=/.test(raw) || tutWantHash()) return;
+    var want = id === "vBuild" ? "" : "t=" + id;
+    if (raw === want) return;
+    try {
+      if (history.replaceState) {
+        history.replaceState(null, "",
+          location.pathname + location.search + (want ? "#" + want : ""));
+      }
+    } catch (err) { /* */ }
   }
 
   // Zusammenfassungskacheln → echte IDs in builder-body.html
@@ -6129,15 +6232,39 @@
         ? "Fertig" : "Weiter";
     }
   }
+  function tutClearHash() {
+    var hash = (location.hash || "").replace(/^#/, "");
+    var search = location.search || "";
+    var nextHash = hash.split("&").filter(function (p) {
+      return p && p !== "tut=1";
+    }).join("&");
+    var nextSearch = search
+      .replace(/([?&])tut=1(?=&|$)/g, "$1")
+      .replace(/[?&]$/, "")
+      .replace(/^\?&/, "?")
+      .replace(/&&+/g, "&");
+    if (nextSearch === "?") nextSearch = "";
+    if (nextHash === hash && nextSearch === search) return;
+    try {
+      if (history.replaceState) {
+        history.replaceState(null, "",
+          location.pathname + nextSearch + (nextHash ? "#" + nextHash : ""));
+      } else if (nextHash !== hash) {
+        location.hash = nextHash;
+      }
+    } catch (err) { /* */ }
+  }
   function tutFinish() {
     tutState.done = true;
     tutSave();
     tutShow(false);
+    tutClearHash();
   }
   function tutCollapse() {
     tutState.done = true;
     tutSave();
     tutShow(false);
+    tutClearHash();
   }
   function tutOpen(force) {
     if (force) tutState.step = 0;
@@ -6198,11 +6325,10 @@
       });
     }
   }
-  initTutorial();
 
   document.addEventListener("click", function (e) {
     var b = e.target.closest(".vtab[data-view]");
-    if (b) showView(b.dataset.view);
+    if (b) showView(b.dataset.view, { syncHash: true });
   });
   // Pfeiltasten in der Ansichts-Leiste (wie bei .tab).
   document.addEventListener("keydown", function (e) {
@@ -6220,7 +6346,7 @@
     else if (e.key === "End") next = sibs[sibs.length - 1];
     if (!next) return;
     e.preventDefault();
-    showView(next.dataset.view);
+    showView(next.dataset.view, { syncHash: true });
     next.focus();
   });
   [].forEach.call(document.querySelectorAll(".vtab"), function (t) {
@@ -6679,7 +6805,9 @@
 
   // ---------- Merken ----------
   var STORE = "aldi-buildschmiede-v1";
+  var allowSave = false;
   function save() {
+    if (!allowSave) return;
     try {
       localStorage.setItem(STORE, JSON.stringify({
         b: encode(),
@@ -7627,38 +7755,56 @@
     save();
   }
 
-  // Build aus URL laden
+  // Build aus URL laden. Immer zuerst restore — sonst wischt ein #b=-
+  // Share-Link beim ersten refresh() den importierten Charakter weg.
+  restore();
   var h = location.hash.match(/b=([0-9a-z.]+)/);
-  if (h) { decode(h[1]); el.url.value = shareUrl(); }
-  else { restore(); }
+  if (h) {
+    decode(h[1]);
+    if (el.url) el.url.value = shareUrl();
+  }
   // #t= verlinkt eine Stelle in der Oberfläche. Seit dem Umbau gibt es
   // zwei Ebenen: die Ansicht im Kopfbalken und die Reiter im Nachschlage-
   // werk. Beide über denselben Parameter erreichbar halten, sonst zeigen
   // ältere geteilte Links ins Leere.
+  var applyingHash = false;
   function applyHashTarget() {
-    var raw = (location.hash || "").replace(/^#/, "");
-    if (/tut=1/.test(raw) && typeof tutOpen === "function") tutOpen(true);
-    if (!raw || /^b=/.test(raw)) return;
-    var ht = raw.match(/t=([A-Za-z]+)/);
-    if (ht) {
-      var vb = document.querySelector('[data-view="' + ht[1] + '"]');
-      if (vb) { showView(ht[1]); return; }
-      var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
-      if (!tb) return;
-      var view = tb.closest(".view");
-      if (view) showView(view.id);
-      tb.click();
-      return;
+    if (applyingHash) return;
+    applyingHash = true;
+    try {
+      var raw = (location.hash || "").replace(/^#/, "");
+      if (tutWantHash()) tutOpen(true);
+      if (!raw || /^b=/.test(raw)) return;
+      var ht = raw.match(/(?:^|[?&])t=([A-Za-z]+)/);
+      if (ht) {
+        if (isViewId(ht[1])) { showView(ht[1]); return; }
+        var vb = document.querySelector('.vtab[data-view="' + ht[1] + '"]');
+        if (vb) { showView(ht[1]); return; }
+        var tb = document.querySelector('.tab[data-tab="' + ht[1] + '"]');
+        if (!tb) return;
+        var view = tb.closest(".view");
+        if (view) showView(view.id);
+        activateTab(tb);
+        return;
+      }
+      var id = raw.split("&")[0];
+      if (!id || /=/.test(id)) return;
+      if (JUMP[id]) { jumpTo(id); return; }
+      if (id === "hoverTip" || id === "data" || id === "toast") return;
+      var node = document.getElementById(id);
+      if (node) jumpTo(node);
+    } catch (err) {
+      showView("vBuild");
+    } finally {
+      applyingHash = false;
     }
-    var id = raw.split("&")[0];
-    if (JUMP[id]) { jumpTo(id); return; }
-    var el = document.getElementById(id);
-    if (el) jumpTo(el);
   }
   initTutorial();
   applyHashTarget();
+  if (!document.querySelector(".view.on")) showView("vBuild");
 
   window.addEventListener("hashchange", function () {
+    if (applyingHash) return;
     var m = location.hash.match(/b=([0-9a-z.]+)/);
     if (m) { decode(m[1]); refresh(); }
     // Ein reiner Hashwechsel laedt die Seite nicht neu - ohne diesen
@@ -7788,7 +7934,60 @@
   renderAI();
   renderMethods();
   renderLogMetaWissen();
-  refresh();
+  try {
+    refresh();
+  } catch (err) {
+    showView("vBuild");
+  }
+  allowSave = true;
+  initHoverSystem();
+})();
+
+);
+    document.addEventListener("focusin", function (e) {
+      var el = host(e.target);
+      if (!el) return;
+      var text = textOf(el);
+      if (!text) return;
+      hide(true);
+      show(el, text);
+    });
+    document.addEventListener("focusout", function (e) {
+      var el = host(e.target);
+      if (!el || el === pinned) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (cur === el) hide(false);
+    });
+    document.addEventListener("click", function (e) {
+      if (!coarse()) return;
+      var el = host(e.target);
+      if (!el) { hide(true); return; }
+      if (el.hasAttribute("data-jump") || el.hasAttribute("data-add")) return;
+      var text = textOf(el);
+      if (!text) return;
+      if (pinned === el) { hide(true); return; }
+      if (pinned) pinned.classList.remove("pin");
+      pinned = el;
+      el.classList.add("pin");
+      show(el, text);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") hide(true);
+    });
+    window.addEventListener("scroll", function () { hide(true); }, true);
+  }
+
+  renderArchetypes();
+  renderGenerator();
+  renderAI();
+  renderMethods();
+  renderLogMetaWissen();
+  try {
+    refresh();
+  } catch (err) {
+    showView("vBuild");
+  }
+  allowSave = true;
   initHoverSystem();
 })();
 

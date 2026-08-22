@@ -7796,7 +7796,14 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
   });
 
   // ---------- Ansichten ----------
-  function showView(id) {
+  function isViewId(id) {
+    if (!id) return false;
+    var v = document.getElementById(id);
+    return !!(v && v.classList && v.classList.contains("view"));
+  }
+
+  function showView(id, opts) {
+    if (!isViewId(id)) id = "vBuild";
     [].forEach.call(document.querySelectorAll(".view"), function (v) {
       var on = v.id === id;
       v.classList.toggle("on", on);
@@ -7808,6 +7815,23 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
       t.setAttribute("aria-selected", on ? "true" : "false");
       t.tabIndex = on ? 0 : -1;
     });
+    if (opts && opts.syncHash) syncViewHash(id);
+  }
+
+  // Tabwechsel schreibt den Hash neu, damit ein Reload dieselbe Ansicht
+  // oeffnet — nicht eine veraltete #t= vom Import-Chip. Share-Links (#b=)
+  // und #tut=1 bleiben unangetastet.
+  function syncViewHash(id) {
+    var raw = (location.hash || "").replace(/^#/, "");
+    if (/b=/.test(raw) || tutWantHash()) return;
+    var want = id === "vBuild" ? "" : "t=" + id;
+    if (raw === want) return;
+    try {
+      if (history.replaceState) {
+        history.replaceState(null, "",
+          location.pathname + location.search + (want ? "#" + want : ""));
+      }
+    } catch (err) { /* */ }
   }
 
   // Zusammenfassungskacheln → echte IDs in builder-body.html
@@ -8096,15 +8120,39 @@ body:has(#tutPanel:not([hidden])) .statushint{display:none}
         ? "Fertig" : "Weiter";
     }
   }
+  function tutClearHash() {
+    var hash = (location.hash || "").replace(/^#/, "");
+    var search = location.search || "";
+    var nextHash = hash.split("&").filter(function (p) {
+      return p && p !== "tut=1";
+    }).join("&");
+    var nextSearch = search
+      .replace(/([?&])tut=1(?=&|$)/g, "$1")
+      .replace(/[?&]$/, "")
+      .replace(/^\?&/, "?")
+      .replace(/&&+/g, "&");
+    if (nextSearch === "?") nextSearch = "";
+    if (nextHash === hash && nextSearch === search) return;
+    try {
+      if (history.replaceState) {
+        history.replaceState(null, "",
+          location.pathname + nextSearch + (nextHash ? "#" + nextHash : ""));
+      } else if (nextHash !== hash) {
+        location.hash = nextHash;
+      }
+    } catch (err) { /* */ }
+  }
   function tutFinish() {
     tutState.done = true;
     tutSave();
     tutShow(false);
+    tutClearHash();
   }
   function tutCollapse() {
     tutState.done = true;
     tutSave();
     tutShow(false);
+    tutClearHash();
   }
   function tutOpen(force) {
     if (force) tutState.step = 0;
