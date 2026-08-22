@@ -344,11 +344,11 @@ Zeilenbasiert, Felder mit `|`, Listen mit `;`. Der Parser in
 `builder-app.js` (`parseExport`) ist **absichtlich nachsichtig**:
 unbekannte Zeilen werden übersprungen, nicht abgelehnt. Ein neues Feld im
 Addon bricht also keine ältere Seite. `BS.FORMAT` bleibt **1** (additiv);
-Addon-Version aktuell **1.5.4**. Manuelle Testexporte: `data/testexport-*.txt`.
+Addon-Version aktuell **1.5.5**. Manuelle Testexporte: `data/testexport-*.txt`.
 
 ```
 === BUILDSCHMIEDE v1 ===
-ADDON|1.5.4
+ADDON|1.5.5
 CHAR|Name|Level|Rasse|Klasse
 PATH|Intelligence
 PATHINFO|spellId|icon|name

@@ -5,9 +5,8 @@
 --          (PrestigeModeUI, SkillCardsFrame, EnchantCollection, Ascension CharacterFrame)
 --   Fallback outer: UI-DialogBox-Background + UI-DialogBox-Border + UI-DialogBox-Header
 --          (AscFastRoll / RaidInfo / StaticPopup family)
---   Text inset: InsetFrameTemplate + UI-Background-Marble when present
+--   Text inset: InsetFrameBlackBGTemplate / InsetFrameTemplate when present
 --          (CA / SharedXML Inset); else MacroFrameTextBackground tooltip backdrop
---          (UI-Tooltip-Background + UI-Tooltip-Border + TOOLTIP_DEFAULT_*)
 --   Controls: UIPanelCloseButton, UIPanelButtonTemplate, UIPanelScrollFrameTemplate,
 --             InputBoxTemplate, GameFontNormal / Highlight / HighlightSmall / DisableSmall
 --
@@ -18,7 +17,6 @@ local BS = AscBuildschmiede
 local FRAME_W, FRAME_H = 600, 480
 local PAD = 16
 
--- Portrait-Icons wie CharacterAdvancement / Wildcard (client icon paths).
 local ICON_OWN = "Interface\\Icons\\trade_archaeology_draenei_tome"
 local ICON_FOREIGN = "Interface\\Icons\\misc_rune_pvp_random"
 
@@ -29,7 +27,6 @@ local DIALOG_BACKDROP = {
     insets = { left = 11, right = 12, top = 12, bottom = 11 },
 }
 
--- MacroFrameTextBackground (Blizzard_MacroUI) — dark, readable for export text.
 local MACRO_INSET_BACKDROP = {
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -46,8 +43,8 @@ end
 
 local function setTitle(f, text)
     if type(PortraitFrame_SetTitle) == "function" then
-        pcall(PortraitFrame_SetTitle, f, text)
-        if f.TitleText or f.title then return end
+        local ok = pcall(PortraitFrame_SetTitle, f, text)
+        if ok and (f.TitleText or f.title) then return end
     end
     if f.TitleText and f.TitleText.SetText then
         f.TitleText:SetText(text)
@@ -66,8 +63,11 @@ local function setPortraitIcon(f, icon)
         portrait = f.PortraitFrame.portrait
     end
     if not portrait then return end
+    if type(SetPortraitToTexture) == "function" then
+        if pcall(SetPortraitToTexture, portrait, icon) then return end
+    end
     if not pcallSet(portrait, "SetPortraitTexture", icon) then
-        portrait:SetTexture(icon)
+        pcall(function() portrait:SetTexture(icon) end)
     end
 end
 
@@ -87,7 +87,6 @@ local function tooltipColors()
     return cr, cg, cb, ca, br, bg, bb
 end
 
--- Classic DialogBox chrome (RaidInfo / AscFastRoll) when PortraitFrameTemplate missing.
 local function applyClassicDialogChrome(f)
     f:SetBackdrop(DIALOG_BACKDROP)
     if f.SetBackdropColor then
@@ -103,7 +102,7 @@ local function applyClassicDialogChrome(f)
     header:SetHeight(64)
     header:SetPoint("TOP", 0, 12)
 
-    local corner = f:CreateTexture(nil, "OVERLAY")
+    local corner = f:CreateTexture(nil, "ARTWORK")
     corner:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Corner")
     corner:SetWidth(32)
     corner:SetHeight(32)
@@ -137,28 +136,21 @@ local function createRootFrame()
     return f
 end
 
+-- Flat inset only — nested well caused zero-size EditBox parenting / SetText faults.
 local function createInset(parent)
     local inset
     local ok = pcall(function()
-        inset = CreateFrame("Frame", nil, parent, "InsetFrameTemplate")
+        inset = CreateFrame("Frame", nil, parent, "InsetFrameBlackBGTemplate")
     end)
+    if not (ok and inset) then
+        ok = pcall(function()
+            inset = CreateFrame("Frame", nil, parent, "InsetFrameTemplate")
+        end)
+    end
     if ok and inset then
-        if inset.Bg and inset.Bg.SetTexture then
-            inset.Bg:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble", true, true)
-            if inset.Bg.SetHorizTile then
-                inset.Bg:SetHorizTile(true)
-                inset.Bg:SetVertTile(true)
-            end
+        if inset.Bg and inset.Bg.SetVertexColor then
+            pcall(function() inset.Bg:SetVertexColor(0.07, 0.07, 0.09, 1) end)
         end
-        -- Dark text well on top of marble (MacroFrame readability).
-        local well = CreateFrame("Frame", nil, inset)
-        well:SetPoint("TOPLEFT", 4, -4)
-        well:SetPoint("BOTTOMRIGHT", -4, 4)
-        well:SetBackdrop(MACRO_INSET_BACKDROP)
-        local cr, cg, cb, ca, br, bg, bb = tooltipColors()
-        well:SetBackdropColor(cr, cg, cb, ca)
-        well:SetBackdropBorderColor(br, bg, bb, 1)
-        inset._textWell = well
         return inset
     end
 
@@ -170,8 +162,28 @@ local function createInset(parent)
     return inset
 end
 
+local function syncEditSize(f)
+    local edit, scroll = f.edit, f.scroll
+    if not edit or not scroll then return end
+    local w = scroll:GetWidth()
+    local h = scroll:GetHeight()
+    if w and w > 20 then
+        edit:SetWidth(w)
+    else
+        edit:SetWidth(FRAME_W - PAD * 2 - 52)
+    end
+    local minH = (h and h > 40) and h or 200
+    if (edit:GetHeight() or 0) < 40 then
+        edit:SetHeight(minH)
+    end
+end
+
 local function setPayload(f, payload)
     f.payload = payload or ""
+    if not f.edit then
+        error("AscBuildschmiedeEdit fehlt")
+    end
+    syncEditSize(f)
     f.edit:SetText(f.payload)
     f.edit:SetFocus()
     f.edit:HighlightText()
@@ -205,7 +217,6 @@ local function applyMode(f, mode, meta)
     end
 end
 
--- Zusatzinfos nur aus dem Export-Text lesen (kein Collect-Aufruf).
 local function richnessFromPayload(payload)
     payload = payload or ""
     local bits = {}
@@ -252,7 +263,9 @@ local function richnessFromPayload(payload)
     return bits
 end
 
+-- Kein "|" als Trenner in FontStrings (Ascension Escape-Parser → UI Error).
 local function statusOwn(payload)
+    payload = payload or ""
     local abi, tal = payload:match("COUNT|A:(%d+)|T:(%d+)")
     local char = payload:match("CHAR|([^|]+)")
     local path = payload:match("PATH|([^\n|]+)")
@@ -272,14 +285,15 @@ local function statusOwn(payload)
     for i = 1, #parts do
         if parts[i] then out[#out + 1] = parts[i] end
     end
-    local s = table.concat(out, "  |  ")
+    local s = table.concat(out, "  ·  ")
     if qline then
-        s = s .. "  |  " .. qline:gsub("|", " · ")
+        s = s .. "  ·  " .. qline:gsub("|", " · ")
     end
     return s
 end
 
 local function statusForeign(payload)
+    payload = payload or ""
     local name = payload:match("CHAR|([^|]+)")
     local level = payload:match("CHAR|[^|]+|(%d+)")
     local path = payload:match("PATH|([^\n|]+)")
@@ -299,7 +313,41 @@ local function statusForeign(payload)
     for i = 1, #parts do
         if parts[i] then out[#out + 1] = parts[i] end
     end
-    return table.concat(out, "  |  ")
+    return table.concat(out, "  ·  ")
+end
+
+local function showExportError(f, err)
+    err = tostring(err or "unbekannter Fehler")
+    local msg = table.concat({
+        "=== BUILDSCHMIEDE EXPORT FEHLER ===",
+        "Der Export ist fehlgeschlagen — es gibt nichts zu kopieren.",
+        "",
+        "Fehler: " .. err,
+        "",
+        "Bitte so melden:",
+        "1. Klicke auf die rote UI-Error-Zeile im Chat.",
+        "2. Kopiere den Lua-Fehler und schick ihn weiter.",
+        "3. Danach /reload und /bs erneut versuchen.",
+        "",
+        "Seite: " .. tostring(BS.SITE or ""),
+        "Addon: " .. tostring(BS.VERSION or ""),
+    }, "\n")
+    f.payload = msg
+    if f.edit then
+        pcall(function()
+            syncEditSize(f)
+            f.edit:SetText(msg)
+            f.edit:HighlightText()
+        end)
+    end
+    if f.info then
+        pcall(function()
+            f.info:SetText("Exportfehler — siehe Textfeld · UI-Error im Chat anklicken")
+            f.info:SetTextColor(1, 0.3, 0.3)
+        end)
+    end
+    BS.Print("|cffff5555Exportfehler:|r " .. err)
+    BS.Print("Klicke auf die rote UI-Error-Zeile im Chat und schick den Lua-Fehler weiter.")
 end
 
 local function makeFrame()
@@ -332,7 +380,6 @@ local function makeFrame()
 
     f.title = f.TitleText or f.title
 
-    -- PortraitFrame title strip sits under the metal top; DialogBox uses header banner.
     local topY = (f._ascChrome == "portrait") and -58 or -36
 
     local subtitle = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -373,7 +420,6 @@ local function makeFrame()
     end)
     f.url = url
 
-    -- Soft gold rule under the URL row (AscFastRoll separator idiom).
     local sep = f:CreateTexture(nil, "ARTWORK")
     sep:SetTexture("Interface\\Buttons\\WHITE8X8")
     sep:SetHeight(1)
@@ -386,32 +432,54 @@ local function makeFrame()
     inset:SetPoint("BOTTOMRIGHT", -(PAD + 4), 78)
     f.inset = inset
 
-    local scrollParent = inset._textWell or inset
-    local scroll = CreateFrame("ScrollFrame", "AscBuildschmiedeScroll", scrollParent,
+    local scroll = CreateFrame("ScrollFrame", "AscBuildschmiedeScroll", inset,
         "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 6, -6)
-    scroll:SetPoint("BOTTOMRIGHT", -28, 6)
+    scroll:SetPoint("TOPLEFT", 8, -8)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 8)
     f.scroll = scroll
 
     local edit = CreateFrame("EditBox", "AscBuildschmiedeEdit", scroll)
     edit:SetMultiLine(true)
     edit:SetAutoFocus(false)
-    edit:SetFontObject(GameFontHighlightSmall)
+    edit:SetFontObject(GameFontHighlightSmall or ChatFontNormal)
     edit:SetWidth(FRAME_W - PAD * 2 - 52)
+    edit:SetHeight(300)
     edit:SetMaxLetters(0)
     edit:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
         f:Hide()
     end)
-    -- Nur Anzeige: User-Eingaben zuruecksetzen, Parser-Text bleibt exakt.
+    edit:SetScript("OnCursorChanged", function(self, x, y, w, h)
+        if type(ScrollingEdit_OnCursorChanged) == "function" then
+            pcall(ScrollingEdit_OnCursorChanged, self, x, y, w, h)
+        end
+    end)
     edit:SetScript("OnTextChanged", function(self, user)
         if user then
             self:SetText(f.payload or "")
             self:HighlightText()
         end
+        if type(ScrollingEdit_OnTextChanged) == "function" then
+            pcall(ScrollingEdit_OnTextChanged, self, scroll)
+        end
+    end)
+    edit:SetScript("OnUpdate", function(self, elapsed)
+        if type(ScrollingEdit_OnUpdate) == "function" then
+            pcall(ScrollingEdit_OnUpdate, self, elapsed, scroll)
+        end
     end)
     scroll:SetScrollChild(edit)
     f.edit = edit
+
+    f:SetScript("OnShow", function(self)
+        syncEditSize(self)
+        if self.payload and self.edit and self.edit:GetText() == "" and self.payload ~= "" then
+            pcall(function()
+                self.edit:SetText(self.payload)
+                self.edit:HighlightText()
+            end)
+        end
+    end)
 
     local info = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     info:SetPoint("BOTTOMLEFT", PAD + 4, 52)
@@ -426,6 +494,7 @@ local function makeFrame()
     copy:SetPoint("BOTTOMLEFT", PAD, 18)
     copy:SetText("Alles markieren")
     copy:SetScript("OnClick", function()
+        syncEditSize(f)
         edit:SetFocus()
         edit:HighlightText()
     end)
@@ -436,7 +505,6 @@ local function makeFrame()
     refresh:SetPoint("LEFT", copy, "RIGHT", 8, 0)
     refresh:SetText("Neu einlesen")
     refresh:SetScript("OnClick", function()
-        -- Fremdmodus: wechselt auf den eigenen Export.
         BS.Refresh()
     end)
     f.refresh = refresh
@@ -452,31 +520,73 @@ local function makeFrame()
     return f
 end
 
-function BS.Refresh()
-    if not frame then return end
-    local payload = BS.BuildExport()
-    applyMode(frame, "own")
-    setPayload(frame, payload)
-    frame.info:SetText(statusOwn(payload))
+local function ensureFrame()
+    if frame and frame.edit then return frame end
+    local ok, err = pcall(function()
+        frame = makeFrame()
+    end)
+    if not ok or not frame or not frame.edit then
+        frame = nil
+        BS.Print("|cffff5555Fensterbau fehlgeschlagen:|r " .. tostring(err))
+        BS.Print("Klicke auf die rote UI-Error-Zeile im Chat und schick den Lua-Fehler weiter.")
+        return nil
+    end
+    return frame
 end
 
--- Fremder Build: gleiches Fenster, eigener Modus — Refresh ersetzt ihn
--- erst, wenn der Spieler "Mein Build" waehlt.
+function BS.Refresh()
+    local f = ensureFrame()
+    if not f then return end
+
+    local okBuild, payload = pcall(function()
+        return BS.BuildExport()
+    end)
+    if not okBuild then
+        showExportError(f, payload)
+        f:Show()
+        return
+    end
+    if type(payload) ~= "string" or payload == "" then
+        showExportError(f, "BuildExport lieferte leeren Text")
+        f:Show()
+        return
+    end
+
+    local okUI, err = pcall(function()
+        applyMode(f, "own")
+        setPayload(f, payload)
+        f.info:SetText(statusOwn(payload))
+        f.info:SetTextColor(0.7, 0.7, 0.7)
+    end)
+    if not okUI then
+        pcall(setPayload, f, payload)
+        showExportError(f, err)
+    end
+    f:Show()
+end
+
 function BS.ShowForeign(payload)
-    if not frame then frame = makeFrame() end
-    frame:Show()
-    local name = payload and payload:match("CHAR|([^|]+)")
-    applyMode(frame, "foreign", { name = name })
-    setPayload(frame, payload)
-    frame.info:SetText(statusForeign(payload or ""))
+    local f = ensureFrame()
+    if not f then return end
+    f:Show()
+    local ok, err = pcall(function()
+        local name = payload and payload:match("CHAR|([^|]+)")
+        applyMode(f, "foreign", { name = name })
+        setPayload(f, payload or "")
+        f.info:SetText(statusForeign(payload or ""))
+    end)
+    if not ok then
+        pcall(setPayload, f, payload or "")
+        showExportError(f, err)
+    end
 end
 
 function BS.Toggle()
-    if not frame then frame = makeFrame() end
-    if frame:IsShown() then
-        frame:Hide()
+    local f = ensureFrame()
+    if not f then return end
+    if f:IsShown() then
+        f:Hide()
         return
     end
-    frame:Show()
     BS.Refresh()
 end
