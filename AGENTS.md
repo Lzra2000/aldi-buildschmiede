@@ -395,5 +395,12 @@ wären.
    `lzra2000/aldi-buildschmiede` und Pages aktuell bleiben — siehe
    `.cursor/rules/full-agent-utilization.mdc`.
 
+### GitHub Pages
+
+Quelle: Branch **`main`**, Ordner **`/`** (Repo-Root). Live:
+https://lzra2000.github.io/aldi-buildschmiede/ · Synergien:
+`…/synergien.html`. Pages baut **nicht** aus `src/` — nur die mitgepushten
+Artefakte. Kurz für Mitwirkende: `CONTRIBUTING.md`.
+
 Ein Fehler in einer Zahl ist hier schlimmer als ein Fehler im Layout. Die
 Leute treffen danach Entscheidungen über ihren Charakter.

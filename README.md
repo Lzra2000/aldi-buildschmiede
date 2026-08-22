@@ -1,55 +1,74 @@
 # Aldi Ehrfürchtig — Buildschmiede
 
-Zwei Seiten und ein Addon für Project Ascension, Season 10 Wildcard.
+Werkzeuge für **Project Ascension**, Season 10 Wildcard — für Gildenmitglieder beim **Leveln (10–59)**, nicht für Endgame-Raid.
 
-- **[Buildschmiede](https://lzra2000.github.io/aldi-buildschmiede/)** — interaktiver Builder.
-  3.071 Fähigkeiten und Talente durchsuchbar, 30 Ability- und 25 Talent-Plätze.
-  Warnt vor doppelten Skills, fehlenden Voraussetzungen und fehlender Skalierung,
-  empfiehlt dir den passenden Path und begründet das mit deinen konkreten Skills.
-  Builds lassen sich per Link teilen.
-- **[Synergiekompendium](https://lzra2000.github.io/aldi-buildschmiede/synergien.html)** —
-  Nachschlagewerk: was mit was zusammenspielt, woraus Schaden und Heilung skalieren.
-- **[Companion-Addon](AscBuildschmiede.zip)** — `/bs` im Spiel exportiert deinen
-  echten Charakter (Abilities, Talente, Path, Stats, Gear, Seltenheits-Budget) als
-  Text. Auf der Seite einfügen, dann sagt sie dir, was an deinem tatsächlichen
-  Build kritisch ist. `/bs target` liest den Build deines Ziels aus — den kannst
-  du auf der Seite unter *Vergleich* gegen deinen eigenen stellen.
+Zwei HTML-Seiten und ein Companion-Addon. Zahlen kommen aus Katalog/DBC/Export — nichts Erfundenes.
+
+---
+
+## Live (GitHub Pages)
+
+| | Link |
+|---|---|
+| **Builder** | https://lzra2000.github.io/aldi-buildschmiede/ |
+| **Synergien** | https://lzra2000.github.io/aldi-buildschmiede/synergien.html |
+| **Addon-Download** | [AscBuildschmiede.zip](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip) |
+
+---
+
+## Was steckt drin?
+
+- **Buildschmiede** — Katalog durchsuchen, Build zusammenstellen, Warnungen (Doppeln, Voraussetzungen, Skalierung), Path-Empfehlung, Teilen per Link. Addon-Export einfügen → Befund zum echten Charakter.
+- **Synergiekompendium** — was mit was zusammenspielt, woraus Schaden/Heilung skalieren.
+- **Companion-Addon** — im Spiel `/bs`: Export als Text (Abilities, Talente, Path, Stats, Gear, Budget). Auf der Seite einfügen. `/bs target` liest den Build des Ziels (Vergleich).
+
+---
+
+## English (short)
+
+Build tools for Ascension Season 10 Wildcard, aimed at **leveling 10–59**. Live builder + synergies pages above; download `AscBuildschmiede.zip`, unzip into `Interface\AddOns\`, then `/bs` in-game to export your character into the site. No invented spell numbers.
+
+---
 
 ## Addon installieren
 
-1. `AscBuildschmiede.zip` herunterladen.
-2. Nach `Interface\AddOns\` entpacken. Es muss danach
-   `Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc` geben.
-3. Spiel neu starten, dann `/bs`.
+1. [AscBuildschmiede.zip](https://github.com/lzra2000/aldi-buildschmiede/raw/main/AscBuildschmiede.zip) herunterladen.
+2. Nach `Interface\AddOns\` entpacken → `Interface\AddOns\AscBuildschmiede\AscBuildschmiede.toc`.
+3. Client neu starten, dann **`/bs`**.
 
 | Befehl | Wirkung |
 |---|---|
-| `/bs` | Fenster auf oder zu |
-| `/bs target` | Build des angeklickten Spielers auslesen |
+| `/bs` | Fenster auf/zu |
+| `/bs target` | Build des Ziels auslesen |
 | `/bs gear` | Gear im Export an/aus |
-| `/bs stats` | Stats und Waffen im Export an/aus |
+| `/bs stats` | Stats und Waffen an/aus |
 
-Das Addon schickt nichts ins Internet. Es liest den Charakter aus und schreibt
-Text in ein Fenster — kopieren musst du selbst.
+Das Addon geht **nicht** ins Netz — nur Text im Fenster zum Selbstkopieren.
 
-## Technisch
+---
 
-Beide Seiten sind eigenständige HTML-Dateien: kein Server, keine Datenbank,
-keine externen Anfragen außer Google Fonts. Öffnen reicht.
+## Lokal öffnen
 
-Datenbasis: Season-10-Katalog (1.321 Abilities, 1.750 Talente). Die Stat-Zahlen
-sind an einem Charakter der Stufe 51 auf Path of Intelligence gemessen, die
-Path-Tooltips wortgetreu aus dem Client übernommen.
+Kein Bundler, keine Dependencies. Repo-Root:
 
-## Für Entwickler
+```bash
+python3 -m http.server
+```
 
-Die Seite wird gebaut, nicht von Hand bearbeitet:
+Dann http://localhost:8000/ und http://localhost:8000/synergien.html — oder die HTML-Dateien direkt im Browser öffnen.
+
+Seite neu bauen (nach Änderungen an `src/` / `data/`):
 
 ```bash
 python3 pipeline/assemble.py
 ```
 
-`src/` enthält die Quelle, `data/` die aufbereiteten Daten, `pipeline/` die
-Skripte, `addon/` die Lua-Quelle des Companions. Arbeitsweise, Datenherkunft
-und die Fallen, die schon zugeschnappt sind, stehen in
-**[AGENTS.md](AGENTS.md)** — vor der ersten Änderung einmal lesen.
+---
+
+## Für Entwickler
+
+- Quelle: `src/`, Daten: `data/`, Pipeline: `pipeline/`, Addon: `addon/`
+- Gebaut (für Pages mitcommitten): `index.html`, `synergien.html`, `AscBuildschmiede.zip`
+- Arbeitsregeln und Fallen: **[AGENTS.md](AGENTS.md)** · kurze Mitmach-Hinweise: **[CONTRIBUTING.md](CONTRIBUTING.md)**
+
+GitHub Pages liefert aus dem **Root von `main`** — ohne gepushte HTML-Dateien bleibt die Live-Seite alt.
