@@ -330,37 +330,23 @@
     syncFiltMore();
   }
 
-  // Kurztext immer; langer Tooltip hinter <details>. Clamp kommt von
-  // .row.compact .desc (CSS-Lane; .ds bleibt als Fallback).
+  // Kurztext immer. Clamp: .row.compact .desc (CSS-Lane) bzw. .ds.
+  // Kein Tooltip-<details> — das wäre eine extra Chrome-Zeile.
   function rowDesc(tip) {
     if (!tip) return "";
-    var html = '<span class="desc ds" title="' + esc(tip) + '">' + esc(tip) + "</span>";
-    if (tip.length > 140) html += wrapDetails(esc(tip), "Tooltip");
-    return html;
+    return '<span class="desc ds" title="' + esc(tip) + '">' + esc(tip) + "</span>";
   }
 
   function row(i, r) {
-    var a = archOf[i];
     var tr = treeLabel(TREE[i]);
-    var sug = ssugPathLabel(i);
     var block = tooHigh(i) ? " lock" : (overBudget(i) && !picked[i] ? " lock" : "");
-    var nRel = ssugspPairs(i).length;
     return '<div class="row compact' + (picked[i] ? " picked" : block) + '" data-i="' + i + '" role="button" tabindex="0">' +
       '<span class="icon qf' + r[3] + '" style="width:32px;height:32px;flex:0 0 32px;' + iconStyle(i) + '"></span>' +
       '<span class="body"><span class="nm q' + r[3] + '">' + esc(r[0]) + "</span>" +
-      (a ? ' <span class="meta" style="color:var(--accent)">' + esc(a) + "</span>" : "") +
-      (tr ? ' <span class="meta">' + esc(tr) + "</span>" : "") +
-      (sug
-        ? ' <span class="bdg s" title="SpellStatSuggestions-Path-Code (DBC 0/1/3/4 → Strength/Agility/Intelligence/Healing; nicht PrimaryStat-ID)">' +
-          esc(sug) + "</span>"
-        : "") +
       rowDesc(r[5]) + badges(i) +
-      (nRel ? wrapDetails(verwandteHtml(i, 6), "Verwandte (" + nRel + ")") : "") +
-      (DES && !isDesireEligIdx(i)
-        ? '<span class="bdg r" title="Nicht auf dem Wildcard-Desire-Board / Rapid Roll">kein Desire</span>'
-        : "") +
       "</span>" +
       '<span class="meta">' + (r[1] ? "TAL" : "ABI") + " · " + esc(r[2]) +
+      (tr ? " · " + esc(tr) : "") +
       " · " + (tooHigh(i) ? '<span class="lvlbad">lvl' + r[4] + "</span>" : "lvl" + r[4]) +
       "</span></div>";
   }
@@ -1546,8 +1532,9 @@
     };
   }
 
-  // Fehlende SCARD-:sSPELLID aus cardId (Katalog) oder CARDED füllen.
-  // Nie nur „Karte #id“, wenn ein Spell-Name auflösbar ist.
+  // Fehlende SCARD-:sSPELLID aus CARDED füllen.
+  // cardId ist keine Spell-/Entry-ID — ein Katalogtreffer wäre Zufall
+  // und lässt die echten CARDED-Spells als zweite „Auf Karten“-Wand stehen.
   function enrichScardSids(c) {
     if (!c || !c.scard || !c.scard.length) return;
     var used = Object.create(null);
@@ -1561,12 +1548,7 @@
     }
     c.scard.forEach(function (s) {
       if (!s || s.blocked) return;
-      if (s.sid) { used[s.sid] = 1; return; }
-      var cid = s.cardId || 0;
-      if (cid && BYSID[cid] !== undefined) takeSid(s, cid, "cardId");
-      else if (cid && BYEID[cid] !== undefined) {
-        takeSid(s, SID[BYEID[cid]], "entry");
-      }
+      if (s.sid) used[s.sid] = 1;
     });
     var pool = (c.carded || []).filter(function (sid) {
       return sid && !used[sid];
@@ -1592,7 +1574,8 @@
       return '<span class="scico scico-empty" aria-hidden="true"></span>';
     }
     return '<span class="icon scico" style="width:' + size + "px;height:" +
-      size + "px;" + iconStyle(catIdx, size) + '"></span>';
+      size + "px;flex:0 0 " + size + "px;" + iconStyle(catIdx, size) +
+      '"></span>';
   }
 
   // Ein Raster: Slots mit Name/Icon. „Auf Karten“ nur für Reste, nicht doppelt.
@@ -1617,7 +1600,8 @@
         var tone = s.q !== undefined ? gearQTone(s.q)
           : (parts.kind === "Golden" ? 3 : null);
         var cls = "scard" + (s.blocked ? " blocked" : "") +
-          (s.active ? " active" : "");
+          (s.active ? " active" : "") +
+          (tone !== null ? " q" + tone : "");
         var metaBits = [];
         if (parts.deck) metaBits.push(parts.deck);
         if (parts.kind && parts.kind !== "Normal") metaBits.push(parts.kind);
@@ -2195,9 +2179,10 @@
     var hd = document.getElementById("cC");
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Noch kein Charakter eingelesen. ' +
-        '<a href="#t=vTools">Import unter Werkzeuge</a> — im Spiel <code>/bs</code> ' +
-        "tippen, kopieren und hier einfügen.</div>";
+      box.innerHTML = emptyState(
+        "Noch kein Charakter eingelesen.",
+        '<p><a href="#t=vTools">Import unter Werkzeuge</a> — im Spiel <code>/bs</code> ' +
+          "tippen, kopieren und hier einfügen.</p>");
       renderGearBox(null);
       return;
     }
@@ -3061,10 +3046,11 @@
     var list = charIssues(ids);
     if (!CHAR) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Importiere deinen Charakter mit ' +
-        "<code>/bs</code>, dann steht hier, was kritisch ist und was du " +
-        "verbessern kannst — Path, Essence, Budget, Skill Cards und Hit " +
-        "für <b>Levelrun</b> und <b>Endgame</b>.</div>";
+      box.innerHTML = emptyState(
+        "Importiere deinen Charakter mit <code>/bs</code>.",
+        "<p>Dann steht hier, was kritisch ist und was du verbessern kannst — " +
+          "Path, Essence, Budget, Skill Cards und Hit für <b>Levelrun</b> " +
+          "und <b>Endgame</b>.</p>");
       return;
     }
     function issueKind(html) {
@@ -3083,7 +3069,10 @@
       '<span class="jumpsep"> · </span>' +
       '<a class="jumplink" href="#issues-fix" data-jump="issues-fix" ' +
       'title="Zu verbesserbaren Befunden springen">' + fix + " verbesserbar</a>";
-    hd.className = "cnt " + (krit ? "over" : fix ? "ok" : "full");
+    // info/fix/warn = verbesserbar (amber), nicht ok/grün
+    hd.className = "cnt " + (krit ? "over" : fix ? "warn" : "ok");
+    hd.setAttribute("data-krit", String(krit));
+    hd.setAttribute("data-fix", String(fix));
     var lead = '<div class="qhint">' +
       (isEndgameFrame()
         ? "Befund für <b>Endgame</b>: Path, Essence, Budget und Hit wiegen " +
@@ -3190,12 +3179,22 @@
     var o = SC[i] || {};
     var show = [];
     var more = [];
+    var a = archOf[i];
+    if (a) show.push('<span class="bdg" title="Archetyp">' + esc(a) + "</span>");
+    var sug = ssugPathLabel(i);
+    if (sug) {
+      show.push('<span class="bdg s" title="Path-Hinweis aus SpellStatSuggestions — nicht die PrimaryStat-ID">' +
+        esc(sug) + "</span>");
+    }
+    if (DES && !isDesireEligIdx(i)) {
+      show.push('<span class="bdg r" title="Nicht auf dem Wildcard-Desire-Board / Rapid Roll">kein Desire</span>');
+    }
     if (o.w) {
       show.push('<span class="bdg w">' + fmt(o.w) + " % " +
         (o.wh === "any" ? "Waffe" : HAND[o.wh]) + "</span>");
     }
-    if (o.sch) show.push('<span class="bdg s">' + esc(o.sch) + "</span>");
-    else if (o.fsch) show.push('<span class="bdg s">' + esc(o.fsch) + "</span>");
+    if (o.sch) show.push('<span class="bdg s">' + esc(schoolDe(o.sch)) + "</span>");
+    else if (o.fsch) show.push('<span class="bdg s">' + esc(schoolDe(o.fsch)) + "</span>");
     if (o.ap) {
       show.push('<span class="bdg w" title="Attack-Power-Anteil aus dem Tooltip">' +
         fmt(o.ap) + " % AP</span>");
@@ -3210,7 +3209,6 @@
       show.push('<span class="bdg w" title="Tooltip nennt Spell Power, Prozent fehlt">' +
         "SP · Anteil fehlt</span>");
     }
-    // Flats/Ticks/Mods: gemessen, aber nicht in der ersten Zeile.
     if (o.flat && !(o.tick && o.tick === o.flat[0] && o.flat[0] === o.flat[1])) {
       more.push('<span class="bdg f">' + fmt(o.flat[0]) +
         (o.flat[1] !== o.flat[0] ? "–" + fmt(o.flat[1]) : "") + "</span>");
@@ -3225,7 +3223,7 @@
     if (o.absorb) {
       more.push('<span class="bdg f">Absorb ' + fmt(o.absorb[0]) +
         (o.absorb[1] !== o.absorb[0] ? "–" + fmt(o.absorb[1]) : "") +
-        (o.asch ? " " + esc(o.asch) : "") + "</span>");
+        (o.asch ? " " + esc(schoolDe(o.asch)) : "") + "</span>");
     }
     if (o.dot) more.push('<span class="bdg d">' + o.dot + " s</span>");
     if (o.tick) more.push('<span class="bdg d">' + fmt(o.tick) + "/s</span>");
@@ -3261,19 +3259,11 @@
     }
     var rel = relBadgeItems(i);
     var mech = mechBadgeItems(i);
-    show = rel.show.concat(mech.show, show);
-    more = more.concat(mech.more, rel.more);
-    if (show.length > 4) {
-      more = show.slice(4).concat(more);
-      show = show.slice(0, 4);
-    }
-    var html = "";
-    if (show.length) html += '<span class="bdgs">' + show.join("") + "</span>";
-    if (more.length) {
-      html += wrapDetails('<span class="bdgs">' + more.join("") + "</span>",
-        "Weitere Zahlen (" + more.length + ")");
-    }
-    return html;
+    var chips = verwandteHtml(i, 4, true);
+    // Ein .bdgs — CSS clampt auf eine Zeile, Hover/Auswahl klappt auf.
+    var all = rel.show.concat(mech.show, show, more, mech.more, rel.more);
+    if (chips) all.push(chips);
+    return all.length ? '<span class="bdgs">' + all.join("") + "</span>" : "";
   }
 
   // Vererbung, Voraussetzung, gemeinsamer GCD/CD — nur wenn die Daten sie setzen.
@@ -3347,7 +3337,7 @@
     if (!m) return { show: show, more: more };
     if (m.cd) show.push('<span class="bdg c">CD ' + secs(m.cd) + "</span>");
     if (m.cast) more.push('<span class="bdg c">' + fmt(m.cast) + " s Cast</span>");
-    else if (m.cd || m.cost || m.range) more.push('<span class="bdg c">instant</span>');
+    else if (m.cd || m.cost || m.range) more.push('<span class="bdg c">sofort</span>');
     if (m.ch) {
       more.push('<span class="bdg c">' + m.ch + " Ladung" +
         (m.ch === 1 ? "" : "en") + "</span>");
@@ -3695,10 +3685,11 @@
         '%"></i></span><span class="qv">' + use[q] + " / " + lim + "</span></div>");
     }
     if (!any) {
-      box.innerHTML = '<div class="qhint">Seltenheits-Budget unbekannt — ' +
-        '<a href="#t=vTools">Charakter importieren</a> (<code>/bs</code>), dann wird ' +
-        "hier mitgezählt. Im Spiel darfst du nicht beliebig viele Epics und " +
-        "Legendaries tragen.</div>";
+      box.innerHTML = emptyHint(
+        "Seltenheits-Budget unbekannt.",
+        '<p><a href="#t=vTools">Charakter importieren</a> (<code>/bs</code>), ' +
+          "dann wird hier mitgezählt. Im Spiel darfst du nicht beliebig viele " +
+          "Epics und Legendaries tragen.</p>");
       return;
     }
     box.innerHTML = o.join("");
@@ -3842,8 +3833,9 @@
       return;
     }
     if (!list.length) {
-      box.innerHTML = '<div class="empty">Kein Vorschlag. Entweder passt schon ' +
-        "alles zusammen, oder deine Plätze sind voll.</div>";
+      box.innerHTML = emptyState(
+        "Kein Vorschlag.",
+        "<p>Entweder passt schon alles zusammen, oder deine Plätze sind voll.</p>");
       return;
     }
     function sugRow(x) {
@@ -3902,8 +3894,12 @@
     serpent: "Schlangenform", humanoid: "ohne Form",
     presence_blood: "Blood Presence", presence_frost: "Frost Presence",
     presence_unholy: "Unholy Presence", warrior_stance: "Kriegerhaltung",
-    shadowform: "Shadowform", meta: "Metamorphosis", ghostwolf: "Ghost Wolf"
+    shadowform: "Shadowform", meta: "Metamorphosis", ghostwolf: "Ghost Wolf",
+    ushift: "in jeder Form"
   };
+  // Katze, Bär und Worgen sind eigene Kampf-Familien — die Form selbst
+  // nicht mischen. Worgen erlaubt Cat-Fähigkeiten, nicht die Katzenform.
+  var FORM_EXCL = { cat: 1, bear: 1, worgen: 1 };
   var FORM_COMBAT = {
     bear: 1, cat: 1, moonkin: 1, tree: 1, worgen: 1, serpent: 1, meta: 1
   };
@@ -3981,14 +3977,16 @@
       strong: false,
       grants: false,
       shapeshiftOk: false,
+      humanoidOnly: false,
       stanceGroup: null,
       variant: "",
       utility: false
     };
   }
 
-  // Eine Familie aus Name+Beschreibung. Mehrfach erlaubt (Mangle = Katze+Bär)
-  // landet in allow[]; family ist der stabile Vertreter.
+  // Eine Familie aus D.frm (formtags.py), sonst Name+Beschreibung.
+  // Mehrfach erlaubt (Mangle = Katze+Bär) landet in allow[]; family ist
+  // der stabile Vertreter. ushift = nutzbar in der gewählten Kampf-Form.
   function formInfo(i) {
     if (FORM_CACHE[i]) return FORM_CACHE[i];
     if (FORM_BUSY[i]) return emptyFormInfo();
@@ -4003,22 +4001,52 @@
     var name = String(rec[0] || "");
     var desc = String(rec[5] || "");
     var blob = name + "\n" + desc;
-    var allow = [];
+    var req = [];
+    var mention = [];
     var rawAllow = [];
+    var grantFamily = "";
 
     info.shapeshiftOk = FORM_SHAPE_OK_RX.test(blob);
 
-    var paren = /\((cat|bear|feral)\)/i.exec(name);
+    function pushReq(f) {
+      formPushAllow(req, f);
+      info.require = true;
+      info.strong = true;
+    }
+    function pushMention(f) {
+      formPushAllow(mention, f);
+      info.strong = true;
+    }
+
+    var frmRaw = FRM[i];
+    if (frmRaw && typeof frmRaw === "string") {
+      var frmParts = frmRaw.split("+");
+      var ft, fcode;
+      for (ft = 0; ft < frmParts.length; ft++) {
+        fcode = frmParts[ft];
+        if (!fcode) continue;
+        if (fcode === "ushift") {
+          info.shapeshiftOk = true;
+          continue;
+        }
+        if (fcode === "humanoid") {
+          info.humanoidOnly = true;
+          continue;
+        }
+        rawAllow.push(formNormTag(fcode));
+        pushMention(fcode);
+      }
+    }
+
+    var paren = /\((cat|bear|feral)(?:\s+form)?\)/i.exec(name);
     if (paren) {
       var pk = paren[1].toLowerCase();
       if (pk === "feral") {
-        formPushAllow(allow, "cat");
-        formPushAllow(allow, "bear");
+        pushReq("cat");
+        pushReq("bear");
       } else {
-        formPushAllow(allow, pk);
+        pushReq(pk);
       }
-      info.require = true;
-      info.strong = true;
     }
 
     if (FORM_GRANT_RX.test(name.replace(/\s+/g, " ").trim())) {
@@ -4026,11 +4054,10 @@
       for (gi = 0; gi < FORM_PATS.length; gi++) {
         if (FORM_PATS[gi].rx.test(name)) {
           gf = formNormWarrior(FORM_PATS[gi].f);
-          formPushAllow(allow, gf);
+          pushReq(gf);
           rawAllow.push(FORM_PATS[gi].f);
+          grantFamily = gf;
           info.grants = rec[1] === 0;
-          info.require = true;
-          info.strong = true;
           break;
         }
       }
@@ -4039,78 +4066,66 @@
       for (nj = 0; nj < FORM_PATS.length; nj++) {
         if (FORM_PATS[nj].rx.test(name)) {
           nf = formNormWarrior(FORM_PATS[nj].f);
-          formPushAllow(allow, nf);
+          pushReq(nf);
           rawAllow.push(FORM_PATS[nj].f);
-          info.require = true;
-          info.strong = true;
         }
       }
     }
 
+    // Pflicht nur bei „only usable“ oder „can be used in A or B“ (Mangle).
+    // „Usable in Bear Form“ (Conduit) ist ein Bonus, kein Zwang.
     var only = /only usable while in ([^.]+)/i.exec(desc);
-    var canUse = /(?:can be used|usable) in ([^.]+)/i.exec(desc);
+    var canUseOr = /can be used in ([^.]+)/i.exec(desc);
+    var usableIn = /usable in ([^.]+)/i.exec(desc);
     var whileIn = /usable while in ([^.]+)/i.exec(desc);
     function absorbPhrase(phrase, asRequire) {
       if (!phrase) return;
       var pi;
       for (pi = 0; pi < FORM_PATS.length; pi++) {
         if (FORM_PATS[pi].rx.test(phrase)) {
-          formPushAllow(allow, FORM_PATS[pi].f);
-          if (asRequire) {
-            info.require = true;
-            info.strong = true;
-          } else {
-            info.strong = true;
-          }
+          if (asRequire) pushReq(FORM_PATS[pi].f);
+          else pushMention(FORM_PATS[pi].f);
         }
       }
     }
     absorbPhrase(only && only[1], true);
-    absorbPhrase(canUse && canUse[1], true);
+    absorbPhrase(canUseOr && canUseOr[1], true);
+    absorbPhrase(usableIn && usableIn[1], false);
     absorbPhrase(whileIn && whileIn[1], false);
-    // „Duration is doubled in Bear Form“ / „while in Cat Form“ — Bonus, kein Zwang.
-    if (!info.require) {
-      var bi;
-      for (bi = 0; bi < FORM_PATS.length; bi++) {
-        if (FORM_PATS[bi].rx.test(blob)) {
-          formPushAllow(allow, FORM_PATS[bi].f);
-          info.strong = true;
-        }
-      }
-    } else {
-      var bj;
-      for (bj = 0; bj < FORM_PATS.length; bj++) {
-        if (FORM_PATS[bj].rx.test(blob)) formPushAllow(allow, FORM_PATS[bj].f);
-      }
+    var bi;
+    for (bi = 0; bi < FORM_PATS.length; bi++) {
+      if (FORM_PATS[bi].rx.test(blob)) pushMention(FORM_PATS[bi].f);
     }
 
-    if (!allow.length) {
+    if (!req.length) {
       var si, sj, stemHits;
       for (si = 0; si < FORM_STEMS.length; si++) {
         if (FORM_STEMS[si].rx.test(name)) {
           stemHits = FORM_STEMS[si].f;
-          for (sj = 0; sj < stemHits.length; sj++) formPushAllow(allow, stemHits[sj]);
-          info.require = true;
-          info.strong = true;
+          for (sj = 0; sj < stemHits.length; sj++) pushReq(stemHits[sj]);
         }
       }
     }
 
-    if (!allow.length) {
+    if (!req.length && !mention.length) {
       var base = inheritBase(i);
       if (base !== null && base !== undefined && base !== i) {
         var parent = formInfo(base);
         if (parent.allow && parent.allow.length) {
           var pa;
-          for (pa = 0; pa < parent.allow.length; pa++) formPushAllow(allow, parent.allow[pa]);
-          info.require = info.require || parent.require;
-          info.strong = info.strong || parent.strong;
+          for (pa = 0; pa < parent.allow.length; pa++) {
+            if (parent.require) pushReq(parent.allow[pa]);
+            else pushMention(parent.allow[pa]);
+          }
         }
       }
     }
 
+    var allow = req.length ? req.slice() : mention.slice();
     info.allow = allow;
-    if (allow.length === 1) info.family = allow[0];
+    if (grantFamily) info.family = grantFamily;
+    else if (req.length === 1) info.family = req[0];
+    else if (allow.length === 1) info.family = allow[0];
     else if (allow.length > 1) {
       var pref = ["bear", "cat", "moonkin", "tree", "worgen", "serpent", "meta",
         "shadowform", "presence_blood", "presence_frost", "presence_unholy",
@@ -4160,9 +4175,8 @@
     },
     {
       k: "phys", n: "Reiner Waffenkämpfer",
-      d: "Physischer Schaden aus Waffenangriffen. Einfach zu spielen, " +
-         "skaliert geradlinig mit Waffe und Attack Power. Eine Kampf-Form " +
-         "reicht — Katze und Bär werden nicht gemischt.",
+      d: "Physischer Waffenschaden. Geradlinig mit Waffe und Attack Power — " +
+         "eine Kampf-Form reicht.",
       score: function (i) {
         var f = pathFlags(i), s = SC[i] || {};
         var v = 0;
@@ -4175,8 +4189,8 @@
     },
     {
       k: "feral", n: "Wildform",
-      d: "Eine Kampf-Form, nicht drei. Katze oder Bär — je nachdem, welche " +
-         "Fähigkeiten vorne liegen. Worgen bleibt eine eigene Familie.",
+      d: "Eine Kampf-Form, nicht drei. Katze oder Bär — Worgen bleibt eine " +
+         "eigene Familie.",
       formHint: ["cat", "bear"],
       score: function (i) {
         var info = formInfo(i);
@@ -4323,22 +4337,21 @@
 
     function formConflict(i) {
       var info = formInfo(i);
+      if (info.humanoidOnly && primary && formIsCombat(primary) && !info.shapeshiftOk) {
+        return "geht nur ohne Form — dein Build bleibt bei " + formDe(primary);
+      }
       if (info.stanceGroup && stanceHave[info.stanceGroup]) {
         var have = stanceHave[info.stanceGroup];
-        var mine = info.variant || info.family;
-        if (have !== mine) {
+        if (!formMatchesHave(info, have)) {
           return "andere Haltung — du hast schon " + formDe(
             info.stanceGroup === "warrior_stance" ? "warrior_stance" :
-            info.stanceGroup === "presence" ? (
-              /blood/.test(have) ? "presence_blood" :
-              /frost/.test(have) ? "presence_frost" :
-              /unholy/.test(have) ? "presence_unholy" : have
-            ) : have
+            info.stanceGroup === "presence" ? formPresenceKey(have) : have
           );
         }
       }
+      // Katze / Bär / Worgen (und andere Kampf-Formen) nicht als zweite Form.
       if (info.grants && !info.utility && primary &&
-          info.family !== primary && !formCompat(primary, info.family)) {
+          formGrantClash(primary, info.family)) {
         return "andere Kampf-Form — dein Build bleibt bei " + formDe(primary);
       }
       if (primary && info.require && info.allow.length) {
@@ -4350,7 +4363,7 @@
             break;
           }
         }
-        if (!ok) {
+        if (!ok && !(info.shapeshiftOk && !info.require)) {
           var need = info.allow.map(formDe).join(" / ");
           return "braucht " + need + ", passt nicht zu " + formDe(primary);
         }
@@ -4774,8 +4787,9 @@
     if (!box) return;
     if (!ids.length) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Wähle oder generiere einen Build — ' +
-        "dann steht hier, worauf du beim Gear achten musst.</div>";
+      box.innerHTML = emptyState(
+        "Wähle oder generiere einen Build.",
+        "<p>Dann steht hier, worauf du beim Gear achten musst.</p>");
       return;
     }
     var r = statPriority(ids);
@@ -5553,13 +5567,18 @@
     tutSave();
     tutShow(false);
   }
-  function applyTutHash() {
-    if (!tutWantHash()) return;
+  function tutOpen(force) {
+    if (force) tutState.step = 0;
     tutState.done = false;
     tutSave();
     tutShow(true);
     renderTutorial();
   }
+  function applyTutHash() {
+    if (!tutWantHash()) return;
+    tutOpen(true);
+  }
+  var tutBound = false;
   function initTutorial() {
     var root = document.getElementById("tutRoot");
     if (!root) return;
@@ -5568,6 +5587,8 @@
     tutShow(!tutState.done);
     renderTutorial();
     tutSave();
+    if (tutBound) return;
+    tutBound = true;
     var prev = document.getElementById("tutPrev");
     var next = document.getElementById("tutNext");
     var skip = document.getElementById("tutSkip");
@@ -5782,7 +5803,7 @@
     showMiss = showMiss && showMiss.checked;
 
     var have = {}; ids.forEach(function (i) { have[i] = 1; });
-    var cards = [], linked = 0, orphans = 0;
+    var cards = [], linked = 0, orphans = 0, gcdWarn = 0;
 
     ids.slice().sort(function (a, b) {
       return CAT[a][1] - CAT[b][1] || CAT[b][3] - CAT[a][3];
@@ -5800,7 +5821,10 @@
         });
       }
       if (orphan) orphans++;
-      if (onlyLive && !c.rows.length && !orphan) return;
+      if (c.gcdPeers.length) gcdWarn++;
+      // Nur echte Kanten, tote Talente, geteilter GCD/CD — nicht jede uses-Zeile.
+      var notable = c.live || orphan || c.gcdPeers.length || c.cdPeers.length;
+      if (onlyLive && !notable) return;
 
       var s = SC[i] || {}, m = MC[i] || {}, foot = [];
       if (s.w) foot.push(s.w + " % Waffe" + (s.sch ? " " + s.sch : ""));
@@ -5813,50 +5837,77 @@
       if (m.cd) foot.push("CD " + secs(m.cd));
       if (m.cost) foot.push(m.cost + " " + m.res);
 
-      var bodyRows = c.rows.length
-        ? c.rows.map(function (r) {
+      var meta = (CAT[i][1] ? "TAL" : "ABI") + " · lvl" + CAT[i][4];
+      if (c.live) meta += " · " + c.live + (c.live === 1 ? " Kante" : " Kanten");
+      if (c.gcdPeers.length) meta += " · gleicher GCD";
+      if (c.cdPeers.length) meta += " · geteilter CD";
+
+      var lead = "";
+      if (orphan) {
+        lead += '<div class="chn-foot" style="color:var(--warn)">Wirkt nicht: ' +
+          "keine genannte Fähigkeit und keine Schulvariante im Build.</div>";
+      } else if (c.gcdPeers.length) {
+        lead += '<div class="chn-foot"><em>Gleicher GCD — ein Slot:</em> ' +
+          c.gcdPeers.map(function (k) { return pill(k, false, false); }).join("") +
+          "</div>";
+      }
+      if (!orphan && c.cdPeers.length) {
+        lead += '<div class="chn-foot"><em>Geteilter CD</em> (' +
+          esc(CDG[REL[i][5]] || "gemeinsam") + "): " +
+          c.cdPeers.map(function (k) { return pill(k, false, false); }).join("") +
+          "</div>";
+      }
+      if (!orphan && foot.length) {
+        lead += '<div class="chn-foot">' + esc(foot.join(" · ")) + "</div>";
+      }
+
+      // GCD/CD stehen sichtbar oben — Details nur Vererbung und Kanten.
+      var detRows = c.rows.filter(function (r) {
+        return r[0] !== "Gleicher GCD" && r[0] !== "Geteilter CD";
+      });
+      var bodyRows = detRows.length
+        ? detRows.map(function (r) {
             return '<div class="lnk"><b>' + esc(r[0]) + "</b><span>" + r[1] + "</span></div>";
           }).join("")
         : "";
+      var detLabel = "Verkettung (" + detRows.length + ")";
+      if (detRows.length === 1 && detRows[0][0] === "Erbt Talente") {
+        detLabel = c.fromUses ? "Talente der Basis" : "Vererbung";
+      }
       cards.push('<div class="chn' + (orphan ? " orphan" : "") + '">' +
         '<div class="chn-hd"><span class="icon" style="width:22px;height:22px;' +
         'flex:0 0 22px;' + iconStyle(i, 22) + '"></span>' +
         '<span class="nm q' + CAT[i][3] + '">' +
         esc(CAT[i][0]) + "</span>" +
-        '<span class="meta">' + (CAT[i][1] ? "TAL" : "ABI") + " · lvl" +
-        CAT[i][4] +
-        (c.live ? " · " + c.live + " Kanten" : "") +
-        "</span></div>" +
-        (orphan ? '<div class="chn-foot" style="color:var(--warn)">Wirkt nicht: ' +
-          "keine der genannten Fähigkeiten ist gewählt — auch keine Schulvariante, " +
-          "die deren Talente erbt.</div>"
-                : (foot.length ? '<div class="chn-foot">' + esc(foot.join(" · ")) +
-                   "</div>" : "")) +
+        '<span class="meta">' + meta + "</span></div>" +
+        lead +
         (bodyRows
-          ? wrapDetails('<div class="chn-body">' + bodyRows + "</div>",
-            "Verkettung (" + c.rows.length + ")")
+          ? wrapDetails('<div class="chn-body">' + bodyRows + "</div>", detLabel)
           : "") +
         "</div>");
     });
 
     var k = document.getElementById("cK"), k2 = document.getElementById("cK2");
-    var label = ids.length ? (linked + " verkettet" + (orphans ? " · " + orphans + " tot" : ""))
-                           : "—";
+    var label = ids.length
+      ? (linked + " verkettet" +
+        (gcdWarn ? " · " + gcdWarn + " gleicher GCD" : "") +
+        (orphans ? " · " + orphans + " tot" : ""))
+      : "—";
     if (k) { k.textContent = ids.length ? String(linked) : "—"; }
     if (k2) {
       k2.textContent = label;
-      k2.className = "cnt " + (orphans ? "over" : linked ? "ok" : "");
+      k2.className = "cnt " + (orphans || gcdWarn ? "over" : linked ? "ok" : "");
     }
 
     box.innerHTML = ids.length
       ? (cards.length
-        ? '<div class="chaingrid">' + cards.slice(0, 8).join("") + "</div>" +
-          (cards.length > 8
-            ? wrapDetails('<div class="chaingrid">' + cards.slice(8).join("") + "</div>",
-              "Weitere Ketten (" + (cards.length - 8) + ")")
+        ? '<div class="chaingrid">' + cards.slice(0, 6).join("") + "</div>" +
+          (cards.length > 6
+            ? wrapDetails('<div class="chaingrid">' + cards.slice(6).join("") + "</div>",
+              "Weitere Ketten (" + (cards.length - 6) + ")")
             : "")
-        : '<div class="empty">Keiner deiner Einträge ist im Katalog mit einem ' +
-          "anderen verknüpft. Häkchen oben ausschalten, um trotzdem alle zu sehen.</div>")
+        : '<div class="empty">Keiner deiner Einträge hängt im Katalog an einem ' +
+          "anderen. Häkchen oben ausschalten, um trotzdem alle zu sehen.</div>")
       : '<div class="empty">Wähle Fähigkeiten und Talente — dann steht hier, ' +
         "was auf was einzahlt und was ins Leere läuft.</div>";
   }
@@ -5896,10 +5947,11 @@
     function bindJumpChip(el, key, title) {
       if (!el) return;
       el.setAttribute("data-jump", key);
-      el.setAttribute("role", "button");
-      el.setAttribute("tabindex", "0");
       if (title) el.title = title;
       el.classList.add("chip-jump");
+      if (el.tagName === "A" || el.tagName === "BUTTON") return;
+      el.setAttribute("role", "button");
+      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
     }
     var ci = document.getElementById("chipIssues");
     if (ci) {
@@ -6900,21 +6952,26 @@
   // werk. Beide über denselben Parameter erreichbar halten, sonst zeigen
   // ältere geteilte Links ins Leere.
   function applyHashTarget() {
-    if (/tut=1/.test(location.hash)) tutOpen(true);
-    var ht = location.hash.match(/t=([A-Za-z]+)/);
-    if (!ht) return;
-    var vb = document.querySelector('[data-view="' + ht[1] + '"]');
-    if (vb) { vb.click(); return; }
-    var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
-    if (!tb) return;
-    // Der Reiter liegt in einer Ansicht - die muss zuerst auf.
-    var view = tb.closest(".view");
-    if (view) {
-      var vt = document.querySelector('[data-view="' + view.id + '"]');
-      if (vt) vt.click();
+    var raw = (location.hash || "").replace(/^#/, "");
+    if (/tut=1/.test(raw) && typeof tutOpen === "function") tutOpen(true);
+    if (!raw || /^b=/.test(raw)) return;
+    var ht = raw.match(/t=([A-Za-z]+)/);
+    if (ht) {
+      var vb = document.querySelector('[data-view="' + ht[1] + '"]');
+      if (vb) { showView(ht[1]); return; }
+      var tb = document.querySelector('[data-tab="' + ht[1] + '"]');
+      if (!tb) return;
+      var view = tb.closest(".view");
+      if (view) showView(view.id);
+      tb.click();
+      return;
     }
-    tb.click();
+    var id = raw.split("&")[0];
+    if (JUMP[id]) { jumpTo(id); return; }
+    var el = document.getElementById(id);
+    if (el) jumpTo(el);
   }
+  initTutorial();
   applyHashTarget();
 
   window.addEventListener("hashchange", function () {
