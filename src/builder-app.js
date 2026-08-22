@@ -429,7 +429,13 @@
   }
   function renderLogMetaWissen() {
     var box = document.getElementById("logmetabox");
-    if (!box) return;
+    if (!box) {
+      var host = document.getElementById("rPaths");
+      if (!host) return;
+      box = document.createElement("div");
+      box.id = "logmetabox";
+      host.appendChild(box);
+    }
     if (!LMETA) { box.innerHTML = ""; return; }
     box.innerHTML = logmetaDetails(
       "<p>Die Path-Wertung der Schmiede ändert sich dadurch nicht. " +
@@ -574,7 +580,7 @@
   if (filtReset) {
     filtReset.addEventListener("click", function (e) {
       e.preventDefault();
-      ["fSort", "fScale", "fQual"].forEach(function (id) {
+      ["fSort", "fScale", "fQual", "fPathReq"].forEach(function (id) {
         if (el[id]) el[id].value = "";
       });
       render();
@@ -1663,9 +1669,7 @@
           }).filter(Boolean);
           break;
         case "STARTCHOICE":
-          d.startChoice = (parts.join("|") || "").split(";").map(function (x) {
-            return parseInt(x, 10) || 0;
-          }).filter(Boolean);
+          d.startChoice = parseIdList(parts);
           break;
         case "SUGGEST":
           // SUGGEST|Path;Path — grosszuegig: ; | , und Key:Wert
@@ -7646,16 +7650,128 @@
     applyHashTarget();
   });
 
+  function initHoverSystem() {
+    var box = document.getElementById("hoverTip");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "hoverTip";
+      box.setAttribute("role", "tooltip");
+      box.hidden = true;
+      document.body.appendChild(box);
+    }
+    var timer = null, cur = null, pinned = null;
+    function delayMs() {
+      try {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
+      } catch (e) { /* */ }
+      return 240;
+    }
+    function coarse() {
+      try { return window.matchMedia("(pointer: coarse)").matches; }
+      catch (e) { return false; }
+    }
+    function host(t) {
+      return t && t.closest ? t.closest("[data-tip]") : null;
+    }
+    function textOf(el) {
+      var raw = String(el.getAttribute("data-tip") || "").replace(/[ \t]+/g, " ").trim();
+      if (!raw) return "";
+      var vis = String(el.innerText || "").replace(/\s+/g, " ").trim();
+      return raw.replace(/\s+/g, " ").trim() === vis ? "" : raw;
+    }
+    function hide(force) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (!force && pinned) return;
+      box.classList.remove("on");
+      box.hidden = true;
+      box.textContent = "";
+      if (force && pinned) {
+        pinned.classList.remove("pin");
+        pinned = null;
+      }
+      cur = null;
+    }
+    function place(el) {
+      var r = el.getBoundingClientRect();
+      var tw = box.offsetWidth, th = box.offsetHeight;
+      var x = r.left + r.width / 2 - tw / 2;
+      var y = r.top - th - 8;
+      if (y < 8) y = r.bottom + 8;
+      if (x < 8) x = 8;
+      if (x + tw > window.innerWidth - 8) x = window.innerWidth - tw - 8;
+      box.style.left = Math.round(x) + "px";
+      box.style.top = Math.round(y) + "px";
+    }
+    function show(el, text) {
+      cur = el;
+      box.textContent = text;
+      box.hidden = false;
+      box.classList.add("on");
+      place(el);
+    }
+    function arm(el) {
+      var text = textOf(el);
+      if (!text) return;
+      if (cur === el && box.classList.contains("on")) { place(el); return; }
+      hide(false);
+      cur = el;
+      var wait = delayMs();
+      if (!wait) { show(el, text); return; }
+      timer = setTimeout(function () {
+        timer = null;
+        if (cur === el) show(el, textOf(el) || text);
+      }, wait);
+    }
+    document.addEventListener("pointerover", function (e) {
+      var el = host(e.target);
+      if (!el || coarse()) return;
+      arm(el);
+    });
+    document.addEventListener("pointerout", function (e) {
+      var el = host(e.target);
+      if (!el || el === pinned) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (cur === el) hide(false);
+    });
+    document.addEventListener("focusin", function (e) {
+      var el = host(e.target);
+      if (!el) return;
+      var text = textOf(el);
+      if (!text) return;
+      hide(true);
+      show(el, text);
+    });
+    document.addEventListener("focusout", function (e) {
+      var el = host(e.target);
+      if (!el || el === pinned) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (cur === el) hide(false);
+    });
+    document.addEventListener("click", function (e) {
+      if (!coarse()) return;
+      var el = host(e.target);
+      if (!el) { hide(true); return; }
+      if (el.hasAttribute("data-jump") || el.hasAttribute("data-add")) return;
+      var text = textOf(el);
+      if (!text) return;
+      if (pinned === el) { hide(true); return; }
+      if (pinned) pinned.classList.remove("pin");
+      pinned = el;
+      el.classList.add("pin");
+      show(el, text);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") hide(true);
+    });
+    window.addEventListener("scroll", function () { hide(true); }, true);
+  }
+
   renderArchetypes();
   renderGenerator();
   renderAI();
   renderMethods();
   renderLogMetaWissen();
   refresh();
-})();
-
-
-  renderLogMetaWissen();
-  refresh();
+  initHoverSystem();
 })();
 
