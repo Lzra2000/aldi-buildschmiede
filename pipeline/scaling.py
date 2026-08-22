@@ -19,8 +19,10 @@ Ausgabe scaling.json: pro Katalogindex ein Objekt, leere Felder weggelassen.
   dot    Dauer in Sekunden
   tick   Schaden pro Sekunde (falls genannt)
   ap     Prozent Attack Power (Schadens-/Heilkoeffizient)
+         aus Tooltip-Text ODER Spell.dbc-Formel ($AP*0.24 → 24)
   apb    1 wenn Tooltip "based on attack power" ohne Prozent nennt
   sp     Prozent Spell Power (Schadenskoeffizient)
+         aus Tooltip-Text ODER Spell.dbc-Formel ($SP*0.24 → 24)
   spb    1 wenn Tooltip Spell-Power-Skalierung ohne Prozent nennt
   heal   [min, max] Grundheilung
          inkl. "restore N health", "healing an additional N"
@@ -209,16 +211,64 @@ RX_TICK = re.compile(
 RX_DOT_TOTAL = re.compile(
     r"(\d[\d,]*(?:\.\d+)?)\s+(?:(" + SCHOOL + r")\s+)?damage\s+over\s+(\d+)\s*sec",
     re.I)
-RX_AP = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?attack\s+power", re.I)
-RX_SP = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?spell\s+(?:power|damage)", re.I)
+RX_AP = re.compile(
+    r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?"
+    r"(?:ranged\s+|melee\s+)?attack\s+power",
+    re.I)
+RX_SP = re.compile(
+    r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?"
+    r"(?:bonus\s+)?(?:healing\s+)?spell\s+(?:power|damage)",
+    re.I)
+# "increased by 33% of the higher of your attack power or spell power" (Gargoyle).
+# Beide Prozente gemessen — max(AP, SP), kein erfundenes Verhältnis.
+RX_AP_OR_SP = re.compile(
+    r"(\d+(?:\.\d+)?)\s*%\s+of\s+the\s+higher\s+of\s+your\s+"
+    r"(?:attack\s+power\s+or\s+spell\s+power|"
+    r"spell\s+power\s+or\s+attack\s+power)",
+    re.I)
 RX_APB = re.compile(
     r"(?:based on|increased by|scales with)\s+(?:your\s+)?"
-    r"(?:ranged\s+|melee\s+)?attack\s+power",
+    r"(?:ranged\s+|melee\s+)?attack\s+power"
+    r"|damage\s+is\s+based\s+on\s+(?:your\s+)?attack\s+power"
+    r"|increased\s+by\s+(?:your\s+)?attack\s+power"
+    r"|scales\s+with\s+(?:ranged\s+)?attack\s+power",
     re.I)
 RX_SPB = re.compile(
     r"(?:based on|increased by|scales with|scaling with)\s+(?:your\s+)?"
     r"(?:healing\s+)?spell\s+(?:power|damage)"
-    r"|spell\s+power\s+increases",
+    r"|spell\s+power\s+increases"
+    r"|(?:damage|healing)\s+gained\s+from\s+spell\s+power"
+    r"|gained\s+from\s+spell\s+power"
+    r"|scales\s+with\s+healing\s+power"
+    r"|increased\s+by\s+healing\s+power"
+    r"|heal(?:s|ing)?\s+(?:you\s+)?based\s+on\s+(?:your\s+)?spell\s+damage",
+    re.I)
+
+# DBC-Tooltip-Formeln ($SP*0.24) → 24 %% SP. Nur lesen, nie erfinden.
+# SP/AP bleiben in sync_tooltips unaufgeloest; hier nur der Faktor → scaling.
+_RX_DBC_SP = re.compile(
+    r"\$?(?:SP|sp|SPS|SPH|SPFI|SPFR|SPN|spfi|sps|sph|spn)\s*\*\s*"
+    r"(\d+(?:\.\d+)?)",
+    re.I)
+_RX_DBC_AP = re.compile(
+    r"\$?(?:AP|ap|RAP|rap)\s*\*\s*(\d+(?:\.\d+)?)",
+    re.I)
+# Finisher: ($SP*0.0587)*5 → Faktor × CP
+_RX_DBC_SP_CP = re.compile(
+    r"\(\s*\$?(?:SP|sp|SPS|SPH|SPFI|SPFR|SPN|spfi|sps|sph|spn)\s*\*\s*"
+    r"(\d+(?:\.\d+)?)\s*\)\s*\*\s*([1-5])",
+    re.I)
+_RX_DBC_AP_CP = re.compile(
+    r"\(\s*\$?(?:AP|ap|RAP|rap)\s*\*\s*"
+    r"(\d+(?:\.\d+)?)\s*\)\s*\*\s*([1-5])",
+    re.I)
+_RX_DBC_BOTH_L = re.compile(
+    r"(\d+(?:\.\d+)?)\s*\*\s*\(\s*\$?(?:AP|ap|RAP|rap)\s*\+\s*\$?(?:SP|sp)\s*\)"
+    r"(?:\s*\*\s*(\d+))?(?:\s*\*\s*(\d+))?",
+    re.I)
+_RX_DBC_BOTH_R = re.compile(
+    r"\(\s*\$?(?:AP|ap|RAP|rap)\s*\+\s*\$?(?:SP|sp)\s*\)\s*\*"
+    r"(?:(\d+)\s*\*\s*)?(?:(\d+)\s*\*\s*)?(\d+(?:\.\d+)?)",
     re.I)
 RX_PROC = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+chance", re.I)
 # Nur echte Stapel, nicht "up to 5 nearby enemies".
@@ -307,9 +357,117 @@ def tidy(s):
 
 
 def _pct_is_conversion(desc, match):
-    """True bei 'X by N% of AP/SP' — das ist Umrechnung, kein Trefferkoeffizient."""
+    """True bei 'X by N% of AP/SP' — Umrechnung, kein Trefferkoeffizient.
+
+    Ausnahme: Schaden/Heilung „… increased by N% of AP/SP“ ist ein gemessener
+    Koeffizient (z. B. Summon Gargoyle), kein Stat-Umbau.
+    """
     prev = desc[max(0, match.start() - 8):match.start()]
-    return bool(re.search(r"\bby\s*$", prev, re.I))
+    if not re.search(r"\bby\s*$", prev, re.I):
+        return False
+    ctx = desc[max(0, match.start() - 80):match.start()]
+    if re.search(
+        r"(?:damage|healing|heal)\b.{0,70}"
+        r"(?:increased|further\s+increased)\s+by\s*$",
+        ctx, re.I,
+    ):
+        return False
+    return True
+
+
+def _ap_sp_is_non_damage(desc, match):
+    """Mana-Regen, Healing-Power-Umbau, Absorb-% — kein Trefferkoeffizient."""
+    ctx = desc[max(0, match.start() - 64):match.end() + 24]
+    if re.search(r"absorb", ctx, re.I):
+        return True
+    if re.search(
+        r"(?:healing\s+power|spell\s+healing|bonus\s+spell\s+healing)\s+by",
+        ctx, re.I,
+    ):
+        return True
+    if re.search(r"mana|regenerat", ctx, re.I) and not re.search(
+        r"\b(?:damage|heal(?:ing|s)?)\b", ctx, re.I
+    ):
+        return True
+    # Talent: „Mind Blast … gain an additional 15% of your bonus spell damage“
+    if re.search(
+        r"gain(?:s)?\s+an?\s+additional\s+\d+(?:\.\d+)?\s*%\s+of\s+"
+        r"(?:your\s+)?bonus\s+spell\s+damage",
+        desc, re.I,
+    ) and match.group(0) and "bonus spell" in (match.group(0).lower() + ctx.lower()):
+        return True
+    return False
+
+
+def _cp_mult(a, b):
+    """CP-Faktoren 1–5 aus Tooltip-Zeilen; sonst 1 (kein Multiplikator)."""
+    mul = 1
+    for x in (a, b):
+        if x is None:
+            continue
+        n = int(x)
+        if 1 <= n <= 5:
+            mul *= n
+        else:
+            # z. B. Tick-Anzahl ausserhalb 1–5 — nicht als CP werten
+            pass
+    return mul
+
+
+def extract_dbc_power_coeffs(raw):
+    """Liest SP/AP-Faktoren aus Spell.dbc-Formeln ($SP*0.24 → 24).
+
+    Kein Aufloesen der $-Tokens im Katalogtext. Mana-only / Waffen-/14
+    bleiben aussen vor. Finisher: max. effektiver Faktor (5 CP).
+    """
+    if not raw or ("$" not in raw and "SP" not in raw and "AP" not in raw):
+        return {}
+    # Reine Mana-Umwandlung (Life Tap) — kein Schadens-/Heilkoeffizient
+    if re.search(r"health into|into\s+\$\{[^}]*\}\s*mana|mana returned", raw, re.I):
+        if not re.search(r"\bdamage\b|\bheal", raw, re.I):
+            return {}
+
+    ap_fs, sp_fs = [], []
+
+    for m in _RX_DBC_SP.finditer(raw):
+        # Nicht greifen wenn unmittelbar Division folgt (selten)
+        sp_fs.append(float(m.group(1)))
+    for m in _RX_DBC_AP.finditer(raw):
+        ap_fs.append(float(m.group(1)))
+    for m in _RX_DBC_SP_CP.finditer(raw):
+        sp_fs.append(float(m.group(1)) * int(m.group(2)))
+    for m in _RX_DBC_AP_CP.finditer(raw):
+        ap_fs.append(float(m.group(1)) * int(m.group(2)))
+
+    for m in _RX_DBC_BOTH_L.finditer(raw):
+        base = float(m.group(1))
+        eff = base * _cp_mult(m.group(2), m.group(3))
+        ap_fs.append(eff)
+        sp_fs.append(eff)
+
+    for m in _RX_DBC_BOTH_R.finditer(raw):
+        # ($AP+$SP)*5*5*0.02 → Faktor 0.02 × CP 5 × 5
+        cp1, cp2, factor_s = m.group(1), m.group(2), m.group(3)
+        factor = float(factor_s)
+        mul = _cp_mult(cp1, cp2)
+        # Nur CP-Ziffer ohne echten Koeffizienten (kein Dezimal, 1–5)
+        if mul == 1 and factor == int(factor) and 1 <= factor <= 5:
+            continue
+        eff = factor * mul
+        ap_fs.append(eff)
+        sp_fs.append(eff)
+
+    out = {}
+    # Prozent = Faktor * 100 (0.24 → 24). Cap 500 %% gegen Parser-Ausreisser.
+    if ap_fs:
+        pct = round(max(ap_fs) * 100, 4)
+        if 0 < pct <= 500:
+            out["ap"] = pct if pct != int(pct) else int(pct)
+    if sp_fs:
+        pct = round(max(sp_fs) * 100, 4)
+        if 0 < pct <= 500:
+            out["sp"] = pct if pct != int(pct) else int(pct)
+    return out
 
 
 def extract(desc):
@@ -499,24 +657,23 @@ def extract(desc):
             if "dot" not in o:
                 o["dot"] = int(m.group(3))
 
-    m = RX_AP.search(d)
-    if m and not _pct_is_conversion(d, m):
-        ctx = d[max(0, m.start() - 50):m.end() + 15]
-        # Mana ueber AP ist kein Schadenskoeffizient (z.B. Shamanistic Rage).
-        if not (re.search(r"mana|regenerat", ctx, re.I)
-                and not re.search(r"damage|healing power", ctx, re.I)):
+    m = RX_AP_OR_SP.search(d)
+    if m and not _pct_is_conversion(d, m) and not _ap_sp_is_non_damage(d, m):
+        pct = float(m.group(1))
+        o["ap"] = pct
+        o["sp"] = pct
+    else:
+        m = RX_AP.search(d)
+        if m and not _pct_is_conversion(d, m) and not _ap_sp_is_non_damage(d, m):
             o["ap"] = float(m.group(1))
-    elif RX_APB.search(d):
-        o["apb"] = 1
+        elif "ap" not in o and RX_APB.search(d):
+            o["apb"] = 1
 
-    m = RX_SP.search(d)
-    if m and not _pct_is_conversion(d, m):
-        ctx = d[max(0, m.start() - 40):m.end() + 20]
-        # "absorbs an additional N% of spell damage" ist kein SP-Koeffizient.
-        if not re.search(r"absorb", ctx, re.I):
+        m = RX_SP.search(d)
+        if m and not _pct_is_conversion(d, m) and not _ap_sp_is_non_damage(d, m):
             o["sp"] = float(m.group(1))
-    elif "sp" not in o and RX_SPB.search(d):
-        o["spb"] = 1
+        elif "sp" not in o and RX_SPB.search(d):
+            o["spb"] = 1
 
     m = RX_PROC.search(d)
     if m:
@@ -577,6 +734,40 @@ def main():
     cat = json.load(io.open(os.path.join(DATA, "catalog.json"), encoding="utf-8"))
     out = [extract(r[5]) for r in cat]
 
+    # Optionale DBC-Mine: SP/AP-Faktoren aus Tooltip-Formeln (Spell.dbc).
+    # Ohne Client bleiben Text-Parser-Ergebnisse stehen.
+    dbc_filled = 0
+    ids_path = os.path.join(DATA, "spellids.json")
+    if os.path.isfile(ids_path):
+        try:
+            from sync_tooltips import SpellDB  # gleiche DBC-Pfade
+            ids = json.load(io.open(ids_path, encoding="utf-8"))
+            assert len(ids) == len(cat)
+            db = SpellDB()
+            for i, o in enumerate(out):
+                if "ap" in o and "sp" in o:
+                    continue
+                sid = ids[i][0]
+                raw = db.raw_desc(sid) if sid in db.by_u else ""
+                coeffs = extract_dbc_power_coeffs(raw or "")
+                if not coeffs:
+                    continue
+                added = False
+                if "ap" not in o and "ap" in coeffs:
+                    o["ap"] = coeffs["ap"]
+                    if "apb" in o:
+                        del o["apb"]
+                    added = True
+                if "sp" not in o and "sp" in coeffs:
+                    o["sp"] = coeffs["sp"]
+                    if "spb" in o:
+                        del o["spb"]
+                    added = True
+                if added:
+                    dbc_filled += 1
+        except Exception as ex:
+            print("DBC-Koeffizienten uebersprungen:", ex)
+
     io.open(os.path.join(DATA, "scaling.json"), "w", encoding="utf-8").write(
         json.dumps(out, separators=(",", ":"))
     )
@@ -587,6 +778,7 @@ def main():
             keys[k] = keys.get(k, 0) + 1
     print("Eintraege gesamt:", len(out))
     print("mit irgendeiner Skalierung:", sum(1 for o in out if o))
+    print("DBC SP/AP nachgezogen:", dbc_filled)
     for k in sorted(keys, key=lambda x: -keys[x]):
         print("  %-6s %5d" % (k, keys[k]))
 
@@ -596,6 +788,13 @@ def main():
         if "w" in o and n < 6:
             print("   %-22s %5.0f%% %-7s %s" % (cat[i][0][:22], o["w"],
                                                 o.get("wh", ""), o.get("sch", "physisch")))
+            n += 1
+    print("\nStichproben SP/AP (DBC oder Text):")
+    n = 0
+    for i, o in enumerate(out):
+        if ("ap" in o or "sp" in o) and n < 10:
+            print("   %-24s ap=%s sp=%s" % (
+                cat[i][0][:24], o.get("ap", "-"), o.get("sp", "-")))
             n += 1
     print("\nStichproben Multiplikatoren:")
     n = 0

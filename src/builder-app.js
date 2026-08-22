@@ -33,6 +33,16 @@
     });
   }
 
+  // Talent-Vererbung: relations.base, sonst Text-usesbase (modifiers.py).
+  // Schulvariante erbt TALENTE der Basis — nicht die Basisfähigkeit selbst.
+  function inheritBase(i) {
+    var b = REL[i][0];
+    if (b !== null && b !== undefined) return b;
+    var u = UB[i];
+    if (u === undefined || u === null) u = UB[String(i)];
+    return (u === undefined || u === null) ? null : +u;
+  }
+
   function tagTypeName(id) {
     if (!TAGN || !TAGN.types) return "";
     var t = TAGN.types[id] || TAGN.types[String(id)];
@@ -424,7 +434,7 @@
     //    voellig egal - entscheidend ist, ob ein Talent gewaehlt wurde, das
     //    die Basis verbessert.
     ids.forEach(function (i) {
-      var base = REL[i][0];
+      var base = inheritBase(i);
       if (base === null || base === undefined) return;
       var mods = BM[base] || [];
       var active = mods.filter(function (j) { return have[j]; });
@@ -491,7 +501,7 @@
         if (have[j]) return true;
         // Auch zaehlen, wenn eine Schulvariante von j im Build steht:
         // das Talent wirkt dann ueber die Modifier-Vererbung.
-        return ids.some(function (k) { return REL[k][0] === j; });
+        return ids.some(function (k) { return inheritBase(k) === j; });
       });
       if (!anyHave) {
         var names = refs.slice(0, 3).map(function (j) { return esc(CAT[j][0]); }).join(", ");
@@ -778,6 +788,33 @@
         "Intellect gibt dir <em>keinen</em> Melee-Crit. Genau diese Trennung hebt " +
         "<b>Path of Duality</b> auf: dort gibt Intellect Melee-Crit und " +
         "Agility Spell-Crit.</div>");
+    }
+    // SpellStatSuggestions Intelligence ↔ Magie: Path-Hinweis, kein Coeff erfinden
+    if (SSUG && SSUG.path && shown < MAX) {
+      var intSug = [], magGap = [];
+      ids.forEach(function (i) {
+        if (ssugPathLabel(i) === "Intelligence") intSug.push(i);
+        var t = TAG[i] || 0, s = SC[i] || {};
+        if ((t & T_MAGIC) && !s.w && !(s.sp || s.spb)) magGap.push(i);
+      });
+      if (intSug.length) {
+        shown++;
+        if (P.k === "int") {
+          out.push('<div class="pn-row good">SpellStatSuggestions markiert ' +
+            nm(intSug, 3) + " mit „Intelligence“. Path of Intelligence " +
+            "passt dazu (Item-SP ×2) — das ist kein Tooltip-Koeffizient, " +
+            "nur der DBC-Path-Code.</div>");
+        } else {
+          out.push('<div class="pn-row warn">SpellStatSuggestions markiert ' +
+            nm(intSug, 3) + " mit „Intelligence“. Auf " + esc(P.n) +
+            " fehlt der ×2-SP-Multiplikator; Path of Intelligence wäre der " +
+            "DBC-Hinweis — ohne dass wir fehlende Tooltip-% erfinden." +
+            (magGap.length
+              ? " " + magGap.length + " Magie-Einträge ohne SP-% bleiben Lücken."
+              : "") +
+            "</div>");
+        }
+      }
     }
     return out;
   }
@@ -2302,6 +2339,65 @@
         " ohne Vergleich — pipeline/ilvlbands.py + assemble.");
     }
 
+    // 12. SP/AP aus Tooltips vs. Flat ohne Koeffizient (kein erfundener Coeff)
+    var spHit = [], apHit = [], flatNo = [];
+    ids.forEach(function (i) {
+      var sc = SC[i];
+      if (!sc) return;
+      if (sc.sp || sc.spb) spHit.push(i);
+      if (sc.ap || sc.apb) apHit.push(i);
+      if (sc.flat && !sc.w && !(sc.sp || sc.spb || sc.ap || sc.apb)) {
+        flatNo.push(i);
+      }
+    });
+    if (spHit.length) {
+      push("ok", spHit.length +
+        (spHit.length === 1 ? " mit gemessenem Spell-Power-Anteil"
+                            : " mit gemessenem Spell-Power-Anteil"),
+        " Tooltip nennt SP (Prozent oder „Anteil fehlt“). " +
+        spHit.slice(0, 5).map(function (i) { return CAT[i][0]; }).map(esc)
+          .join(", ") +
+        (spHit.length > 5 ? " …" : "") + ".");
+    }
+    if (apHit.length) {
+      push("ok", apHit.length +
+        (apHit.length === 1 ? " mit gemessenem Attack-Power-Anteil"
+                            : " mit gemessenem Attack-Power-Anteil"),
+        " Tooltip nennt AP. " +
+        apHit.slice(0, 5).map(function (i) { return CAT[i][0]; }).map(esc)
+          .join(", ") +
+        (apHit.length > 5 ? " …" : "") + ".");
+    }
+    if (flatNo.length) {
+      push("info", flatNo.length +
+        (flatNo.length === 1
+          ? " Flat-Eintrag ohne SP-/AP-Anteil"
+          : " Flat-Einträge ohne SP-/AP-Anteil"),
+        " Grundschaden steht im Tooltip, der Koeffizient fehlt — " +
+        "kein Prozent erfunden. " +
+        flatNo.slice(0, 6).map(function (i) { return CAT[i][0]; }).map(esc)
+          .join(", ") +
+        (flatNo.length > 6 ? " …" : "") + ".");
+    }
+    // SpellStatSuggestions: Intelligence-Codes bei Magie → Path-Hinweis, kein Coeff
+    if (SSUG && SSUG.path) {
+      var intSug = ids.filter(function (i) {
+        return ssugPathLabel(i) === "Intelligence";
+      });
+      var magNoSp = ids.filter(function (i) {
+        var t = TAG[i] || 0, sc = SC[i] || {};
+        return (t & T_MAGIC) && !sc.w && !(sc.sp || sc.spb);
+      });
+      if (intSug.length && magNoSp.length) {
+        push("info", intSug.length +
+          "× SpellStatSuggestions „Intelligence“",
+        " DBC-Path-Code für Magie/Schulen — kein SP-Koeffizient. " +
+          "Path of Intelligence multipliziert Item-SP ×2; " +
+          magNoSp.length +
+          " Magie-Einträge ohne Tooltip-SP-% bleiben ehrlich ohne Zahl.");
+      }
+    }
+
     return out;
   }
 
@@ -2465,10 +2561,20 @@
     }
     if (o.dot) b.push('<span class="bdg d">' + o.dot + " s</span>");
     if (o.tick) b.push('<span class="bdg d">' + fmt(o.tick) + "/s</span>");
-    if (o.ap) b.push('<span class="bdg w">' + fmt(o.ap) + " % AP</span>");
-    else if (o.apb) b.push('<span class="bdg w">AP</span>');
-    if (o.sp) b.push('<span class="bdg w">' + fmt(o.sp) + " % SP</span>");
-    else if (o.spb) b.push('<span class="bdg w">SP</span>');
+    if (o.ap) {
+      b.push('<span class="bdg w" title="Attack-Power-Anteil aus dem Tooltip">' +
+        fmt(o.ap) + " % AP</span>");
+    } else if (o.apb) {
+      b.push('<span class="bdg w" title="Tooltip nennt Attack Power, Prozent fehlt">' +
+        "AP · Anteil fehlt</span>");
+    }
+    if (o.sp) {
+      b.push('<span class="bdg w" title="Spell-Power-Anteil aus dem Tooltip">' +
+        fmt(o.sp) + " % SP</span>");
+    } else if (o.spb) {
+      b.push('<span class="bdg w" title="Tooltip nennt Spell Power, Prozent fehlt">' +
+        "SP · Anteil fehlt</span>");
+    }
     (o.inc || []).forEach(function (x) {
       b.push('<span class="bdg m">+' + fmt(x[0]) + " % " + esc(short(x[1])) + "</span>");
     });
@@ -2514,6 +2620,8 @@
     if (mode === "h") return !!o.heal;
     if (mode === "d") return !!(o.dot || o.tick);
     if (mode === "g") return !!(o.gen && o.gen.length);
+    if (mode === "sp") return !!(o.sp || o.spb);
+    if (mode === "ap") return !!(o.ap || o.apb);
     if (mode === "cd" || mode === "nocd" || mode === "free") {
       return mechMatch(i, mode);
     }
@@ -2531,7 +2639,7 @@
     var b = [];
     if (m.cd) b.push('<span class="bdg c">CD ' + secs(m.cd) + "</span>");
     if (m.cast) b.push('<span class="bdg c">' + fmt(m.cast) + " s Cast</span>");
-    else if (m.cd || m.cost) b.push('<span class="bdg c">instant</span>');
+    else if (m.cd || m.cost || m.range) b.push('<span class="bdg c">instant</span>');
     if (m.ch) {
       b.push('<span class="bdg c">' + m.ch + " Ladung" +
         (m.ch === 1 ? "" : "en") + "</span>");
@@ -2541,6 +2649,15 @@
     }
     if (m.cost) b.push('<span class="bdg r">' + fmt(m.cost) + " " + esc(m.res) + "</span>");
     if (m.range) b.push('<span class="bdg f">' + m.range + " m</span>");
+    // DBC-Wirkdauer — getrennt vom Tooltip-DoT (o.dot), kein doppeltes Abzeichen
+    // wenn beide dieselbe Sekundenzahl nennen.
+    if (m.dur) {
+      var tipDot = SC[i] && SC[i].dot;
+      if (!tipDot || tipDot !== m.dur) {
+        b.push('<span class="bdg d" title="Wirkdauer aus Spell.dbc">Wirkdauer ' +
+          secs(m.dur) + "</span>");
+      }
+    }
     return b.join("");
   }
   function secs(v) {
@@ -2713,27 +2830,75 @@
       });
     }
 
+    // 2b. Spell Power / Attack Power — nur gemessene Tooltip-Anteile
+    var spRows = [], apRows = [];
+    ids.forEach(function (i) {
+      var s = SC[i];
+      if (!s) return;
+      if (s.sp || s.spb) spRows.push(i);
+      if (s.ap || s.apb) apRows.push(i);
+    });
+    if (spRows.length || apRows.length) {
+      o.push('<div class="schd">Spell Power / Attack Power (Tooltip)</div>');
+      o.push('<div class="scsum"><b>Nur was im Text steht</b>' +
+        "Prozent kommt wörtlich aus dem Tooltip. „Anteil fehlt“ heißt: der " +
+        "Text nennt SP/AP, aber keine Prozentzahl — dann wird nichts erfunden.</div>");
+      spRows.forEach(function (i) {
+        var s = SC[i];
+        o.push('<div class="scrow"><span class="nm">' + esc(CAT[i][0]) + "</span>" +
+          '<span class="val">' +
+          (s.sp ? fmt(s.sp) + " % SP"
+                : "SP · Anteil fehlt") +
+          '</span><span class="sub">aus dem Tooltip' +
+          (s.sp && s.ap && s.sp === s.ap
+            ? " — höherer Wert aus AP oder SP (max)"
+            : "") +
+          "</span></div>");
+      });
+      apRows.forEach(function (i) {
+        var s = SC[i];
+        // Doppelzeile vermeiden, wenn schon unter SP mit gleichem %-Wert
+        if (s.sp && s.ap && s.sp === s.ap && spRows.indexOf(i) >= 0) return;
+        o.push('<div class="scrow"><span class="nm">' + esc(CAT[i][0]) + "</span>" +
+          '<span class="val">' +
+          (s.ap ? fmt(s.ap) + " % AP"
+                : "AP · Anteil fehlt") +
+          '</span><span class="sub">aus dem Tooltip</span></div>');
+      });
+    }
+
     // 3. Flat-Damage ehrlich als Luecke ausweisen
     var flat = ids.filter(function (i) {
       return SC[i] && SC[i].flat && !SC[i].w;
     });
+    var flatGap = flat.filter(function (i) {
+      var s = SC[i];
+      return !(s.sp || s.spb || s.ap || s.apb);
+    });
     if (flat.length) {
       o.push('<div class="schd">Fester Grundschaden</div>');
       o.push('<div class="scsum"><b>' + flat.length + " Einträge mit fester Zahl</b>" +
-        "Was Spell Power hier draufrechnet, steht in keinem dieser Tooltips. " +
-        "Die Zahlen unten sind der <em>Grundwert ohne dein Gear</em> — dein " +
-        "tatsächlicher Schaden liegt darüber.</div>");
+        (flatGap.length
+          ? " Bei " + flatGap.length + " davon fehlt der SP-/AP-Anteil im Tooltip — " +
+            "die Zahlen unten sind der <em>Grundwert ohne dein Gear</em>."
+          : " Was Spell Power hier draufrechnet, steht in keinem dieser Tooltips. " +
+            "Die Zahlen unten sind der <em>Grundwert ohne dein Gear</em> — dein " +
+            "tatsächlicher Schaden liegt darüber.") +
+        "</div>");
       flat.slice(0, 10).forEach(function (i) {
         var s = SC[i];
+        var gap = !(s.sp || s.spb || s.ap || s.apb);
         o.push('<div class="scrow"><span class="nm">' + esc(CAT[i][0]) + "</span>" +
           '<span class="val">' + s.flat[0] +
           (s.flat[1] !== s.flat[0] ? "–" + s.flat[1] : "") + "</span>" +
           '<span class="sub">' + (s.fsch ? esc(s.fsch) : "physisch") +
-          (s.dot ? ", über " + s.dot + " s" : "") + "</span></div>");
+          (s.dot ? ", über " + s.dot + " s" : "") +
+          (gap ? " · SP/AP-Anteil fehlt" : "") +
+          "</span></div>");
       });
     }
 
-    var n = hits.length + mult.length;
+    var n = hits.length + mult.length + spRows.length + apRows.length;
     hd.textContent = n ? String(n) : "—";
     hd.className = "cnt " + (n ? "ok" : "");
     box.innerHTML = o.length ? o.join("") :
@@ -2838,7 +3003,7 @@
     var bases = {};
     ids.forEach(function (i) {
       bases[i] = 1;
-      var b = REL[i][0];
+      var b = inheritBase(i);
       if (b !== null && b !== undefined) bases[b] = 1;
     });
 
@@ -3173,7 +3338,7 @@
     var bases = {};
     Object.keys(sel).map(Number).forEach(function (i) {
       bases[i] = 1;
-      var b = REL[i][0];
+      var b = inheritBase(i);
       if (b !== null && b !== undefined) bases[b] = 1;
     });
     var tpool = [];
@@ -3212,7 +3377,7 @@
     var w = { SP: 0, AP: 0, Crit: 0, Haste: 0, Int: 0, Agi: 0, Str: 0,
               Heal: 0, Hit: 0, Sta: 0 };
     var n = { weapon: 0, weaponTal: 0, spell: 0, heal: 0, cast: 0,
-              instant: 0, crit: 0 };
+              instant: 0, crit: 0, spTip: 0, apTip: 0, ssugInt: 0 };
 
     ids.forEach(function (i) {
       var t = TAG[i] || 0, s = SC[i] || {}, m = MC[i] || {};
@@ -3222,6 +3387,15 @@
       }
       if ((t & T_MAGIC) && !s.w) { n.spell++; w.SP += 3; }
       if (s.flat) w.SP += 1;
+      // Gemessene Tooltip-Anteile zählen stärker als nur der Magie-Tag
+      if (s.sp) { n.spTip++; w.SP += 4; }
+      else if (s.spb) { n.spTip++; w.SP += 2; }
+      if (s.ap) { n.apTip++; w.AP += 4; }
+      else if (s.apb) { n.apTip++; w.AP += 2; }
+      if (ssugPathLabel(i) === "Intelligence") {
+        n.ssugInt++;
+        w.SP += 0.8; w.Int += 0.5;
+      }
       if (t & T_HEAL) { n.heal++; w.Heal += 3; w.SP += 1; }
       if (m.cast) { n.cast++; w.Haste += 2.5; }
       else if (m.cd) { n.instant++; w.Haste += 0.3; }
@@ -3269,9 +3443,12 @@
       case "SP": return "zählt doppelt: 14 Spell Power = 1 Waffen-DPS, " +
         "und voll auf jeden Spruch" + (P && P.sp > 1
           ? " — auf " + P.n + " zusätzlich ×" + String(P.sp).replace(".", ",")
-          : "");
+          : "") +
+        (n.spTip ? "; " + n.spTip + " mit Tooltip-SP" : "") +
+        (n.ssugInt ? "; " + n.ssugInt + "× SpellStatSuggestions Intelligence" : "");
       case "AP": return (n.weapon + n.weaponTal) +
-        " Einträge mit Waffenbezug, gleiche 14:1-Regel";
+        " Einträge mit Waffenbezug, gleiche 14:1-Regel" +
+        (n.apTip ? "; " + n.apTip + " mit Tooltip-AP" : "");
       case "Crit": return "der einzige Stat, der Melee- und Spell-Crit " +
         "gleichzeitig hebt";
       case "Haste": return n.cast
@@ -3353,7 +3530,11 @@
       "Faustregel: " + r.n.weapon + " Waffenangriffe" +
       (r.n.weaponTal ? " (+" + r.n.weaponTal + " Talente dazu)" : "") + ", " +
       r.n.spell + " reine Sprüche, " + r.n.heal + " heilende Einträge, " +
-      r.n.cast + " mit Castzeit" + (r.path ? ", Path " + esc(r.path.n.replace("Path of ", ""))
+      r.n.cast + " mit Castzeit" +
+      (r.n.spTip ? ", " + r.n.spTip + " mit Tooltip-SP" : "") +
+      (r.n.apTip ? ", " + r.n.apTip + " mit Tooltip-AP" : "") +
+      (r.n.ssugInt ? ", " + r.n.ssugInt + "× DBC Intelligence" : "") +
+      (r.path ? ", Path " + esc(r.path.n.replace("Path of ", ""))
       : "") + ".</div>"];
     r.rows.forEach(function (x, n) {
       o.push('<div class="statrow"><span class="rk">' + (n + 1) + "</span>" +
@@ -3881,7 +4062,7 @@
   function chainOf(i, have, showMissing) {
     var rows = [], live = 0, dead = 0;
 
-    var base = REL[i][0];
+    var base = inheritBase(i);
     if (base !== null && base !== undefined) {
       rows.push(["Basis", "<em>erbt die Talente von</em> " + pill(base, !!have[base], false)]);
     }
@@ -4444,7 +4625,7 @@
     var wantT = {};
     Object.keys(picked).map(Number).forEach(function (i) {
       (BM[i] || []).forEach(function (t) { wantT[t] = (wantT[t] || 0) + 1; });
-      var b = REL[i][0];
+      var b = inheritBase(i);
       if (b !== null && b !== undefined) {
         (BM[b] || []).forEach(function (t) { wantT[t] = (wantT[t] || 0) + 1; });
       }

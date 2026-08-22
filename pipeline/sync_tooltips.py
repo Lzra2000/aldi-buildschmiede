@@ -15,10 +15,12 @@ aufgeloest (Anzeige = basePoints+1, bei Prozenten der Betrag).
 
 Was dieses Skript bewusst NICHT anfasst:
   - ${...}-Formeln mit SP/AP/PL/RAP/$f — Zahlen nicht erfinden
-  - reine $m/$s/$d/$t/$b/$e-Arithmetik in ${...} ist erlaubt (DBC)
-  - $<mult> = 1 (untalentierte Client-Basis); sonstige $<…> ohne DBC-Quelle
+  - reine $m/$s/$d/$t/$b/$e/$i-Arithmetik in ${...} ist erlaubt (DBC)
+  - $<mult>=1, $<glyph>=0 (untalentiert/unglypht); sonstige $<…> ohne DBC
   - $i/$n aus MaxAffectedTargets/ProcCharges; Salvage nur als Fallback
     ($o aus BasePoints*Ticks, $q aus EffectMiscValue, $r aus SpellRange — ok)
+  - SP/AP-Koeffizienten aus Formeln liest scaling.py separat in scaling.json
+    (Faktor*100), ohne den Katalogtext umzuschreiben
 
 Eintraege, bei denen nach der Aufloesung noch $-Tokens uebrig sind,
 bleiben unveraendert (besser ein alter Klartext als ein $-Rest im UI).
@@ -468,15 +470,21 @@ def try_resolve_safe_formula(db, sid, inner):
     """Wertet ${$m1/1000} / ${$b1*1+$m1} / ${$m1*5*$<mult>} aus.
 
     None bei SP/AP/PL/$f oder unbekanntem $<…>. $<mult>=1 (untalentiert),
-    $<dur> aus SpellDuration — beides Client-Default bzw. DBC.
+    $<glyph>=0 (ohne Glyphe), $<dur> aus SpellDuration — Client-Default/DBC.
+    $i (MaxAffectedTargets) in Formeln erlaubt. SP/AP bleiben ehrlich offen.
     """
-    if re.search(r"(?i)\b(?:SP|AP|RAP|PL|BH|SPH)\b|\$[fF]\d|\$ppl", inner):
+    if re.search(
+        r"(?i)\b(?:SP|AP|RAP|PL|BH|SPH|SPS|STA|MW|SPFI|SPFR|SPN)\b"
+        r"|\$[fF]\d|\$ppl|\$mw\b|\$sp[a-z]*\b",
+        inner,
+    ):
         return None
-    if re.search(r"\$<(?!mult>|dur\d*>)", inner, flags=re.I):
+    if re.search(r"\$<(?!mult>|dur\d*|glyph>)", inner, flags=re.I):
         return None
 
-    # Untalentierte Basis: Client setzt $<mult> ohne Mods auf 1.
+    # Untalentierte / unglyphte Basis
     inner = re.sub(r"\$<mult>", "1", inner, flags=re.I)
+    inner = re.sub(r"\$<glyph>", "0", inner, flags=re.I)
 
     def repl_ref(m):
         ref = int(m.group(1)) if m.group(1) else sid
@@ -513,6 +521,11 @@ def try_resolve_safe_formula(db, sid, inner):
         a = db.amplitude_sec(ref, idx)
         return a if a is not None else m.group(0)
 
+    def repl_imax(m):
+        ref = int(m.group(1)) if m.group(1) else sid
+        n = db.max_targets(ref)
+        return n if n is not None else m.group(0)
+
     def repl_dur_var(_m):
         sec = db.dur_sec_number(sid)
         return fmt_number(sec) if sec is not None else _m.group(0)
@@ -523,6 +536,10 @@ def try_resolve_safe_formula(db, sid, inner):
     expr = _RX_SAFE_MULTV.sub(repl_multv, expr)
     expr = _RX_SAFE_DUR.sub(repl_dur, expr)
     expr = _RX_SAFE_AMP.sub(repl_amp, expr)
+    expr = re.sub(r"\$(\d*)i\b", repl_imax, expr)
+    # Client-Tippfehler ${$m1+0)} — eine ueberzaehlige schliessende Klammer
+    if expr.count(")") == expr.count("(") + 1:
+        expr = re.sub(r"\)([^()]*)$", r"\1", expr)
     if "$" in expr or not _RX_SAFE_EXPR.match(expr):
         return None
     try:

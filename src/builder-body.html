@@ -79,6 +79,8 @@
                 <option value="w">Waffenschaden</option><option value="s">Elementar</option>
                 <option value="m">Multiplikatoren</option><option value="d">Über Zeit</option>
                 <option value="h">Heilung</option>
+                <option value="sp">Spell Power</option>
+                <option value="ap">Attack Power</option>
                 <option value="cd">Mit Cooldown</option><option value="nocd">Ohne Cooldown</option>
                 <option value="free">Kostenlos</option>
                 <option value="g">Ressourcen-Generator</option></select>
@@ -498,6 +500,18 @@
             <tr><td><span class="bdg p">15 % Proc</span></td>
               <td>Löst mit 15 % Wahrscheinlichkeit aus.</td>
               <td>Rechne mit dem Durchschnitt, nicht mit dem Bestfall.</td></tr>
+            <tr><td><span class="bdg w">20 % SP</span> / <span class="bdg w">SP · Anteil fehlt</span></td>
+              <td>Spell-Power-Anteil aus dem Tooltip — oder SP genannt, Prozent fehlt.</td>
+              <td>Nur gemessene Zahlen. Fehlt der Anteil, wird keiner erfunden.</td></tr>
+            <tr><td><span class="bdg w">20 % AP</span> / <span class="bdg w">AP · Anteil fehlt</span></td>
+              <td>Attack-Power-Anteil aus dem Tooltip.</td>
+              <td>Gleicher Maßstab wie bei Spell Power.</td></tr>
+            <tr><td><span class="bdg c">CD 8 s</span> · <span class="bdg c">1,5 s Cast</span> · <span class="bdg f">30 m</span></td>
+              <td>Cooldown, Castzeit und Reichweite aus Spell.dbc.</td>
+              <td>Stehen fast nie im Tooltip — die DBC liefert sie.</td></tr>
+            <tr><td><span class="bdg d">Wirkdauer 6 s</span> · <span class="bdg r">20 Mana</span></td>
+              <td>Aura-Dauer und Ressourcenkosten aus der DBC.</td>
+              <td>Ladungen (ch/chr) erscheinen als eigene Abzeichen, wenn vorhanden.</td></tr>
           </tbody>
         </table>
       </div>

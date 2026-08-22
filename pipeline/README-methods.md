@@ -43,10 +43,11 @@ Flat ohne Koeffizient bekommt **keinen** Tempo-Score. Die Seite sagt
 **Frage:** Welches Talent verstärkt die meisten gewählten Schulvarianten?
 
 Ascension-Regel: „This uses Slam modifiers“ erbt die **Talente** der Basis,
-nicht die Basisfähigkeit selbst (`basemods.json` + `relations.json`).
+nicht die Basisfähigkeit selbst (`basemods.json` + `usesbase.json` +
+`relations.json`). Details: `pipeline/NOTES-basemods.md`.
 
 - **Talent-Hitze** = Anzahl Katalog-Abilities mit derselben Basis
-  (Basis + alle Schulvarianten).
+  (Basis + alle Schulvarianten aus Relations **oder** uses-X-Text).
 - **Basis-Hitze** = Varianten × bekannte Modifier-Talente.
 - **Orphan** = Variantenfamilie (≥3) ohne Eintrag in `basemods` — hier greift
   kein bekanntes Talent-Netz.

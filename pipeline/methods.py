@@ -232,6 +232,11 @@ def build_tempo(cat, sc, mc, rel=None):
             row["ap"] = ap
         if sp is not None:
             row["sp"] = sp
+        # DBC-Reichweite / Cast — Levelrun-Kontext (Nah vs Fern), kein Score-Faktor
+        if m.get("range") is not None:
+            row["range"] = m["range"]
+        if m.get("cast") is not None:
+            row["cast"] = m["cast"]
         if m.get("res"):
             row["res"] = m["res"]
             row["cost"] = m.get("cost")
@@ -256,6 +261,8 @@ def build_tempo(cat, sc, mc, rel=None):
             "effektiven Takt: DBC-CD, sonst Charges chr/ch, sonst GCD %.1fs. "
             "Flat-Schaden ohne genannten Koeffizienten wird nicht gerankt. "
             "topHigh = nur conf=high. "
+            "range/cast aus mechanics.json (Spell.dbc) — Levelrun-Kontext "
+            "(Nah vs Fern), kein zusaetzlicher Score-Faktor. "
             "Schulvarianten mit derselben dupGroup teilen sich einen GCD — "
             "ihre Scores nicht als parallelen Takt addieren."
             % GCD
@@ -263,18 +270,25 @@ def build_tempo(cat, sc, mc, rel=None):
     }
 
 
-def build_modheat(cat, rel, bm):
+def build_modheat(cat, rel, bm, ub=None):
     """Talent-Hitze: wie viele Abilities profitieren, wenn das Talent greift.
 
     Schulvarianten erben die Talente der Basis (nicht die Basis selbst).
     Hitze eines Talents = Anzahl Abilities mit derselben Basis (Basis + Varianten).
     Hitze einer Basis = Varianten × modifizierende Talente.
+
+    Variantenketten: relations[i][0], sonst usesbase (Katalogtext
+    \"This uses X modifiers\") — kein Prozent-Raten, nur Text/Relations.
     """
+    ub = ub or {}
     variants = {}
     for i, r in enumerate(rel):
         b = r[0]
         if b is None:
-            continue
+            u = ub.get(str(i), ub.get(i))
+            if u is None:
+                continue
+            b = int(u)
         variants.setdefault(b, []).append(i)
 
     # Talent -> maximale Reichweite ueber alle Basen, die es modifiziert
@@ -323,8 +337,8 @@ def build_modheat(cat, rel, bm):
         "orphans": [b for b in bases if b["orphan"]][:20],
         "note": (
             "Hitze eines Talents = wie viele Katalog-Abilities dieselbe Basis "
-            "nutzen (inkl. Schulvarianten). Orphan = Variantenfamilie ohne "
-            "bekanntes Modifier-Talent in basemods."
+            "nutzen (inkl. Schulvarianten aus relations und uses-X-Text). "
+            "Orphan = Variantenfamilie ohne bekanntes Modifier-Talent in basemods."
         ),
     }
 
@@ -512,13 +526,15 @@ def main():
     rel = load("relations.json")
     bm = load("basemods.json")
     ids = load("spellids.json")
+    ub_path = os.path.join(DATA, "usesbase.json")
+    ub = json.load(io.open(ub_path, encoding="utf-8")) if os.path.exists(ub_path) else {}
 
     assert len(cat) == len(sc) == len(mc) == len(rel) == len(ids), "Laengen drift"
 
     out = {
         "v": 2,
         "tempo": build_tempo(cat, sc, mc, rel),
-        "modheat": build_modheat(cat, rel, bm),
+        "modheat": build_modheat(cat, rel, bm, ub),
         "gaps": build_gaps(cat, sc),
         "resmap": build_resmap(cat, mc),
         "rollgate": build_rollgate(cat, ids),
