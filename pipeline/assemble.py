@@ -35,6 +35,7 @@ PAYLOAD = [
     ("spr", "spriteindex.json"),    # {cols, tile, idx[]}
     ("cdg", "cdgroups.json"),       # Namen der geteilten Cooldowngruppen
     ("bm", "basemods.json"),        # Basisindex -> Talente, die sie verbessern
+    ("ub", "usesbase.json"),        # Variante -> Basis aus "uses X modifiers"-Text
     ("tag", "pathtags.json"),       # Bitmaske: woraus zieht ein Eintrag Wert
     ("sc", "scaling.json"),         # aus Tooltips gelesene Skalierungszahlen
     ("mc", "mechanics.json"),       # Cooldown/Cast/Kosten/Charges aus Spell.dbc
@@ -50,6 +51,8 @@ OPTIONAL_PAYLOAD = [
     ("ssug", "statsuggest.json"),         # Path aus SpellStatSuggestions.dbc
     ("ssugsp", "spellsuggest.json"),      # Related-Spell-Graph (SpellSpellSuggestions)
     ("iic", "itemicons.json"),            # itemId -> iconName (itemicons.py, kompakt)
+    ("ilb", "ilvlbands.json"),            # Levelrun ilvl/Waffen-Bänder (ilvlbands.py)
+    ("wpn", "weapons.json"),              # itemId -> ilvl/dmg/Bänder (weapons.py)
 ]
 
 # Sicherheitsnetz: nur einbetten wenn klein genug fuer GitHub Pages.
@@ -78,6 +81,13 @@ def main():
             if kb > ITEMICONS_EMBED_MAX_KB:
                 print("  iic uebersprungen (%.0f KB > %d KB) — "
                       "pipeline/itemicons.py ohne --all neu laufen"
+                      % (kb, ITEMICONS_EMBED_MAX_KB))
+                continue
+        if key == "wpn":
+            kb = os.path.getsize(p) / 1024.0
+            if kb > ITEMICONS_EMBED_MAX_KB:
+                print("  wpn uebersprungen (%.0f KB > %d KB) — "
+                      "pipeline/weapons.py Seed verkleinern"
                       % (kb, ITEMICONS_EMBED_MAX_KB))
                 continue
         payload[key] = json.load(io.open(p, encoding="utf-8"))

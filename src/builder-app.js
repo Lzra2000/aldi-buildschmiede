@@ -8,6 +8,7 @@
   var SPR = D.spr;          // {cols, tile, idx[]}
   var CDG = D.cdg || [];    // Namen der Shared-Cooldown-Gruppen
   var BM = D.bm || {};      // Basis-Index -> Talente, die sie verbessern
+  var UB = D.ub || {};      // Variante -> Basis aus Katalogtext "uses X modifiers"
   var TAG = D.tag || [];    // Bitmaske: woraus zieht ein Eintrag seinen Wert
   var SC = D.sc || [];      // aus den Tooltips gelesene Skalierungszahlen
   var MC = D.mc || [];      // Cooldown, Castzeit, Kosten aus Spell.dbc
@@ -18,6 +19,8 @@
   var SID = D.sid || [];    // Katalogindex -> spellId (Addon-Export)
   var EID = D.eid || [];    // Katalogindex -> entryId (Addon-Export)
   var ITEMICONS = D.iic || D.itemicons || D.iico || null;
+  var WPN = D.wpn || null;  // itemId -> {n,q,ilvl,dmg,b} aus weapons.py
+  var ILB = D.ilb || null;  // ItemStat-Stufenbänder (ilvl / w1h / w2h / armor)
   var TAGN = D.tagn || null;   // SpellTagTypes Namen + bySpell
   var SSUG = D.ssug || null;   // SpellStatSuggestions path-codes (≠ PrimaryStat-IDs)
   var SSUGSP = D.ssugsp || null; // SpellSpellSuggestions related-graph (optional)
@@ -1415,6 +1418,195 @@
     return '<div class="essbox"><div class="geartitle">ESSENCE</div>' + html + "</div>";
   }
 
+  // ---------- Waffen-Evidence (WEAPON-Import + D.wpn aus Item-DBCs) ----------
+  // Tempo/DPS kommen aus dem Addon (gemessen mit AP/SP). DBC liefert nur
+  // ilvl/Basis-Schaden/Stufenbänder — kein Tempo, keine erfundenen Koeffizienten.
+  function wpnLookup(itemId) {
+    if (!WPN || !itemId) return null;
+    return WPN[itemId] || WPN[String(itemId)] || null;
+  }
+  function weaponAvgDmg(w) {
+    if (!w || !w.dmg) return 0;
+    var m = String(w.dmg).match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
+    return m ? (+m[1] + +m[2]) / 2 : 0;
+  }
+  function weaponExportDps(w) {
+    if (!w) return 0;
+    if (w.dps > 0) return w.dps;
+    var avg = weaponAvgDmg(w);
+    return (avg && w.speed > 0) ? avg / w.speed : 0;
+  }
+  function weaponBandAt(db, level) {
+    if (!db || !db.b || !level) return null;
+    var key = String(level);
+    if (db.b[key]) return db.b[key];
+    // Nächstliegendes Band 10–59, sonst fehlt
+    var best = null, bestDist = 999;
+    Object.keys(db.b).forEach(function (k) {
+      var lv = +k, d = Math.abs(lv - level);
+      if (d < bestDist) { bestDist = d; best = db.b[k]; }
+    });
+    return bestDist <= 2 ? best : null;
+  }
+  function formatDmgPair(pair) {
+    if (!pair || pair.length < 2) return "";
+    return pair[0] + "–" + pair[1];
+  }
+  function weaponEvidenceHtml(w, charLevel) {
+    if (!w) return "";
+    var bits = [];
+    var avg = weaponAvgDmg(w);
+    var dps = weaponExportDps(w);
+    if (dps) {
+      bits.push("Import " + dps.toFixed(1) + " DPS");
+    } else {
+      bits.push("Import-DPS fehlt");
+    }
+    if (avg && w.speed > 0) {
+      var recomputed = avg / w.speed;
+      if (dps && Math.abs(recomputed - dps) > 0.6) {
+        bits.push("nachgerechnet " + recomputed.toFixed(1) + " DPS");
+      }
+    }
+    if (w.ilvl) bits.push("ilvl " + w.ilvl);
+    else bits.push("ilvl fehlt");
+
+    var db = wpnLookup(w.itemId);
+    if (!w.itemId) {
+      bits.push("DBC fehlt (keine itemId)");
+    } else if (!db) {
+      bits.push("DBC fehlt");
+    } else {
+      if (db.ilvl != null) {
+        bits.push("DBC-ilvl " + db.ilvl +
+          (w.ilvl && db.ilvl !== w.ilvl ? " ≠ Import" : ""));
+      } else {
+        bits.push("DBC-ilvl fehlt");
+      }
+      var band = weaponBandAt(db, charLevel);
+      if (band) {
+        bits.push("Band Stufe " + (charLevel || "?") + ": " +
+          formatDmgPair(band) + " (ohne AP/SP)");
+      } else if (db.dmg) {
+        bits.push("DBC-Basis " + formatDmgPair(db.dmg) +
+          " (Band 10–59 fehlt)");
+      } else {
+        bits.push("DBC-Schaden fehlt");
+      }
+      if (db.n && w.name && db.n !== w.name) {
+        bits.push("DBC-Name „" + db.n + "“");
+      }
+    }
+    return bits.join(" · ");
+  }
+  function weaponBareScalingFlags(ids) {
+    // Einträge mit Waffen-Tag, aber ohne gemessene Tooltip-% in D.scaling
+    var bare = [], scaled = [];
+    (ids || []).forEach(function (i) {
+      var t = TAG[i] || 0, s = SC[i] || {};
+      if (!(t & T_WEAPON) && !s.w) return;
+      if (s.w) scaled.push(i);
+      else if (t & T_WEAPON) bare.push(i);
+    });
+    return { bare: bare, scaled: scaled };
+  }
+
+  // ---------- Levelrun-Bänder (D.ilb aus ItemStat.dbc) ----------
+  // Mid-Schaden = Import (min+max)/2 bzw. DPS×Tempo. Keine Spell-Koeffizienten.
+  function ilvlBandAt(level) {
+    if (!ILB || !ILB.levels || !level) return null;
+    var L = Math.round(+level);
+    if (L < 10) L = 10;
+    if (L > 59) L = 59;
+    return ILB.levels[L] || ILB.levels[String(L)] || null;
+  }
+  function weaponIs2H(w) {
+    return !!(w && /2HWEAPON/i.test(String(w.loc || "")));
+  }
+  function weaponMidDamage(w) {
+    if (!w) return null;
+    var avg = weaponAvgDmg(w);
+    if (avg > 0) return avg;
+    var dps = weaponExportDps(w);
+    if (dps > 0 && w.speed > 0) return dps * w.speed;
+    return null;
+  }
+  // band: {p25,p50,p75}. Kollabierte Perzentile → ±Toleranz um p50.
+  function bandVerdict(value, band, kind) {
+    if (value == null || !band || band.p50 == null) return null;
+    var v = +value, lo = band.p25, hi = band.p75, mid = band.p50;
+    if (lo == null || hi == null || hi <= lo) {
+      var pad = kind === "ilvl" ? 5 : Math.max(3, mid * 0.12);
+      lo = mid - pad;
+      hi = mid + pad;
+    }
+    if (v < lo) return "low";
+    if (v > hi) return "high";
+    return "ok";
+  }
+  function bandLabel(verdict, band, unit) {
+    if (!band || band.p50 == null) {
+      return '<span class="band unk" title="Kein ItemStat-Band für diese Stufe">' +
+        "Band unbekannt</span>";
+    }
+    var tip = "ItemStat p25–p75: " + band.p25 + "–" + band.p75 +
+      " · Median " + band.p50 + (unit ? " " + unit : "") +
+      " · n=" + (band.n || "?");
+    var text = verdict === "low" ? "unter Band"
+      : verdict === "high" ? "über Band"
+      : verdict === "ok" ? "im Band"
+      : "Band";
+    return '<span class="band ' + (verdict || "unk") + '" title="' + esc(tip) +
+      '">' + text + " · Med " + band.p50 + "</span>";
+  }
+  function weaponBandKey(w) {
+    // Distanzwaffen: kein 2H-/1H-Mid-Band (NOTES-ilvl) — ehrlich fehlt
+    if (!w || w.slot === "RANGED" || /RANGED|THROWN/i.test(String(w.loc || ""))) {
+      return null;
+    }
+    return weaponIs2H(w) ? "w2h" : "w1h";
+  }
+  // -1 unter Band, 0 unbekannt/ok, +1 über Band (Generator).
+  function weaponGearSignal(c) {
+    c = c || CHAR;
+    if (!c || !c.level) return 0;
+    var band = ilvlBandAt(c.level);
+    if (!band) return 0;
+    var mh = (c.weapons || []).filter(function (w) { return w.slot === "MH"; })[0];
+    if (!mh) return 0;
+    var key = weaponBandKey(mh);
+    if (!key || !band[key]) return 0;
+    var mid = weaponMidDamage(mh);
+    var v = bandVerdict(mid, band[key], "wpn");
+    if (v === "low") return -1;
+    if (v === "high") return 1;
+    return 0;
+  }
+  function ilvlBandHtml(c) {
+    if (!c || !c.level || !(c.ilvl > 0)) return "";
+    var band = ilvlBandAt(c.level);
+    var ib = band && band.ilvl;
+    var verd = bandVerdict(c.ilvl, ib, "ilvl");
+    return bandLabel(verd, ib, "ilvl");
+  }
+  function weaponLevelBandHtml(w, level) {
+    if (!w || !level) return "";
+    var key = weaponBandKey(w);
+    if (!key) {
+      return '<span class="band unk" title="Distanzwaffen haben kein 1H/2H-Mid-Band">' +
+        "Band fehlt (Distanz)</span>";
+    }
+    var band = ilvlBandAt(level);
+    var wb = band && band[key];
+    var mid = weaponMidDamage(w);
+    var verd = bandVerdict(mid, wb, "wpn");
+    if (mid == null) {
+      return '<span class="band unk">Mid fehlt</span>' + bandLabel(null, wb, "");
+    }
+    return '<span class="meta">Mid ' + mid.toFixed(0) + "</span>" +
+      bandLabel(verd, wb, "Mid-Schaden");
+  }
+
   function renderChar() {
     var box = document.getElementById("charBox");
     var hd = document.getElementById("cC");
@@ -1684,10 +1876,15 @@
       o.push('<div class="wepline"><b>Waffe</b> ' +
         '<span' + (mh.itemId ? ' title="itemId ' + mh.itemId + '"' : "") + ">" +
         esc(mh.name) + "</span>" +
-        " · " + mh.dps.toFixed(1) + " DPS · Tempo " + mh.speed.toFixed(2) +
+        (mh.dmg ? " · " + esc(mh.dmg) : "") +
+        (mh.speed ? " · Tempo " + mh.speed.toFixed(2) : "") +
         (mh.sub && mh.sub !== "-" ? " · " + esc(mh.sub) : "") +
         (mh.itemId ? ' <span class="gid">#' + mh.itemId + "</span>" : "") +
         "</div>");
+      o.push('<div class="wepline meta">' + esc(weaponEvidenceHtml(mh, c.level)) +
+        "</div>");
+      o.push('<div class="wepline"><b>Stufenband</b> ' +
+        weaponLevelBandHtml(mh, c.level) + "</div>");
     }
     (c.weapons || []).filter(function (w) {
       return w.slot === "OH" || w.slot === "RANGED";
@@ -1696,13 +1893,22 @@
         (w.slot === "OH" ? "Nebenhand" : "Distanz") + "</b> " +
         '<span' + (w.itemId ? ' title="itemId ' + w.itemId + '"' : "") + ">" +
         esc(w.name) + "</span>" +
-        (w.dps ? " · " + w.dps.toFixed(1) + " DPS" : "") +
+        (w.dmg ? " · " + esc(w.dmg) : "") +
+        (w.speed ? " · Tempo " + w.speed.toFixed(2) : "") +
         (w.itemId ? ' <span class="gid">#' + w.itemId + "</span>" : "") +
         "</div>");
+      o.push('<div class="wepline meta">' + esc(weaponEvidenceHtml(w, c.level)) +
+        "</div>");
+      if (w.slot === "OH") {
+        o.push('<div class="wepline"><b>Stufenband</b> ' +
+          weaponLevelBandHtml(w, c.level) + "</div>");
+      }
     });
     if (c.ilvl) {
       o.push('<div class="wepline"><b>Gegenstandsstufe</b> ' + c.ilvl.toFixed(2) +
-        " über " + (c.gear || []).length + " Slots</div>");
+        " über " + (c.gear || []).length + " Slots" +
+        (c.level ? " · Stufe " + c.level + " " + ilvlBandHtml(c) : "") +
+        "</div>");
     }
     if ((c.gear || []).length) {
       o.push('<div class="gearwrap"><div class="geartitle">AUSRÜSTUNG</div>' +
@@ -1727,7 +1933,20 @@
         c.gear.length + " Slots";
       hd.className = "cnt ok";
     }
-    box.innerHTML = renderGearPaperdoll(c.gear);
+    var note = "";
+    if (c.ilvl && c.level && ILB) {
+      var ib = ilvlBandAt(c.level);
+      var verd = bandVerdict(c.ilvl, ib && ib.ilvl, "ilvl");
+      note = '<div class="ilvlnote"><b>Levelrun-ilvl</b> Import ' +
+        c.ilvl.toFixed(1) + " bei Stufe " + c.level + " " +
+        bandLabel(verd, ib && ib.ilvl, "ilvl") +
+        ". Band aus ItemStat (Skalierungsitems) — Anhalt, kein Raid-Ziel.</div>";
+    } else if (c.ilvl && !ILB) {
+      note = '<div class="ilvlnote"><b>Gegenstandsstufe</b> ' +
+        c.ilvl.toFixed(1) +
+        " — Stufenband nicht eingebettet (<code>ilvlbands.json</code>).</div>";
+    }
+    box.innerHTML = note + renderGearPaperdoll(c.gear);
   }
 
   function charIssues(ids) {
@@ -1997,6 +2216,90 @@
             "Season-10-Export und kennt ihn nicht."
           : ". Die fehlen in der Analyse — der Katalog stammt aus dem " +
             "Season-10-Export und kennt sie nicht."));
+    }
+
+    // 10. Waffen-% aus Tooltips vs. nur Waffen-Tag (kein erfundener Coeff)
+    var wf = weaponBareScalingFlags(ids);
+    if (wf.scaled.length) {
+      push("ok", wf.scaled.length + " mit gemessenem Waffen-%",
+        " Tooltip nennt eine Prozentzahl in scaling.json — die Skalierung " +
+        "unter Auswertung nutzt deinen Import-Waffenschaden.");
+    }
+    if (wf.bare.length) {
+      push("info", wf.bare.length +
+        (wf.bare.length === 1
+          ? " Waffen-Eintrag ohne Tooltip-%"
+          : " Waffen-Einträge ohne Tooltip-%"),
+        " Tag sagt Waffenbezug, aber in scaling.json fehlt w — " +
+        "Prozent fehlt, kein Koeffizient erfunden. " +
+        wf.bare.slice(0, 6).map(function (i) { return CAT[i][0]; }).map(esc)
+          .join(", ") +
+        (wf.bare.length > 6 ? " …" : "") + ".");
+    }
+    if (c.weapons && c.weapons.length) {
+      var missDbc = c.weapons.filter(function (w) {
+        return w.itemId && !wpnLookup(w.itemId);
+      });
+      if (missDbc.length && WPN) {
+        push("info", "Waffen-DBC unvollständig",
+          " Für " + missDbc.map(function (w) { return w.name; }).map(esc)
+            .join(", ") +
+          " fehlt der Eintrag in weapons.json (Seed/Export) — " +
+          "Import-DPS und ilvl bleiben die Quelle.");
+      } else if (!WPN) {
+        push("info", "Waffen-DBC fehlt",
+          " data/weapons.json ist nicht eingebettet — nur der WEAPON-Import " +
+          "zählt. pipeline/weapons.py gegen die Item-DBCs laufen lassen.");
+      }
+    }
+
+    // 11. Levelrun-ilvl / Waffen-Mid gegen ItemStat-Stufenband (D.ilb)
+    if (c.level && ILB) {
+      var Lband = ilvlBandAt(c.level);
+      if (c.ilvl > 0 && Lband && Lband.ilvl) {
+        var iv = bandVerdict(c.ilvl, Lband.ilvl, "ilvl");
+        if (iv === "low") {
+          push("warn", "Gegenstandsstufe unter dem Stufenband",
+            " Import " + c.ilvl.toFixed(1) + " bei Stufe " + c.level +
+            " (Median " + Lband.ilvl.p50 +
+            "). Für den Levelrun lohnt sich frisches Gear aus Quests/Dungeons — " +
+            "kein L60-Raid-Ziel.");
+        } else if (iv === "ok" || iv === "high") {
+          push("ok", "Gegenstandsstufe passt zur Stufe",
+            " " + c.ilvl.toFixed(1) + " ilvl · ItemStat-Median " +
+            Lband.ilvl.p50 + " für Stufe " + c.level + ".");
+        }
+      }
+      var mhIss = (c.weapons || []).filter(function (w) {
+        return w.slot === "MH";
+      })[0];
+      if (mhIss) {
+        var midIss = weaponMidDamage(mhIss);
+        var keyIss = weaponBandKey(mhIss);
+        var wbIss = keyIss && Lband && Lband[keyIss];
+        var wv = bandVerdict(midIss, wbIss, "wpn");
+        if (!keyIss) {
+          /* Distanz als MH untypisch — still */
+        } else if (wv === "low") {
+          push("warn", "Hauptwaffe unter dem Mid-Schaden-Band",
+            " Mid " + (midIss != null ? midIss.toFixed(0) : "?") +
+            " gegen Median " + (wbIss ? wbIss.p50 : "?") +
+            " (ItemStat " + keyIss +
+            "). Bei Waffen-%-Builds zuerst die Waffe tauschen.");
+        } else if (wv === "ok" || wv === "high") {
+          push("ok", "Hauptwaffe im Stufenband",
+            " Mid " + midIss.toFixed(0) + " · Median " + wbIss.p50 +
+            " für Stufe " + c.level + ".");
+        } else if (!wbIss) {
+          push("info", "Kein Waffen-Stufenband",
+            " Für Stufe " + c.level + " fehlt das ItemStat-" +
+            keyIss + "-Band — Import-DPS bleibt die Quelle.");
+        }
+      }
+    } else if (c.ilvl > 0 && !ILB) {
+      push("info", "ilvl-Band nicht eingebettet",
+        " Gegenstandsstufe " + c.ilvl.toFixed(1) +
+        " ohne Vergleich — pipeline/ilvlbands.py + assemble.");
     }
 
     return out;
@@ -2296,6 +2599,37 @@
       return avg;
     }
 
+    // 0. Import-Waffe vs. Item-DBC (wpn) + Stufenband (ilb)
+    if (wep || wepOH || wepR) {
+      o.push('<div class="schd">Waffe (Import + DBC)</div>');
+      if (CHAR && CHAR.level && ILB) {
+        o.push('<div class="scsum"><b>Stufenband ' + CHAR.level + "</b>" +
+          "Mid = Import-Schaden (min+max)/2 bzw. DPS×Tempo. " +
+          "Vergleich gegen ItemStat-Perzentile — ohne AP/SP-Koeffizienten.</div>");
+      } else if (!ILB) {
+        o.push('<div class="scsum"><b>Stufenband fehlt</b>' +
+          "ilvlbands.json nicht eingebettet — nur Import und Item-DBC.</div>");
+      }
+      [wep, wepOH, wepR].forEach(function (w) {
+        if (!w) return;
+        o.push('<div class="scrow"><span class="nm">' + esc(w.name) +
+          '</span><span class="val">' +
+          (weaponExportDps(w) ? weaponExportDps(w).toFixed(1) + " DPS"
+                              : "DPS fehlt") +
+          '</span><span class="sub">' +
+          esc(weaponEvidenceHtml(w, CHAR && CHAR.level)) +
+          (CHAR && CHAR.level
+            ? "<br>" + weaponLevelBandHtml(w, CHAR.level)
+            : "") +
+          "</span></div>");
+      });
+      if (CHAR && CHAR.ilvl) {
+        o.push('<div class="scrow"><span class="nm">Gegenstandsstufe</span>' +
+          '<span class="val">' + CHAR.ilvl.toFixed(1) + "</span>" +
+          '<span class="sub">' + ilvlBandHtml(CHAR) + "</span></div>");
+      }
+    }
+
     // 1. Waffenangriffe, nach geschaetztem Treffer sortiert
     var hits = ids.filter(function (i) { return SC[i] && SC[i].w; })
       .map(function (i) {
@@ -2304,6 +2638,19 @@
                  est: base ? base * SC[i].w / 100 : 0 };
       })
       .sort(function (a, b) { return (b.est - a.est) || (b.pct - a.pct); });
+
+    var bareW = ids.filter(function (i) {
+      return (TAG[i] || 0) & T_WEAPON && !(SC[i] && SC[i].w);
+    });
+    if (bareW.length) {
+      o.push('<div class="scsum"><b>' + bareW.length +
+        " ohne Waffen-% im Tooltip</b>" +
+        "Tag „Waffe“, aber scaling.json hat kein `w` — Prozent fehlt, " +
+        "kein Koeffizient erfunden: " +
+        bareW.slice(0, 8).map(function (i) { return CAT[i][0]; }).map(esc)
+          .join(", ") +
+        (bareW.length > 8 ? " …" : "") + ".</div>");
+    }
 
     if (hits.length) {
       if (avg) {
@@ -2796,6 +3143,7 @@
 
     // Runde 1: Faehigkeiten nach Themenpassung.
     var pool = [];
+    var gearSig = weaponGearSignal(CHAR);
     for (var i = 0; i < CAT.length; i++) {
       if (CAT[i][1] !== 0) continue;
       if (isUndesiredIdx(i)) continue;
@@ -2803,6 +3151,15 @@
       if (isCardedIdx(i)) v += 4; // Skill-Card-Spells bevorzugen
       if (isDesiredIdx(i)) v += 3;
       if (isDesireEligIdx(i)) v += 1.5; // Rapid-Roll-fähig
+      // Mild: nur wenn ItemStat-Band zur Import-Waffe vorliegt (kein Coeff-Raten).
+      if (gearSig !== 0) {
+        var tGear = TAG[i] || 0, sGear = SC[i] || {};
+        var isWpn = !!(sGear.w || (tGear & T_WEAPON));
+        var isMag = !!(tGear & T_MAGIC) && !isWpn;
+        if (gearSig > 0 && isWpn) v += 1.5;
+        if (gearSig < 0 && isWpn) v -= 0.5;
+        if (gearSig < 0 && isMag) v += 1;
+      }
       if (v > 0) pool.push([v + entryQual(i) * 0.4, i]);
     }
     pool.sort(function (a, b) { return b[0] - a[0]; });
