@@ -83,6 +83,25 @@ Bei Tooltip≠DBC gewinnt die DBC (gemessen, nicht geraten). Buff-/Schild-„cha
 im Tooltip (Earth Shield, Holy Shield, Mana Gem, Talent-Stacks) sind **kein**
 `SpellCharges`-System — kein `ch`/`chr` erfinden.
 
+### Verworfen: Namens-Zwillinge (kein Produkt)
+
+`SpellCharges` enthält Spells mit **gleichem Namen** wie Katalogeinträge, aber
+**anderer spellId**. Die Zwillinge stehen **nicht** in `CatalogData.lua`.
+Namens-Join wäre Ratewerk (AGENTS: nie über den Namen zuordnen).
+
+| Katalog | catalog sid | Charge-Zwilling (Bsp.) | ch/chr Zwilling | Warum verworfen |
+|---|---:|---:|---|---|
+| Blooming Shot | 276884 | 92726… | 3 / 15s | Tip: „20 sec to fully bloom“ ≠ 15s; eigene SpellRank-Kette; Zwilling nicht im Katalog |
+| Medicinal Sting | 276885 | 92737… | 3 / 15s | Kein Tip-Charge; eigene Rank-Kette; nicht im Katalog |
+| Bone Spear | 284890 | 983250… | 3 / 15s | Kein Tip-Charge; manaCost DIFF; nicht im Katalog |
+| Mongoose Bite | 1495 | 901004 | 3 / 10s | Katalog hat 5s CD; Zwilling nicht im Katalog |
+| Counterattack | 19306 | 901003 | 3 / 10s | wie Mongoose Bite |
+| Haunt | 48181 | 573425 | 3 / 30s | Icon DIFF, viele Feld-Diffs — anderer Spell |
+| Temple Guardian | 283744 | 801165… | 3 / 35s | Talent; Icon DIFF; Tip ohne Charges |
+
+Diagnose in `mechanics.py` listet solche Zwillinge beim Lauf;
+**keine** Übernahme nach `mechanics.json`. Coverage bleibt **18**.
+
 Produkt: Felder `ch` / `chr` in `mechanics.json` (`pipeline/mechanics.py`).
 Website: Ability-Karten zeigen Badges „N Ladungen“ / „Aufladung Xs“ wenn gesetzt
 (`src/builder-app.js`); fehlende Keys = keine Badge (nichts erfinden).
@@ -287,6 +306,7 @@ Quelle der Ids: alle `data/testexport*.txt` (GEAR/WEAPON) + Seed + Levelrun-Seed
 - `Spell.dbc` manaCostPercentage (Feld 44) ohne zweite Evidence.
 - Ressourcen-**Gewinn** aus der DBC erfinden (nur Tooltip → `scaling.gen`).
 - `ch`/`chr` aus Tooltip-„charges“ ohne `SpellCharges`-Zeile.
+- `ch`/`chr` per Namens-Zwilling (andere spellId, gleicher Name) — siehe §2.
 - `SpellAddon` / `SpellCustomAttr` Flag-Semantik ohne zweite Quelle.
 - `SpellStatSuggestions` Wert `0` als Agility.
 - `ItemAddon.dbc` (48 Felder, 115 MB) — Name/Stats spaeter, Layout noch nicht vollstaendig kartiert.

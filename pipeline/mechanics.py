@@ -280,6 +280,42 @@ def main():
             print("   %-28s sid=%-8d ch=%s chr=%s" % (
                 cat[i][0][:28], ids[i][0], o.get("ch"), o.get("chr")))
 
+    # Namens-Zwillinge: SpellCharges-spellId mit gleichem DBC-Namen wie ein
+    # Katalogeintrag ohne ch — nur Diagnose. Nie per Name zuordnen (AGENTS).
+    name_of = {}
+    for sid, row in by_id.items():
+        if F_NAME < fc:
+            name_of[sid] = sref(sb, row[F_NAME])
+    cat_by_name = {}
+    for i, rec in enumerate(cat):
+        cat_by_name.setdefault(rec[0], []).append(i)
+    twins = []
+    for sid, chpair in charges_by_spell.items():
+        nm = name_of.get(sid) or ""
+        idxs = cat_by_name.get(nm)
+        if not idxs:
+            continue
+        for i in idxs:
+            if ids[i][0] == sid:
+                continue
+            if out[i].get("ch"):
+                continue
+            mx, ms = chpair
+            twins.append((nm, ids[i][0], sid, mx, round(ms / 1000.0, 1)))
+    seen = set()
+    uniq = []
+    for t in twins:
+        if t in seen:
+            continue
+        seen.add(t)
+        uniq.append(t)
+    print("\nNamens-Zwillinge VERWORFEN (nicht nach JSON; %d):" % len(uniq))
+    for nm, csid, tsid, mx, chr_s in uniq[:40]:
+        print("   %-24s catalog=%-8d twin=%-8d would ch=%s chr=%s" % (
+            nm[:24], csid, tsid, mx, chr_s))
+    if len(uniq) > 40:
+        print("   ... +%d weitere" % (len(uniq) - 40))
+
     # Zehntel-Regel: Stichproben + Cap-Check (nichts erfinden, nur messen).
     print("\nKosten Zehntel (Wut/Runenmacht): %d Eintraege" % len(tenths_anchors))
     want = ("Heroic Strike", "Mortal Strike", "Dancing Rune Weapon",

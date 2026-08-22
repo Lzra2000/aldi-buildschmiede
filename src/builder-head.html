@@ -360,8 +360,8 @@ details.panel:not([open])>summary{border-bottom:0}
 /* --- Slots zweispaltig --- */
 .twocol{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule-soft)}
 .twocol>div{background:var(--raised);min-width:0}
-.subhd{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.11em;
-  text-transform:uppercase;color:var(--ink-faint);padding:6px 10px 3px}
+.subhd{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.04em;
+  color:var(--ink-faint);padding:6px 10px 3px}
 .twocol .slot{padding:4px 10px;font-size:12px}
 .twocol .empty{padding:14px 10px;font-size:11.5px}
 
@@ -434,7 +434,7 @@ table.cmp td.num{text-align:right}
 table.cmp td.up{color:var(--good);font-weight:700}
 table.cmp td.down{color:var(--warn);font-weight:700}
 table.cmp tr.sep td{background:var(--sunken);font-family:"JetBrains Mono",monospace;
-  font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
+  font-size:10px;letter-spacing:.04em;color:var(--ink-faint)}
 .cmprow{display:flex;align-items:center;gap:8px;padding:4px 14px;
   border-bottom:1px solid var(--rule-soft);font-size:12px}
 .cmprow .nm{font-family:"JetBrains Mono",monospace;flex:1;min-width:0;
@@ -561,7 +561,7 @@ a.dl:hover{opacity:.88}
 .wepline{padding:7px 14px;font-size:12px;color:var(--ink-soft);
   border-bottom:1px solid var(--rule-soft)}
 .wepline b{font-family:"JetBrains Mono",monospace;font-size:10px;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+  letter-spacing:.04em;color:var(--ink-faint);
   margin-right:7px}
 .gearwrap{padding:10px 14px 14px;border-bottom:1px solid var(--rule-soft)}
 .geartitle{font-family:"JetBrains Mono",monospace;font-size:10px;
@@ -617,7 +617,7 @@ table.stat.cmp tr.diff td{background:var(--accent-soft)}
 .wpn{display:grid;gap:7px;margin-top:10px}
 .wpn>div{font-size:12px;background:var(--raised);border-left:3px solid var(--accent);padding:6px 9px}
 .wpn b{display:block;font-family:"JetBrains Mono",monospace;font-size:10px;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px}
+  letter-spacing:.04em;color:var(--ink-faint);margin-bottom:2px}
 .ranklist{display:block}
 .prow{display:grid;grid-template-columns:auto 1fr auto auto;gap:4px 9px;width:100%;
   text-align:left;padding:7px 14px;border:0;border-bottom:1px solid var(--rule-soft);
@@ -646,8 +646,8 @@ table.stat.cmp tr.diff td{background:var(--accent-soft)}
   color:var(--accent);background:var(--accent-soft);padding:3px 7px;display:inline-block;
   margin-bottom:8px;border:1px solid var(--rule)}
 .pcard dl{margin:0;font-size:12px}
-.pcard dt{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--ink-faint);margin-top:6px}
+.pcard dt{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.04em;
+  color:var(--ink-faint);margin-top:6px}
 .pcard dd{margin:1px 0 0}
 
 .headline{padding:16px 18px;border-bottom:1px solid var(--rule-soft);
@@ -759,11 +759,14 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 .chip.set{border-color:var(--gold);color:var(--gold-hi);background:var(--accent-soft)}
 .chip.warnable.bad{border-color:var(--ember);background:var(--ember-soft)}
 
-/* size+position only via iconStyle() — hardcoded background-size breaks small icons */
-.icon{background-repeat:no-repeat;
+/* Spell icons: sprite via assemble (.icon{background-image:url(data:…)}).
+   Position + background-size ONLY from iconStyle() — never hardcode size here
+   (AGENTS.md Sprite trap → white/empty tiles). No BLP slot ::after overlays. */
+.icon{background-repeat:no-repeat;overflow:hidden;
   flex:0 0 auto;image-rendering:auto;position:relative;
   border:1px solid rgba(0,0,0,.45);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.25)}
+.icon::before,.icon::after{content:none;display:none;background:none}
 .icon.qf1{box-shadow:0 0 0 1px var(--q1), inset 0 0 0 1px rgba(0,0,0,.35)}
 .icon.qf2{box-shadow:0 0 0 1px var(--q2), inset 0 0 0 1px rgba(0,0,0,.35)}
 .icon.qf3{box-shadow:0 0 0 1px var(--q3), inset 0 0 0 1px rgba(0,0,0,.35)}

@@ -173,7 +173,8 @@
   // Genau das war der Grund, warum die Icons in "Dein Build" fehlten.
   function iconStyle(i, size) {
     var t = SPR.idx[i];
-    if (t < 0) return "background:var(--sunken)";
+    // No background shorthand — it would wipe the sprite background-image.
+    if (t < 0) return "background-image:none;background-color:var(--sunken)";
     size = size || SPR.tile;
     var x = (t % SPR.cols) * size, y = Math.floor(t / SPR.cols) * size;
     return "background-position:-" + x + "px -" + y + "px;" +
@@ -3373,7 +3374,7 @@
 
     o.push('<div class="qhint">Der Schlüssel bleibt in <em>deinem</em> Browser ' +
       "und geht nur an den Anbieter, den du wählst. Er steht nicht in dieser " +
-      "Datei — die liegt öffentlich. Jeder trägt seinen eigenen ein. " +
+      "Datei — die liegt öffentlich. Jeder hinterlegt seinen eigenen. " +
       "Anfragen kosten dich je nach Modell ein paar Cent.</div>");
 
     o.push('<div class="aicfg">' +
@@ -3842,8 +3843,8 @@
     if (!box) return;
     if (!RIVAL) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Noch nichts zu vergleichen. Oben einen ' +
-        "Build-Link oder einen Export einfügen — <code>/bs target</code> im Spiel " +
+      box.innerHTML = '<div class="empty">Noch nichts zu vergleichen. Füge oben einen ' +
+        "Build-Link oder einen Export ein — <code>/bs target</code> im Spiel " +
         "liest den Build deines Ziels aus.</div>";
       return;
     }
@@ -3930,7 +3931,7 @@
     o.push('<div class="qhint"><span class="lg up">grün</span> du liegst vorn · ' +
       '<span class="lg down">orange</span> er liegt vorn. Mehr ist nicht ' +
       "automatisch besser — zwei Legendaries weniger können am Budget liegen, " +
-      "nicht an schlechteren Skills.</div>");
+      "nicht an schlechteren Fähigkeiten.</div>");
 
     // Gear slot-by-slot, nur was beide Exporte liefern — keine erfundenen Stats
     if (CHAR && (CHAR.gear || []).length && (RIVAL.gear || []).length) {
@@ -4371,13 +4372,13 @@
     if (fp.gaps.length) {
       var topGaps = fp.gaps.slice(0, 4);
       var fillers = spellTagFillers(ids, topGaps.map(function (g) { return g.key; }), 10);
-      o.push('<div class="geartitle" style="padding:10px 14px 0">LÜCKEN NACH GEWICHT</div>');
+      o.push('<div class="geartitle" style="padding:10px 14px 0">Lücken nach Gewicht</div>');
       o.push('<div class="wepline">' + topGaps.map(function (g) {
         return esc(g.label) + " (−" + g.w + ")";
       }).join(" · ") + "</div>");
       if (fillers.length) {
         o.push('<div class="geartitle" style="padding:10px 14px 0">'
-          + "KATALOG-FILLER FÜR DIESE LÜCKEN</div>");
+          + "Katalog-Vorschläge für diese Lücken</div>");
         fillers.forEach(function (f) {
           var covers = f.filled.map(stagLabel).join(", ");
           o.push('<div class="sug" data-add="' + f.i + '" role="button" tabindex="0">'
@@ -4387,7 +4388,7 @@
             + CAT[f.i][3] + '">' + esc(CAT[f.i][0]) + "</span>"
             + '<span class="sugwhy">schließt ' + f.fill
             + (f.fill === 1 ? " Lücke" : " Lücken") + ": "
-            + esc(covers) + " · lvl" + (CAT[f.i][4] || "?") + "</span></div>"
+            + esc(covers) + " · Stufe " + (CAT[f.i][4] || "?") + "</span></div>"
             + '<span class="sugadd">+</span></div>');
         });
       }
@@ -4408,7 +4409,7 @@
     var o = [];
     o.push('<div class="headline"><b>4. SpellTag-Strukturfingerprint</b>');
     o.push("Offizielle Ascension-Taxonomie aus <code>SpellTags.dbc</code> / "
-      + "<code>SpellTagTypes.dbc</code>. Ergänzt Tempo/Hitze/Lücken — ersetzt sie nicht. "
+      + "<code>SpellTagTypes.dbc</code>. Ergänzt Tempo, Modifier-Reichweite und Lücken — ersetzt sie nicht. "
       + "Live-Auswertung deines Builds: <em>Auswertung → Tag-Struktur</em>.</div>");
     o.push('<div class="flag syn"><b>'
       + (STAGS.taggedEntries || STAGS.entries.length) + " / "
@@ -4499,11 +4500,12 @@
     }
 
     html.push('<div class="headline"><b>2. Modifier-Ketten-Hitze</b>');
+    html.push("Wie viele Abilities ein Talent trifft (gleiche Basis inkl. Schulvarianten). ");
     html.push(esc((h && h.note) || ""));
     html.push("</div>");
     if (h && h.talents && h.talents.length) {
       html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
-      html.push("<th>Hitze</th><th>Talent</th><th>Basis</th>"
+      html.push("<th>Reichweite</th><th>Talent</th><th>Basis</th>"
         + "<th>Abilities in der Kette</th></tr></thead><tbody>");
       h.talents.slice(0, 20).forEach(function (row) {
         html.push("<tr><td class=\"num\">" + row.h + "</td><td>"
@@ -4514,9 +4516,9 @@
       html.push("</tbody></table></div>");
     }
     if (h && h.bases && h.bases.length) {
-      html.push('<div class="headline"><b>Heißeste Basen (Varianten × Talente)</b></div>');
+      html.push('<div class="headline"><b>Basen mit der größten Reichweite</b></div>');
       html.push('<div class="tblwrap"><table class="stat"><thead><tr>');
-      html.push("<th>Hitze</th><th>Basis</th><th>Varianten</th>"
+      html.push("<th>Reichweite</th><th>Basis</th><th>Varianten</th>"
         + "<th>Talente</th></tr></thead><tbody>");
       h.bases.slice(0, 15).forEach(function (row) {
         html.push("<tr><td class=\"num\">" + row.h + "</td><td>"
