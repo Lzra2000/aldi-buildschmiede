@@ -22,6 +22,11 @@ ehrlichen Tooltip-/DBC-Zahlen?
 | AP-% / SP-% | nur wenn der Tooltip den Prozentwert nennt |
 | CD | `mechanics.json`: Spell.dbc-CD, sonst bei Charges `chr/ch`, sonst GCD 1,5 s |
 
+**Shared GCD:** Schulvarianten mit derselben `relations.dupGroup` teilen sich
+einen GCD. `tempo.dupGroups` zählt multi-member Gruppen; Scores aus einer
+Gruppe nicht als parallelen Takt addieren. Getrennt davon: `cdgroups.json`
+= geteilter Ability-Cooldown (`CategoryRecoveryTime`), nicht GCD.
+
 **Vertrauen (`conf`):**
 
 | Stufe | Bedeutung |
@@ -48,16 +53,30 @@ nicht die Basisfähigkeit selbst (`basemods.json` + `relations.json`).
 
 ## 3. Ehrliche Zahlenlücken (`gaps`)
 
-**Frage:** Wo behauptet der Katalog Schaden/Heilung, liefert `scaling.json`
+**Frage:** Wo behauptet der Katalog Schaden/Heilung/Absorb, liefert `scaling.json`
 aber keine messbare Zahl?
 
-Treffer nur bei Deal-/Weapon-/Heal-Formulierungen. Treffer ohne `w` / `flat` /
-`ap` / `sp` / `heal` / `tick` landen hier — inkl. Kurzgrund
-(`schadenstext_ohne_zahl`, `nur_multiplikator_kein_basisschaden`, …).
+Treffer nur bei Deal-/Weapon-/Heal-/Absorb-Formulierungen. Treffer ohne `w` /
+`flat` / `ap` / `sp` / `heal` / `healpct` / `absorb` / `tick` landen hier —
+inkl. Kurzgrund (`schadenstext_ohne_zahl`, `nur_multiplikator_kein_basisschaden`,
+`dot_ohne_tickzahl`, `proc_ohne_schaden`, …).
 
-Parser-Nachzug in `scaling.py` (ohne SP/AP zu erfinden): bare `weapon damage`
-(=100%), `weapon damage plus N`, `N to M additional`, armor-piercing Flats,
-CP-Finisher-Zahlen, `N plus M over T` (nur Sofortanteil), Heil-Zusatzformen.
+Reine Buff-Texte („deal 20% more damage“, „take 40% less“) und
+Mastery-Freischaltlisten zählen **nicht** als Lücke.
+
+Parser-Nachzug in `scaling.py` (ohne SP/AP zu erfinden):
+
+| Muster | Feld |
+|---|---|
+| bare `weapon damage` / `plus N` | `w=100`, optional `flat` |
+| Offhand-Schlag ohne % (`Shiv`, Threat of Thassarian, …) | `w=100`, `wh=oh` |
+| `two`/`N` `extra attacks` (Windfury) | `w=N×100` |
+| `N to M` / hyphen / additional / armor-piercing / CP-Finisher | `flat` |
+| `N plus M over T` | `flat` = Sofortanteil N (kein Tick erfunden) |
+| `absorbing N [School] damage` | `absorb`, optional `asch` |
+| `restore N health` / heal-for | `heal` |
+| `healed for N% of maximum health` | `healpct` |
+
 `sync_tooltips.py` gegen AscensionDBC: Katalog bereits aktuell (0 Diffs);
 512 Eintraege bleiben wegen SP/AP/PL-`$`-Formeln bewusst unaufgeloest.
 

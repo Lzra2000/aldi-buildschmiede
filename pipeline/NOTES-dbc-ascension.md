@@ -30,39 +30,116 @@ Kein Exe-Decompile, keine Injection, kein FrameXML im Repo.
 | `ItemSubClass.dbc` | 121 | 44 | 176 | 1247 |
 | `Spell.dbc` | 209334 | 234 | 936 | 13379233 |
 
-## 2. SpellCharges (neue Mechanik-Facette)
+## 2. SpellCharges (Mechanik-Facette)
 
 Layout gemessen:
 
 - `SpellCharges.dbc`: `spellId`, `categoryId` (414 Zeilen)
 - `SpellChargesCategory.dbc`: `id`, `maxCharges`, `rechargeMs`
+- `SpellRank.dbc`: `rowId`, `firstSpellId`, `spellId`, `rank` — Fallback, falls
+  nur Folge-Ränge in `SpellCharges` stehen (gleiche Category)
 
-Katalog-Schnittmenge: **18** / 3071 Spells mit Charges.
+### Katalog-Schnittmenge = Deckel
 
-| Spell | spellId | max | Recharge |
-|---|---:|---:|---:|
-| Unrelenting Wrath | 272318 | 2 | 120.0s |
-| Dark Transfusion | 274210 | 3 | 10.0s |
-| Synchronize | 276345 | 2 | 6.0s |
-| Shadow Artillery | 276816 | 2 | 15.0s |
-| Temporal Rift | 284758 | 3 | 10.0s |
-| Hydricles | 284854 | 3 | 8.0s |
-| Bone Arrow | 284879 | 2 | 20.0s |
-| Quick Draw | 285612 | 3 | 20.0s |
-| Templar's Slash | 278742 | 3 | 8.0s |
-| Angelic Feather | 760053 | 3 | 20.0s |
-| Ironfur | 760100 | 3 | 10.0s |
-| Barbed Shot | 984828 | 2 | 10.0s |
-| Rocket Boots | 280030 | 3 | 30.0s |
-| Rock Barrier | 280295 | 2 | 20.0s |
-| Veilwalk | 280340 | 2 | 60.0s |
-| Chaos Rush | 280350 | 2 | 10.0s |
-| Quake | 280885 | 2 | 8.0s |
-| Build: Firepot Drone | 289190 | 3 | 10.0s |
+| | n |
+|---|---:|
+| `SpellCharges` gesamt | 414 |
+| Katalog-Treffer (spellId = `spellids.json[i][0]`) | **18** |
+| Zusätzliche Treffer via SpellRank-Sibling | **0** |
+| Nicht-Katalog (Raenge / andere Spells) | 396 |
+
+**18 ist die harte Obergrenze** der aktuellen Extracts: es gibt keine weiteren
+Katalog-spellIds in `SpellCharges`. Rank-Siblings (60 Zeilen) gehoeren alle zu
+denselben 18 First-Ranks — sie verdoppeln die Coverage nicht.
+
+`spellids.json`-Zeile = `[spellId, castMs, minRange, maxRange, passive, entryId]`.
+Nur Index 0 ist eine Spell-ID; castMs darf nie als Spell-ID gegen Charges/Kosten
+gelesen werden.
+
+### Katalog mit `ch` / `chr` (DBC = Quelle)
+
+| Spell | spellId | max | Recharge | Tooltip-Recharge |
+|---|---:|---:|---:|---|
+| Unrelenting Wrath | 272318 | 2 | 120.0s | (kein Zahlenpaar) |
+| Dark Transfusion | 274210 | 3 | 10.0s | (kein Zahlenpaar) |
+| Synchronize | 276345 | 2 | 6.0s | OK |
+| Shadow Artillery | 276816 | 2 | 15.0s | OK |
+| Temporal Rift | 284758 | 3 | 10.0s | OK |
+| Hydricles | 284854 | 3 | 8.0s | OK |
+| Bone Arrow | 284879 | 2 | **20.0s** | tip 30s → **DIFF, DBC** |
+| Quick Draw | 285612 | 3 | 20.0s | OK |
+| Templar's Slash | 278742 | 3 | 8.0s | OK |
+| Angelic Feather | 760053 | 3 | 20.0s | OK |
+| Ironfur | 760100 | 3 | 10.0s | OK |
+| Barbed Shot | 984828 | 2 | **10.0s** | tip 12s → **DIFF, DBC** |
+| Rocket Boots | 280030 | 3 | 30.0s | OK |
+| Rock Barrier | 280295 | 2 | 20.0s | OK |
+| Veilwalk | 280340 | 2 | 60.0s | OK |
+| Chaos Rush | 280350 | 2 | 10.0s | OK |
+| Quake | 280885 | 2 | 8.0s | OK |
+| Build: Firepot Drone | 289190 | 3 | 10.0s | OK |
+
+Bei Tooltip≠DBC gewinnt die DBC (gemessen, nicht geraten). Buff-/Schild-„charges“
+im Tooltip (Earth Shield, Holy Shield, Mana Gem, Talent-Stacks) sind **kein**
+`SpellCharges`-System — kein `ch`/`chr` erfinden.
 
 Produkt: Felder `ch` / `chr` in `mechanics.json` (`pipeline/mechanics.py`).
 Website: Ability-Karten zeigen Badges „N Ladungen“ / „Aufladung Xs“ wenn gesetzt
 (`src/builder-app.js`); fehlende Keys = keine Badge (nichts erfinden).
+
+## 2b. Power-Kosten (DBC) vs Regen (Tooltip)
+
+### Wer liefert was
+
+| Wert | Quelle | Produkt |
+|---|---|---|
+| Verbrauch (`cost` / `res`) | `Spell.dbc` manaCost + powerType | `mechanics.json` |
+| Gewinn / Regen (`gen`) | Beschreibungstext | `scaling.json` via `scaling.py` |
+| Schadenszahlen | Beschreibungstext | `scaling.json` |
+| CD / Cast / Range / Dauer / Proc | DBC | `mechanics.json` |
+| Ladungen / Recharge | `SpellCharges*` | `mechanics.json` `ch`/`chr` |
+
+Tooltips sagen praktisch nie „costs N rage“ (0 Treffer im Katalog gegen
+`costs|requires N rage|energy|…`). DBC liefert 367 Katalog-Eintraege mit
+`manaCost > 0`. Umgekehrt kennt die DBC keinen Ressourcen-Gewinn — Charge
+„generate 12 rage“ steht nur im Text → `scaling.gen`.
+
+### powerType + Zehntel-Regel (verifiziert)
+
+| powerType | Label | manaCost-Skalierung | Katalog mit cost |
+|---:|---|---|---:|
+| 0 | Mana | absolut | 25 |
+| 1 | Wut | **÷10** (Zehntel) | 192 |
+| 3 | Energie | absolut | 148 |
+| 6 | Runenmacht | **÷10** | 1 |
+| −2 | Leben | absolut (signed) | 1 |
+| 5 | Runen | manaCost meist 0 | — |
+
+Anker (raw → Anzeige), Pool-Cap Wut = 100:
+
+| Spell | raw manaCost | nach /10 | res |
+|---|---:|---:|---|
+| Heroic Strike | 150 | 15 | Wut |
+| Mortal Strike | 300 | 30 | Wut |
+| Whirlwind | 250 | 25 | Wut |
+| Dancing Rune Weapon | 600 | 60 | Wut |
+| Frost Strike | 400 | 40 | Wut |
+| Rune Strike | 200 | 20 | Wut |
+| Sinister Strike | 45 | 45 (kein /10) | Energie |
+
+Alle 192 Wut-Kosten liegen nach `/10` in `≤ 100`. Ohne Zehntel waeren 159
+Eintraege `raw > 100` — das waere Parserfehler, kein Spielwert.
+
+**Ascension-Eigenheit:** klassische Runenmacht-Spender (Frost Strike, Dancing
+Rune Weapon, Rune Strike) stehen hier mit `powerType = 1` (Wut) und Zehnteln,
+nicht mit Typ 6. Anzeige folgt der DBC (`res: Wut`); nichts umbiegen.
+
+`manaCostPercentage` (Feld 44): 3 Katalog-Treffer (Health Funnel, Testament of
+Fortitude, Voidborne). **Kein Produktfeld** — Semantik Prozent-vom-Pool nicht
+ohne zweite Evidence einbetten.
+
+Klassische Mana-Spells (Frostbolt, Fireball, …) haben im Ascension-`Spell.dbc`
+oft `manaCost = 0` — fehlende Kosten weglassen, nicht aus dem Tooltip schaetzen.
 
 ## 3. SpellTagTypes / SpellTags
 
@@ -207,6 +284,9 @@ Quelle der Ids: alle `data/testexport*.txt` (GEAR/WEAPON) + Seed + Levelrun-Seed
 ## 8. Was bewusst nicht Produkt wird
 
 - `Spell.dbc` EffectBasePoints → Schaden (bekannt unbrauchbar).
+- `Spell.dbc` manaCostPercentage (Feld 44) ohne zweite Evidence.
+- Ressourcen-**Gewinn** aus der DBC erfinden (nur Tooltip → `scaling.gen`).
+- `ch`/`chr` aus Tooltip-„charges“ ohne `SpellCharges`-Zeile.
 - `SpellAddon` / `SpellCustomAttr` Flag-Semantik ohne zweite Quelle.
 - `SpellStatSuggestions` Wert `0` als Agility.
 - `ItemAddon.dbc` (48 Felder, 115 MB) — Name/Stats spaeter, Layout noch nicht vollstaendig kartiert.
@@ -231,6 +311,76 @@ Katalog↔Katalog: ~171k Zeilen — zu gross zum Voll-Embed.
 Produkt: `data/spellsuggest.json` → Assemble `ssugsp` (`pipeline/spellsuggest.py`).
 Top-12 pro Quell-Spell, Katalogindizes + weight. **Nicht** `ssug`
 (SpellStatSuggestions / Path).
+
+---
+
+## 10. Tooltip-Parser-Nachzug (scaling / methods gaps)
+
+Stand 2026-08-22. Quelle: Katalog-Beschreibungstext (Season10), abgleichbar mit
+`Spell.dbc`-Tooltips via `sync_tooltips.py`. **Kein** erfundenes SP/AP.
+
+Neue / erweiterte Muster in `pipeline/scaling.py`:
+
+| Regex-Gruppe | Beispiel | Ergebnis |
+|---|---|---|
+| `RX_WEAPON_OH` | „instant off-hand weapon attack“, „additional attack with your off-hand weapon“ | `w=100`, `wh=oh` |
+| `RX_EXTRA_ATTACKS` | „two extra attacks“ (Windfury) | `w=200` — Zahlwort×100; „46 extra attack power“ bleibt ungenutzt (kein AP-%) |
+| `RX_ABSORB` | „absorbing 347 damage“, „Absorbs 165 Fire damage“, „absorbs 12045 spell damage“ | `absorb=[N,N]`, optional `asch`; **nicht** „absorbing 75% of …“ |
+| `RX_HEAL_RESTORE` | „restore 100 health“ | `heal` |
+| `RX_HEAL_PCT` | „healed for 4% of its maximum health“ | `healpct=4` |
+
+`methods.py` Gaps: Buff-only-Filter (`RX_BUFF_ONLY`), strengere `% … weapon damage`-
+Erkennung, Mastery-Unlock-Texte ausgeschlossen. Scale-Keys fuer Luecken-Frei:
+`w/flat/ap/sp/heal/healpct/absorb/tick`.
+
+Restluecken (~24) sind ehrlich: Schule ohne Zahl (Mangle-Varianten, Earthquake,
+Heroic Leap, …), Relativschaden (Conflagrate = % of Immolate), oder nur Multiplikator.
+
+## 11. Shared GCD (Dubletten) vs. geteilter Ability-CD
+
+Zwei getrennte Mechanismen — nicht vermischen.
+
+### A) Schulvarianten / Dubletten = **ein GCD** (Produktregel)
+
+Quelle: Season10 `relations.json` Feld `dupGroup` (`REL[i][3]`).
+60 Gruppen mit ≥2 Mitgliedern, 234 Katalogeinträge.
+
+Regel (AGENTS.md / `ascension-calc-re.mdc`): Schulvarianten derselben Fähigkeit
+teilen sich **einen** GCD — nicht parallel stapelbar. Analyse warnt „Gleicher GCD“,
+Ketten zeigen Zeile „Gleicher GCD“, Tempo-Scores einer Gruppe nicht addieren.
+
+DBC-Stichprobe (`Spell.dbc` patch-T, Felder wie in `mechanics.py`):
+
+| Feld | Index | Bedeutung (3.3.5a-Layout) |
+|---|---:|---|
+| RecoveryTime | 29 | Spell-eigener CD (ms) |
+| CategoryRecoveryTime | 30 | Category-CD (ms) |
+| StartRecoveryCategory | 31 | Recovery-/GCD-Kategorie |
+| StartRecoveryTime | 32 | Dauer dieser Recovery (ms) |
+
+Gemessen (Katalog ∩ multi-member `dupGroup`):
+
+- In **59 / 60** Gruppen ist `StartRecoveryCategory` innerhalb der Gruppe identisch.
+- Ausnahme: Immolate / Moonfire (Gruppe 20) — verschiedene StartRecoveryCategory;
+  Produkt behandelt sie trotzdem über `dupGroup` (Season10), nicht über DBC-Heuristik.
+- Slam-Familie: Basis Slam + Arcane/Shadow/Burning/Frozen/Storm/Brilliant Slam
+  haben `StartRecoveryCategory = 12` und `RecoveryTime = CategoryRecoveryTime = 0`
+  (kein eigener CD → Takt über GCD/Recovery-Kategorie, nicht als unabhängige CDs).
+
+Keine erfundenen Koeffizienten; `mechanics.json` speichert weiter nur gemessene
+`cd`/`cast`/… — die GCD-Slot-Regel kommt aus `dupGroup` + Produktmandat.
+
+### B) Geteilter Ability-Cooldown = `cdGroup` / `cdgroups.json`
+
+Quelle: Season10 `relations.json` Feld `cdGroup` (`REL[i][5]`) + Namen in
+`data/cdgroups.json` (10 Gruppen, 25 Spells mit Index ≥0; 4 Gruppen mit ≥2 Mitgliedern:
+Interrupts, Tonics, Shaman Shocks, Seismic).
+
+DBC: oft gemeinsames `CategoryRecoveryTime` (z. B. Tonics alle `crt=180000`;
+Shocks `crt=6000`). UI: „Geteilter Cooldown“ — **kein** zusätzlicher paralleler CD.
+
+Produkt bereits verdrahtet: Analyse-Flag, Ketten-Zeile „Geteilter CD“, Generator
+überspringt Dubletten über `dupGroup`.
 
 ---
 Ende der Probe.

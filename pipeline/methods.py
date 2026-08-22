@@ -34,18 +34,55 @@ RX_DEALS = re.compile(
     r"(?:deal(?:s|ing)?|cause(?:s|ing)?|inflict(?:s|ing)?)\s+"
     r".{0,60}?damage"
     r"|weapon'?s?\s+damage"
-    r"|\d[\d,]*(?:\.\d+)?\s*%\s*.{0,30}?weapon"
+    r"|\d[\d,]*(?:\.\d+)?\s*%\s*.{0,30}?weapon'?s?\s+damag"
     r"|\d[\d,]*(?:\.\d+)?\s+to\s+\d[\d,]*(?:\.\d+)?\s+\w*\s*damage"
-    r"|heal(?:s|ing)?\s+.{0,80}?for\s+\d",
+    r"|heal(?:s|ing)?\s+.{0,80}?for\s+\d"
+    r"|absorb(?:s|ing)\s+(?:up\s+to\s+)?\d[\d,]*(?:\.\d+)?\s+"
+    r"(?:\w+\s+)?damage\b"
+    r"|off[-\s]?hand\s+weapon\s+attack"
+    r"|extra\s+attacks?\b",
     re.I,
 )
 RX_NOT_DEALS = re.compile(
-    r"damage\s+taken|reduc(?:es?|ing)\s+.{0,40}?damage|absorb|immune|"
+    r"damage\s+taken|reduc(?:es?|ing)\s+.{0,40}?damage|immune|"
     r"damage\s+caused|may\s+interrupt",
     re.I,
 )
+# Reine Buff-/Debuff-Formulierungen: „deal 20% more damage“, „take 40% less“.
+# Kein Basisschaden im Tooltip — keine Zahlenluecke fuer Scaling.
+RX_BUFF_ONLY = re.compile(
+    r"(?:deal(?:s|ing)?|cause(?:s|ing)?)\s+"
+    r"(?:\d+(?:\.\d+)?\s*%\s+)?"
+    r"(?:more|less|increased|reduced)\s+.{0,24}?damage"
+    r"|deal\s+half\s+damage"
+    r"|take(?:s)?\s+\d+(?:\.\d+)?\s*%\s+"
+    r"(?:less|more|reduced|increased)\s+.{0,24}?damage"
+    r"|damage\s+(?:is\s+)?(?:increased|reduced)\s+by\s+\d+"
+    r"|to\s+take\s+\d+(?:\.\d+)?\s*%\s+(?:increased|additional|less|more|reduced)"
+    r"|dealing\s+\d+(?:\.\d+)?\s*%\s+of\s+its\s+damage"
+    r"|stores?\s+\d+(?:\.\d+)?\s*%\s+of\s+your\s+\w+\s+damage",
+    re.I,
+)
+# Echter Schadenstext (Zahl oder Schule ohne %-Buff).
+RX_REAL_DEALS = re.compile(
+    r"weapon'?s?\s+damage"
+    r"|off[-\s]?hand\s+weapon\s+attack"
+    r"|extra\s+attacks?\b"
+    r"|\d[\d,]*(?:\.\d+)?\s*%\s*.{0,30}?weapon'?s?\s+damag"
+    r"|\d[\d,]*(?:\.\d+)?\s+to\s+\d[\d,]*(?:\.\d+)?\s+\w*\s*damage"
+    r"|(?:deal(?:s|ing)?|inflict(?:s|ing)?|cause(?:s|ing)?)\s+"
+    r"(?:an?\s+)?(?:additional\s+)?"
+    r"(?:Physical|Fire|Frost|Nature|Shadow|Arcane|Holy|Magic|Elemental|"
+    r"Shadowflame|Spellstrike|Firestrike|Froststrike|Holystrike|"
+    r"Stormstrike|Shadowstrike|Bleed|Chaos|Plague)\s+damage"
+    r"|heal(?:s|ing)?\s+.{0,80}?for\s+\d"
+    r"|absorb(?:s|ing)\s+(?:up\s+to\s+)?\d[\d,]*(?:\.\d+)?\s+"
+    r"(?:\w+\s+)?damage\b"
+    r"|damage\s+equal\s+to\s+\d+",
+    re.I,
+)
 
-SCALE_KEYS = ("w", "flat", "ap", "sp", "heal", "tick")
+SCALE_KEYS = ("w", "flat", "ap", "sp", "heal", "healpct", "absorb", "tick")
 
 
 def load(name):
@@ -70,12 +107,38 @@ def conf_for(sc, mc):
     return "none"
 
 
-def build_tempo(cat, sc, mc):
+def _dup_group_stats(rel):
+    """Season10 dupGroup: Schulvarianten derselben Faehigkeit = ein GCD."""
+    sizes = {}
+    for r in rel:
+        if not isinstance(r, (list, tuple)) or len(r) < 4:
+            continue
+        g = r[3]
+        if g is None or g < 0:
+            continue
+        sizes[g] = sizes.get(g, 0) + 1
+    multi = {g: n for g, n in sizes.items() if n >= 2}
+    return {
+        "nMulti": len(multi),
+        "nMembers": sum(multi.values()),
+        "note": (
+            "relations.dupGroup: Schulvarianten derselben Faehigkeit teilen "
+            "sich einen GCD — Scores aus einer Gruppe nicht als parallelen "
+            "Takt addieren. Getrennt davon: cdGroup/cdgroups = geteilter "
+            "Ability-Cooldown (CategoryRecoveryTime), nicht GCD."
+        ),
+    }
+
+
+def build_tempo(cat, sc, mc, rel=None):
     """Waffen-% / effektiver CD — ehrlicher Levelrun-Proxy.
 
     Nur Eintraege mit messbarem Waffen-% (oder AP/SP-Prozent). Flat ohne
     Koeffizient kommt in die Liste mit conf=low und score=0 — sichtbar, aber
     nicht als DPS gerankt.
+
+    Pro Spell gerankt; dupGroup-Varianten teilen sich einen GCD (nicht
+    parallel). Keine erfundenen Koeffizienten.
     """
     ranked = []
     flagged = []
@@ -152,6 +215,10 @@ def build_tempo(cat, sc, mc):
             "cdEff": round(cd_eff, 2),
             "cdSrc": cd_src,
         }
+        if rel is not None and isinstance(rel[i], (list, tuple)) and len(rel[i]) > 3:
+            dg = rel[i][3]
+            if dg is not None and dg >= 0:
+                row["dup"] = int(dg)
         if ch is not None:
             row["ch"] = ch
         if chr_s is not None:
@@ -171,6 +238,9 @@ def build_tempo(cat, sc, mc):
 
     ranked.sort(key=lambda r: (-r["s"], r["lvl"], r["i"]))
     high = [r for r in ranked if r["conf"] == "high"]
+    dup_stats = _dup_group_stats(rel) if rel is not None else {
+        "nMulti": 0, "nMembers": 0, "note": "",
+    }
     return {
         "gcd": GCD,
         "lvl": [LVL_LO, LVL_HI],
@@ -179,11 +249,14 @@ def build_tempo(cat, sc, mc):
         "topHigh": high[:TEMPO_TOP],
         "top": ranked[:TEMPO_TOP],
         "flatOhneKoeff": flagged[:40],
+        "dupGroups": dup_stats,
         "note": (
             "Score = messbarer Anteil (Waffen-%% / AP-%% / SP-%%) geteilt durch "
             "effektiven Takt: DBC-CD, sonst Charges chr/ch, sonst GCD %.1fs. "
             "Flat-Schaden ohne genannten Koeffizienten wird nicht gerankt. "
-            "topHigh = nur conf=high."
+            "topHigh = nur conf=high. "
+            "Schulvarianten mit derselben dupGroup teilen sich einen GCD — "
+            "ihre Scores nicht als parallelen Takt addieren."
             % GCD
         ),
     }
@@ -264,9 +337,13 @@ def build_gaps(cat, sc):
         desc = rec[5] or ""
         if not RX_DEALS.search(desc):
             continue
-        if RX_NOT_DEALS.search(desc) and not re.search(
-            r"weapon'?s?\s+damage|deal(?:s|ing)?\s+.{0,40}?damage", desc, re.I
-        ):
+        # Mastery-Freischalttexte listen Kind-Spells — kein eigener Basisschaden
+        if re.search(r"This Mastery automatically unlocks", desc, re.I):
+            continue
+        # Reine Buffs („deal 20% more“) ohne echten Basisschaden-Text → keine Luecke
+        if RX_BUFF_ONLY.search(desc) and not RX_REAL_DEALS.search(desc):
+            continue
+        if RX_NOT_DEALS.search(desc) and not RX_REAL_DEALS.search(desc):
             continue
         s = sc[i] or {}
         if any(k in s for k in SCALE_KEYS):
@@ -303,9 +380,9 @@ def build_gaps(cat, sc):
         "byWhy": by_why,
         "items": items[:GAPS_TOP],
         "note": (
-            "Katalog beschreibt Schaden/Heilung, scaling.json liefert aber weder "
-            "Waffen-%%, Flat, AP-%%, SP-%%, Heal noch Tick. Kein Koeffizient erfunden. "
-            "nBand = Luecken in Level %d-%d."
+            "Katalog beschreibt Schaden/Heilung/Absorb, scaling.json liefert aber "
+            "weder Waffen-%%, Flat, AP-%%, SP-%%, Heal, Heal%%, Absorb noch Tick. "
+            "Kein Koeffizient erfunden. nBand = Luecken in Level %d-%d."
             % (LVL_LO, LVL_HI)
         ),
     }
@@ -427,7 +504,7 @@ def main():
 
     out = {
         "v": 2,
-        "tempo": build_tempo(cat, sc, mc),
+        "tempo": build_tempo(cat, sc, mc, rel),
         "modheat": build_modheat(cat, rel, bm),
         "gaps": build_gaps(cat, sc),
         "resmap": build_resmap(cat, mc),

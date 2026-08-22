@@ -23,6 +23,10 @@ Ausgabe scaling.json: pro Katalogindex ein Objekt, leere Felder weggelassen.
   sp     Prozent Spell Power (Schadenskoeffizient)
   spb    1 wenn Tooltip Spell-Power-Skalierung ohne Prozent nennt
   heal   [min, max] Grundheilung
+         inkl. "restore N health", "healing an additional N"
+  healpct Prozent Heilung von Max-Leben   4 -> "healed for 4% of maximum health"
+  absorb [min, max] Schildstaerke         "absorbing 347 damage", "Absorbs 165 Fire damage"
+  asch   Schule des Absorbs (Ward), sonst weggelassen
   inc    [[Prozent, worauf], ...]         "increases X by N%"
   red    [[Prozent, worauf], ...]         "reduces X by N%"
   proc   Prozent Proc-Chance
@@ -83,6 +87,23 @@ RX_WEAPON_BARE = re.compile(
     r"(?:\s+as\s+(" + SCHOOL + r")(?:\s+damage)?)?",
     re.I)
 
+# Offhand-Schlag ohne "% weapon damage": Shiv, Single-Minded Fury, Threat of Thassarian.
+# Tooltip meint einen vollen OH-Waffenschlag (= 100%), kein SP/AP-Koeffizient.
+RX_WEAPON_OH = re.compile(
+    r"(?:additional|extra)\s+attack\s+with\s+(?:your\s+)?off[-\s]?hand\s+weapon"
+    r"|(?:instant\s+)?off[-\s]?hand\s+weapon\s+attack"
+    r"|strike(?:s)?\s+with\s+(?:your\s+)?off[-\s]?hand\s+weapon"
+    r"|also\s+strike\s+with\s+(?:your\s+)?off[-\s]?hand(?:\s+weapon)?",
+    re.I)
+
+# "two extra attacks" / "3 extra attacks" = N × 100% Waffenanteil (Windfury).
+# Zahlwort oder Ziffer; kein AP-% erfinden (auch wenn "N extra attack power" folgt).
+_WORD_N = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
+RX_EXTRA_ATTACKS = re.compile(
+    r"(?:damage\s+equal\s+to\s+|dealing\s+)?"
+    r"(two|three|four|five|six|\d+)\s+extra\s+attacks?\b",
+    re.I)
+
 RX_FLAT = re.compile(
     r"(\d[\d,]*(?:\.\d+)?)\s+to\s+(\d[\d,]*(?:\.\d+)?)\s+"
     r"(?:additional\s+)?"
@@ -136,9 +157,31 @@ RX_HEAL_ADD = re.compile(
     r"heal(?:s|ing)?\s+(?:an?\s+)?additional\s+(\d[\d,]*(?:\.\d+)?)"
     r"|(\d[\d,]*(?:\.\d+)?)\s+heal(?:s|ing)?\b",
     re.I)
+# "instantly restore 100 health" / "Restore 200 health"
+RX_HEAL_RESTORE = re.compile(
+    r"(?:restor(?:es?|ing)|recover(?:s|ing)?)\s+(\d[\d,]*(?:\.\d+)?)"
+    r"(?:\s+to\s+(\d[\d,]*(?:\.\d+)?))?\s+(?:health|hit\s+points?)",
+    re.I)
+# "healed for 4% of its maximum health" — Prozent Max-Leben, kein Flat/SP
+RX_HEAL_PCT = re.compile(
+    r"heal(?:ed|s|ing)?\s+(?:for\s+)?(\d+(?:\.\d+)?)\s*%\s+of\s+"
+    r"(?:its|their|your|the\s+target'?s?|maximum)\s+"
+    r"(?:maximum\s+|max\s+)?(?:health|hit\s+points?)",
+    re.I)
+# Flat-Absorb aus Tooltip. Nicht: "absorbing 75% of the damage" (Prozent).
+# "spell damage" = unspezifische Ward-Schule (Anti-Magic Zone).
+RX_ABSORB = re.compile(
+    r"absorb(?:s|ing)\s+(?:up\s+to\s+)?(\d[\d,]*(?:\.\d+)?)\s+"
+    r"(?:(" + SCHOOL + r"|[Ss]pell)\s+)?damage\b",
+    re.I)
 RX_DOT = re.compile(r"over\s+(\d+)\s*sec", re.I)
 RX_TICK = re.compile(
     r"(\d[\d,]*(?:\.\d+)?)\s+(?:" + SCHOOL + r"\s+)?damage\s+every\s+(?:(\d+)\s+)?sec",
+    re.I)
+# DoT-Gesamtschaden ohne Sofortanteil: "N School damage over T sec"
+# (RX_FLAT_OVER setzt flat; Tick nur wenn "every" genannt — sonst kein Tick erfinden)
+RX_DOT_TOTAL = re.compile(
+    r"(\d[\d,]*(?:\.\d+)?)\s+(?:(" + SCHOOL + r")\s+)?damage\s+over\s+(\d+)\s*sec",
     re.I)
 RX_AP = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?attack\s+power", re.I)
 RX_SP = re.compile(r"(\d+(?:\.\d+)?)\s*%\s+of\s+(?:your\s+)?spell\s+(?:power|damage)", re.I)
@@ -273,6 +316,17 @@ def extract(desc):
                 fsch = school_name(m.group(4))
                 if fsch:
                     o["fsch"] = fsch
+        elif RX_WEAPON_OH.search(d):
+            o["w"] = 100.0
+            o["wh"] = "oh"
+        else:
+            m = RX_EXTRA_ATTACKS.search(d)
+            if m:
+                raw = m.group(1).lower()
+                n_att = _WORD_N.get(raw) or int(raw)
+                if n_att > 0:
+                    o["w"] = float(n_att * 100)
+                    o["wh"] = "any"
 
     m = RX_FLAT.search(d)
     if m:
@@ -352,6 +406,24 @@ def extract(desc):
         if m:
             v = num(m.group(1) or m.group(2))
             o["heal"] = [v, v]
+        else:
+            m = RX_HEAL_RESTORE.search(d)
+            if m:
+                lo = num(m.group(1))
+                hi = num(m.group(2)) if m.group(2) else lo
+                o["heal"] = [lo, hi]
+
+    m = RX_HEAL_PCT.search(d)
+    if m:
+        o["healpct"] = float(m.group(1))
+
+    m = RX_ABSORB.search(d)
+    if m:
+        v = num(m.group(1))
+        o["absorb"] = [v, v]
+        asch = school_name(m.group(2))
+        if asch and asch.lower() != "spell":
+            o["asch"] = asch
 
     m = RX_DOT.search(d)
     if m:
@@ -360,6 +432,17 @@ def extract(desc):
     m = RX_TICK.search(d)
     if m:
         o["tick"] = num(m.group(1))
+    elif "flat" not in o and "tick" not in o:
+        # Gesamtschaden ueber Dauer als flat (keine Tickrate erfinden)
+        m = RX_DOT_TOTAL.search(d)
+        if m:
+            v = num(m.group(1))
+            o["flat"] = [v, v]
+            sch = school_name(m.group(2))
+            if sch:
+                o["fsch"] = sch
+            if "dot" not in o:
+                o["dot"] = int(m.group(3))
 
     m = RX_AP.search(d)
     if m and not _pct_is_conversion(d, m):
