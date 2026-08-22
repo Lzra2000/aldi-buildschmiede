@@ -18,7 +18,8 @@
   --danger --danger-soft  kritisch (muted red, not neon)
   --caution --caution-soft  verbesserbar / Achtung (amber, not ember)
   --good --good-soft  live / ok (muted green)
-  --warn aliases --danger (wie Builder); .note.warn nutzt --caution
+  --info  neutral info (slate-blue)
+  --warn aliases --caution (wie Builder); Hinweise bleiben Amber, nicht Rot
   --ground --raised --sunken  stone panel stack
   --ink --ink-soft --ink-faint --ink-dim  text
   --muted  secondary copy (= --ink-dim)
@@ -29,75 +30,80 @@
   School hues (--fire…--physical) are Synergien-only and stay muted.
 */
 :root{
-  --ground:#D8D2C4; --raised:#EDE6D6; --sunken:#C9C1B0;
+  --ground:#D4CFC4; --raised:#E8E3D6; --sunken:#C6C0B2;
   --ink:#1A1510; --ink-soft:#3F362C; --ink-faint:#5C5244; --ink-dim:#756C5E;
-  --rule:#8A7E68; --rule-soft:#B0A48E;
+  --rule:#7A7468; --rule-soft:#B0A898;
   --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E4DCC4;
-  --gold:var(--accent); --gold-hi:var(--accent);
+  --gold:var(--accent); --gold-hi:#A07A18;
+  --ember:#8A4A28; --ember-soft:#E6DED4;
   --danger:#8B3530; --danger-soft:#E8D6D2;
-  --warn:var(--danger); --warn-soft:var(--danger-soft);
   --caution:#8A5018; --caution-soft:#E8D8C4;
-  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --warn:var(--caution); --warn-soft:var(--caution-soft);
   --good:#2F5340; --good-soft:#D4DED6; --success:var(--good);
   --info:#3A5268; --info-soft:#D6DCE2;
   --q0:#7A7468; --q1:#3D6A32; --q2:#2E5278; --q3:#5A3D72; --q4:#8A5418;
   --fire:#6E4E42; --frost:#3E5264; --shadow:#52485A;
   --nature:#3E5244; --holy:#6A5A30; --arcane:#52485A; --physical:#5C564E;
-  --atm-a:rgba(139,105,20,.05); --atm-b:rgba(138,74,40,.02);
-  --edge:rgba(26,21,16,.10);
-  --panel-glow:rgba(139,105,20,.03);
-  --stone:#2A241C; --gold:#8B6914; --gold-hi:#8B6914;
+  --atm-a:rgba(139,105,20,.04); --atm-b:rgba(138,74,40,.02);
+  --edge:rgba(26,21,16,.12);
+  --panel-glow:rgba(90,88,80,.06);
+  --stone:#2A2824;
+  --metal:#6A6860; --metal-hi:rgba(40,36,28,.08);
   --dur-view:.22s; --dur-chip:.15s; --ease-out:cubic-bezier(.2,.7,.2,1);
   --quiet:.78; --quiet-focus:1;
   --muted:var(--ink-dim);
-  --page-max:1860px;
+  --page-max:1800px;
   --page-pad:clamp(10px,1.4vw,20px);
-  --gap:10px;
-  --sticky-top:60px;
+  --gap:12px;
+  --sticky-top:72px;
+  --btn-h:32px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
-  --rule:#3A3428; --rule-soft:#2A241C;
-  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
-  --gold:var(--accent); --gold-hi:var(--accent);
+  --ground:#0C0B0A; --raised:#1A1917; --sunken:#121110;
+  --ink:#E6E2D8; --ink-soft:#B8B3A8; --ink-faint:#8A857A; --ink-dim:#6E6A62;
+  --rule:#4A4842; --rule-soft:#2C2A26;
+  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#1E1A10;
+  --gold:var(--accent); --gold-hi:#D4B56A;
+  --ember:#C48A58; --ember-soft:#1C140E;
   --danger:#C47872; --danger-soft:#1C1010;
-  --warn:var(--danger); --warn-soft:var(--danger-soft);
   --caution:#C4A05A; --caution-soft:#1C160C;
-  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --warn:var(--caution); --warn-soft:var(--caution-soft);
   --good:#7A9A78; --good-soft:#101610; --success:var(--good);
   --info:#7A8FA0; --info-soft:#101418;
-  --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
+  --q0:#8E8A82; --q1:#6A8660; --q2:#5A7A96; --q3:#7A6E90; --q4:#B08A4A;
   --fire:#A87868; --frost:#6A7A8A; --shadow:#7A7088;
   --nature:#6A8A72; --holy:#B8A060; --arcane:#7A7088; --physical:#7A7468;
-  --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
-  --edge:rgba(0,0,0,.40);
-  --panel-glow:rgba(201,162,39,.03);
-  --stone:#1A1612;
+  --atm-a:rgba(201,162,39,.04); --atm-b:rgba(196,138,88,.015);
+  --edge:rgba(0,0,0,.45);
+  --panel-glow:rgba(200,196,184,.03);
+  --stone:#1A1917;
+  --metal:#6A6860; --metal-hi:rgba(220,216,204,.07);
   --muted:var(--ink-dim);
+  --btn-h:32px;
 }}
 :root[data-theme="dark"]{
-  --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
-  --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
-  --rule:#3A3428; --rule-soft:#2A241C;
-  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
-  --gold:var(--accent); --gold-hi:var(--accent);
+  --ground:#0C0B0A; --raised:#1A1917; --sunken:#121110;
+  --ink:#E6E2D8; --ink-soft:#B8B3A8; --ink-faint:#8A857A; --ink-dim:#6E6A62;
+  --rule:#4A4842; --rule-soft:#2C2A26;
+  --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#1E1A10;
+  --gold:var(--accent); --gold-hi:#D4B56A;
+  --ember:#C48A58; --ember-soft:#1C140E;
   --danger:#C47872; --danger-soft:#1C1010;
-  --warn:var(--danger); --warn-soft:var(--danger-soft);
   --caution:#C4A05A; --caution-soft:#1C160C;
-  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --warn:var(--caution); --warn-soft:var(--caution-soft);
   --good:#7A9A78; --good-soft:#101610; --success:var(--good);
   --info:#7A8FA0; --info-soft:#101418;
-  --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
+  --q0:#8E8A82; --q1:#6A8660; --q2:#5A7A96; --q3:#7A6E90; --q4:#B08A4A;
   --fire:#A87868; --frost:#6A7A8A; --shadow:#7A7088;
   --nature:#6A8A72; --holy:#B8A060; --arcane:#7A7088; --physical:#7A7468;
-  --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
-  --edge:rgba(0,0,0,.40);
-  --panel-glow:rgba(201,162,39,.03);
-  --stone:#1A1612;
+  --atm-a:rgba(201,162,39,.04); --atm-b:rgba(196,138,88,.015);
+  --edge:rgba(0,0,0,.45);
+  --panel-glow:rgba(200,196,184,.03);
+  --stone:#1A1917;
+  --metal:#6A6860; --metal-hi:rgba(220,216,204,.07);
   --muted:var(--ink-dim);
+  --btn-h:32px;
 }
-
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -123,13 +129,16 @@ h1,h2,h3{font-family:"Archivo Black",Impact,sans-serif;font-weight:400;text-wrap
 code,.mono,.lvl,.qual,th,.tag{font-family:"JetBrains Mono",ui-monospace,monospace}
 code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);padding:1px 5px}
 
-.wrap{max-width:min(100%,var(--page-max));margin:0 auto;padding:12px var(--page-pad) 0}
-.cols-syn{display:grid;gap:12px;grid-template-columns:1fr;align-items:start}
+.wrap{max-width:min(100%,var(--page-max));margin:0 auto;padding:8px var(--page-pad) 0}
+.cols-syn{display:grid;gap:var(--gap);grid-template-columns:1fr;align-items:start}
 .col-side{display:flex}
 .col-main{min-width:0}
 @media(min-width:1100px){
   .cols-syn{grid-template-columns:minmax(180px,220px) minmax(0,1fr);gap:var(--gap)}
-  .col-side{position:sticky;top:var(--sticky-top);align-self:start}
+  .col-side{
+    position:sticky;top:var(--sticky-top);align-self:start;
+    max-height:calc(100dvh - var(--sticky-top) - 8px);
+    overflow:auto;scrollbar-gutter:stable}
 }
 
 .topbar{position:sticky;top:0;z-index:50;background:var(--raised);
@@ -161,7 +170,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   transition:color var(--dur-chip),border-color var(--dur-chip)}
 .prodnav a:hover{color:var(--ink)}
 .prodnav a.on{color:var(--accent);border-bottom-color:var(--accent)}
-.prodnav a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.prodnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .startrow{border-bottom:1px solid var(--rule-soft);
   background:color-mix(in srgb,var(--sunken) 72%,var(--ground))}
@@ -175,7 +184,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   color:var(--accent);text-decoration:none;border:1px solid var(--accent);
   background:var(--raised);padding:6px 11px;white-space:nowrap}
 .startin a:hover{background:var(--accent);color:var(--accent-ink)}
-.startin a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.startin a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .mast{border-bottom:1px solid var(--rule);padding:clamp(10px,2vw,18px) 0 12px;position:relative}
 .mast::after{content:"";display:block;height:2px;margin-top:12px;
@@ -191,7 +200,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   flex:1;min-width:0;background:var(--raised);color:var(--ink);
   border:1px solid var(--rule);padding:8px 11px;font-size:14px;border-radius:0;
   font-family:"Source Serif 4",Georgia,serif}
-.find input[type=search]:focus{outline:2px solid var(--gold,var(--accent));outline-offset:2px;border-color:var(--accent)}
+.find input[type=search]:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--accent)}
 .find-status{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);
   min-height:1.2em;margin:0}
 
@@ -208,7 +217,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   color:var(--ink-soft);text-decoration:none;border:1px solid var(--rule);
   background:var(--raised);padding:5px 9px;white-space:nowrap}
 .topics-nav a:hover{border-color:var(--accent);color:var(--accent)}
-.topics-nav a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.topics-nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .topics-nav a b{font-weight:700;color:var(--accent);margin-left:5px;
   font-variant-numeric:tabular-nums}
 
@@ -236,7 +245,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
   color:var(--ink-faint);text-decoration:none;border:1px solid var(--rule);
   background:var(--sunken);padding:2px 7px;font-weight:400}
 .topic>summary .hint a:hover{border-color:var(--accent);color:var(--accent)}
-.topic>summary .hint a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.topic>summary .hint a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .topic>summary::after{content:"+";margin-left:8px;font-family:"JetBrains Mono",monospace;
   font-size:16px;color:var(--ink-faint)}
 .topic[open]>summary{border-bottom:1px solid var(--rule-soft)}
@@ -258,7 +267,7 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
 a.limit{color:inherit;text-decoration:none;display:block;cursor:pointer;
   scroll-margin-top:86px}
 a.limit:hover{border-color:var(--accent)}
-a.limit:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+a.limit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .limit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--accent);opacity:.45}
 .limit .n{font-family:"Archivo Black",sans-serif;font-size:28px;line-height:1;display:block;
@@ -277,12 +286,12 @@ section > p:first-of-type,.topic-body > .lede{margin-top:10px}
 
 .schools{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;margin:14px 0 0}
 .school{background:var(--raised);border:1px solid var(--rule);
-  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--c);padding:8px 11px;
+  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 color-mix(in srgb,var(--c) 62%,transparent);padding:8px 11px;
   scroll-margin-top:86px}
 a.school{color:inherit;text-decoration:none;display:block;cursor:pointer}
-a.school:hover{border-color:var(--c)}
-a.school:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
-.school .name{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;color:var(--c);display:block}
+a.school:hover{border-color:color-mix(in srgb,var(--c) 70%,var(--rule))}
+a.school:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.school .name{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;color:color-mix(in srgb,var(--c) 72%,var(--ink-faint));display:block}
 .school .count{font-family:"Archivo Black",sans-serif;font-size:22px;line-height:1.2;display:block;color:var(--ink)}
 .school .eg{font-size:14px;color:var(--ink-faint);display:block}
 
@@ -334,19 +343,18 @@ a.cta{
   padding:0 0 2px;border:0;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
   background:transparent}
 a.cta:hover{color:var(--ink);border-bottom-color:var(--accent)}
-a.cta:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+a.cta:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .footnav{margin-top:12px}
 .footnav a{color:var(--accent);font-weight:700;text-decoration:none;
   border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
 .footnav a:hover{border-bottom-color:var(--accent)}
 
-.cols{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-top:14px;align-items:start}
+.cols{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-top:20px}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
 @media(min-width:1400px){.cols{grid-template-columns:1fr 1fr 1fr}}
-@media(min-width:1100px){.cols .col{position:sticky;top:var(--sticky-top)}}
 .col{background:var(--raised);border:1px solid var(--rule);
   box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
-  padding:8px 10px;position:relative}
+  padding:14px 16px;position:relative}
 .col::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--accent);opacity:.45}
 .col h3{margin-top:0;color:var(--ink)}
@@ -363,12 +371,13 @@ footer{padding:24px 0 48px;color:var(--ink-faint);font-size:13px;line-height:1.5
   border-top:1px solid var(--rule);margin-top:8px}
 footer p{max-width:70ch}
 a{color:var(--accent)}
-:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .skip{position:absolute;left:12px;top:0;z-index:200;transform:translateY(-120%);
   background:var(--accent);color:var(--accent-ink);padding:10px 14px;
   font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
-  text-decoration:none;border:1px solid var(--gold,var(--accent));transition:transform .15s}
+  text-decoration:none;border:1px solid var(--accent);transition:transform .15s}
 .skip:focus,.skip:focus-visible{transform:translateY(12px);outline-offset:3px}
+@media(prefers-contrast:more){:focus-visible{outline-width:3px}}
 @media(max-width:560px){
   .tbin{min-height:0;padding-top:10px;padding-bottom:10px;gap:10px}
   .bmark{width:36px;height:36px;flex-basis:36px}
@@ -397,7 +406,7 @@ a{color:var(--accent)}
   letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 8px}
 .synin{width:100%;max-width:42rem;padding:7px 10px;font:15px/1.4 "Source Serif 4",serif;
   color:var(--ink);background:var(--sunken);border:1px solid var(--rule)}
-.synin:focus{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.synin:focus{outline:2px solid var(--accent);outline-offset:2px}
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
 .filters button{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
   padding:6px 10px;border:1px solid var(--rule);background:var(--sunken);
@@ -405,7 +414,7 @@ a{color:var(--accent)}
 .filters button.on,.filters button[aria-pressed="true"]{
   border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
 .filters button:hover{border-color:var(--accent);color:var(--accent)}
-.filters button:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.filters button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .school-filters{margin-top:8px}
 .lookstat{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);
   margin:10px 0 0}
@@ -564,7 +573,7 @@ a.tut-btn.primary,button.tut-btn.primary{border-color:var(--accent);color:var(--
 a.tut-btn.primary:hover,button.tut-btn.primary:hover{
   background:var(--accent);color:var(--accent-ink)}
 .tut-btn:focus-visible,.tut-reopen:focus-visible,.tut-x:focus-visible{
-  outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+  outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:640px){
   .tut-panel,.tut-dismissed{padding:10px 12px 12px 16px}
   .tut-actions{width:100%}
@@ -572,6 +581,39 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
   .tut-steps li{font-size:13px}
 }
 @media(prefers-contrast:more){.tut::before,.tut-bar::before{opacity:1}}
+
+/* Dichte: 1860, kompakte Listen, klebrige Seite — first-class mit Builder */
+:root{--page-max:1860px;--gap:10px;--sticky-top:60px}
+.tbin{min-height:56px}
+.col{padding:8px 10px}
+.cols{margin-top:14px;align-items:start}
+@media(min-width:1100px){
+  .cols .col{position:sticky;top:var(--sticky-top)}
+}
+
+/* === LFM discipline (shared with builder-head) === */
+.topic,.closer,.limit,.chain,.col,.rule,.look,.tbl-wrap{
+  background:var(--raised);border:1px solid var(--rule);
+  box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow),inset 0 1px 0 var(--metal-hi)}
+.kicker,.startin .shd,.tut-kicker,.btext .bguild,.grp,.rule .k,.look label,h2 .num,
+.topic>summary .num,th{color:var(--gold)}
+.prodnav a.on{color:var(--gold);border-bottom-color:var(--gold)}
+.topbar{background:var(--raised);border-bottom:1px solid var(--rule)}
+.topbar::after{background:linear-gradient(90deg,var(--gold) 0%,transparent 52%);opacity:.7}
+.bmark{border:1px solid var(--accent);
+  box-shadow:0 0 0 1px var(--stone),inset 0 0 10px rgba(0,0,0,.35);
+  clip-path:polygon(8% 0,100% 0,100% 92%,92% 100%,0 100%,0 8%)}
+.tut-btn,.filters button,a.cta,.startin a{
+  min-height:var(--btn-h);box-sizing:border-box;display:inline-flex;align-items:center}
+.filters button{padding:0 10px;background:var(--sunken);border:1px solid var(--rule);color:var(--ink-soft)}
+.filters button:hover{border-color:var(--metal);color:var(--ink)}
+.filters button.on,.filters button[aria-pressed="true"]{
+  border-color:var(--gold);color:var(--gold);background:var(--accent-soft)}
+a.cta{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);padding:0 14px}
+.startin a{border-color:var(--rule);color:var(--ink-soft);background:transparent;padding:0 11px}
+.startin a:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.startrow{background:var(--sunken)}
+
 </style>
 </head>
 <body>
@@ -587,7 +629,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
         <i>Season 10 Wildcard · Level 10–60</i>
       </span>
     </a>
-    <nav class="prodnav" aria-label="Produkt">
+    <nav class="prodnav" aria-label="Seiten">
       <a href="index.html">Buildschmiede</a>
       <a class="on" href="synergien.html" aria-current="page">Synergien</a>
     </nav>
@@ -693,17 +735,17 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
           gespiegelt. Das ist keine Deko — es ist der Hebel, mit dem du deinen gesamten Schaden
           auf einen Typ bündelst.</p>
         <div class="schools">
-          <a class="school" id="school-firestrike" href="#look" data-jump="look" data-q="Charred Bite" data-f="alle" style="--c:var(--fire)" title="Firestrike nachschlagen — z. B. Charred Bite"><span class="name">Firestrike</span>
+          <a class="school" id="school-firestrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Charred Bite" data-f="alle" style="--c:var(--fire)" title="Firestrike nachschlagen — z. B. Charred Bite"><span class="name">Firestrike</span>
             <span class="count">43</span><span class="eg">z. B. Charred Bite</span></a>
-          <a class="school" id="school-froststrike" href="#look" data-jump="look" data-q="Rime Strike" data-f="alle" style="--c:var(--frost)" title="Froststrike nachschlagen — z. B. Rime Strike"><span class="name">Froststrike</span>
+          <a class="school" id="school-froststrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Rime Strike" data-f="alle" style="--c:var(--frost)" title="Froststrike nachschlagen — z. B. Rime Strike"><span class="name">Froststrike</span>
             <span class="count">40</span><span class="eg">z. B. Rime Strike</span></a>
-          <a class="school" id="school-shadowstrike" href="#look" data-jump="look" data-q="Sunder Soul" data-f="alle" style="--c:var(--shadow)" title="Shadowstrike nachschlagen — z. B. Sunder Soul"><span class="name">Shadowstrike</span>
+          <a class="school" id="school-shadowstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Sunder Soul" data-f="alle" style="--c:var(--shadow)" title="Shadowstrike nachschlagen — z. B. Sunder Soul"><span class="name">Shadowstrike</span>
             <span class="count">40</span><span class="eg">z. B. Sunder Soul</span></a>
-          <a class="school" id="school-stormstrike" href="#look" data-jump="look" data-q="Voltaic Bite" data-f="alle" style="--c:var(--nature)" title="Stormstrike nachschlagen — z. B. Voltaic Bite"><span class="name">Stormstrike</span>
+          <a class="school" id="school-stormstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Voltaic Bite" data-f="alle" style="--c:var(--nature)" title="Stormstrike nachschlagen — z. B. Voltaic Bite"><span class="name">Stormstrike</span>
             <span class="count">67</span><span class="eg">z. B. Voltaic Bite</span></a>
-          <a class="school" id="school-holystrike" href="#look" data-jump="look" data-q="Holy Shot" data-f="alle" style="--c:var(--holy)" title="Holystrike nachschlagen — z. B. Holy Shot"><span class="name">Holystrike</span>
+          <a class="school" id="school-holystrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Holy Shot" data-f="alle" style="--c:var(--holy)" title="Holystrike nachschlagen — z. B. Holy Shot"><span class="name">Holystrike</span>
             <span class="count">40</span><span class="eg">z. B. Holy Shot</span></a>
-          <a class="school" id="school-spellstrike" href="#look" data-jump="look" data-q="Aether Strike" data-f="alle" style="--c:var(--arcane)" title="Spellstrike nachschlagen — z. B. Aether Strike"><span class="name">Spellstrike</span>
+          <a class="school" id="school-spellstrike" href="#nachschlagen" data-jump="nachschlagen" data-q="Aether Strike" data-f="alle" style="--c:var(--arcane)" title="Spellstrike nachschlagen — z. B. Aether Strike"><span class="name">Spellstrike</span>
             <span class="count">40</span><span class="eg">z. B. Aether Strike</span></a>
         </div>
         <p style="margin-top:12px"><strong>316 Einträge</strong> tragen
@@ -832,7 +874,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="modifier" data-keys="modifier vererbung uses modifiers swipe sinister revenge lava lash slam aimed steady kill mongoose rake mangle">
-        <summary><span class="num">05</span> Modifier-Vererbung <span class="hint"><a href="#look" data-jump="look" data-q="" data-f="erb" title="Vererbung nachschlagen">316 Phrasen</a><a href="#look" data-jump="look" data-q="" data-f="erb" title="Vererbung nachschlagen">110 Basen</a></span></summary>
+        <summary><span class="num">05</span> Modifier-Vererbung <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="erb" title="Vererbung nachschlagen">316 Phrasen</a><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="erb" title="Vererbung nachschlagen">110 Basen</a></span></summary>
         <div class="topic-body">
         <h2>Modifier-Vererbung</h2>
         <p class="lede">Der Satz <code>This uses X modifiers</code> ist die wichtigste Zeile im
@@ -874,7 +916,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="gates" data-keys="sperren gates path healing waffe dolch item duelist rang eclipse agility cooldown kick pummel shock tonic backstab">
-        <summary><span class="num">06</span> Harte Sperren <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="gate" title="Sperren nachschlagen">76 Einträge</a></span></summary>
+        <summary><span class="num">06</span> Harte Sperren <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="gate" title="Sperren nachschlagen">76 Einträge</a></span></summary>
         <div class="topic-body">
         <h2>Harte Sperren</h2>
         <p class="lede">76 Einträge im Katalog funktionieren nur, wenn eine Bedingung außerhalb
@@ -939,7 +981,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="ketten" data-keys="ketten trigger lava freeze knight eclipse draconic toxic gloaming titan fury shuriken sinister bloodthirst refs">
-        <summary><span class="num">07</span> Trigger-Ketten <span class="hint"><a href="#look" data-jump="look" data-f="kette" title="Ketten nachschlagen">1.897 Einträge</a><a href="#look" data-jump="look" data-f="kette" title="Ketten nachschlagen">3.572 Verweise</a></span></summary>
+        <summary><span class="num">07</span> Trigger-Ketten <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="kette" title="Ketten nachschlagen">1.897 Einträge</a><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="kette" title="Ketten nachschlagen">3.572 Verweise</a></span></summary>
         <div class="topic-body">
         <h2>Trigger-Ketten</h2>
         <p class="lede">Fähigkeit A gewährt einen Buff, der Fähigkeit B verstärkt.
@@ -1011,7 +1053,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="procs" data-keys="proc chance windfury envenom scent of blood stormcloak tooltip dbc 1-99">
-        <summary><span class="num">08</span> Procs <span class="hint"><a href="#look" data-jump="look" data-q="" data-f="proc" title="Procs nachschlagen">239 Tooltip</a><a href="#look" data-jump="look" data-q="" data-f="proc" title="Procs nachschlagen">46 DBC</a></span></summary>
+        <summary><span class="num">08</span> Procs <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="proc" title="Procs nachschlagen">239 Tooltip</a><a href="#nachschlagen" data-jump="nachschlagen" data-q="" data-f="proc" title="Procs nachschlagen">46 DBC</a></span></summary>
         <div class="topic-body">
         <h2>Procs — nur belegte Chancen</h2>
         <p class="lede">Eine Proc-Zahl erscheint hier nur, wenn der Tooltip sie nennt
@@ -1050,11 +1092,11 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
         <p class="lede">Tippe einen Katalognamen. Die Karte zeigt Vererbung,
           Schulvarianten (gleicher GCD), Trigger, Proc, Sperre und geteilten
           Cooldown — nur Felder, die in den eingebetteten Listen stehen.</p>
-        <div class="look">
+        <div class="look" id="look" tabindex="-1">
           <label for="qHit">Name im Katalog</label>
           <input class="synin" type="search" id="qHit" name="hit" placeholder="z. B. Slam, Lava Lash, Kick, Windfury Weapon" autocomplete="off" aria-controls="hitList">
           <div class="filters" role="group" aria-label="Filter">
-            <button type="button" data-jump="nachschlagen" data-f="alle" aria-pressed="true">Alle</button>
+            <button type="button" data-jump="nachschlagen" data-f="alle" data-q="" aria-pressed="true">Alle</button>
             <button type="button" data-jump="nachschlagen" data-f="erb">Vererbung</button>
             <button type="button" data-jump="nachschlagen" data-f="gcd">Gleicher GCD</button>
             <button type="button" data-jump="nachschlagen" data-f="kette">Ketten</button>
@@ -1062,12 +1104,12 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
             <button type="button" data-jump="nachschlagen" data-f="gate">Sperren</button>
           </div>
           <div class="filters school-filters" role="group" aria-label="Schulen">
-            <button type="button" data-jump="nachschlagen" data-q="Charred Bite">Firestrike</button>
-            <button type="button" data-jump="nachschlagen" data-q="Rime Strike">Froststrike</button>
-            <button type="button" data-jump="nachschlagen" data-q="Sunder Soul">Shadowstrike</button>
-            <button type="button" data-jump="nachschlagen" data-q="Voltaic Bite">Stormstrike</button>
-            <button type="button" data-jump="nachschlagen" data-q="Holy Shot">Holystrike</button>
-            <button type="button" data-jump="nachschlagen" data-q="Aether Strike">Spellstrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Charred Bite" data-f="alle">Firestrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Rime Strike" data-f="alle">Froststrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Sunder Soul" data-f="alle">Shadowstrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Voltaic Bite" data-f="alle">Stormstrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Holy Shot" data-f="alle">Holystrike</button>
+            <button type="button" data-jump="nachschlagen" data-q="Aether Strike" data-f="alle">Spellstrike</button>
           </div>
           <p class="lookstat" id="hitStat"></p>
           <div class="hits" id="hitList"></div>
@@ -1652,22 +1694,4 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
 </script>
 </body>
 </html>
-Listener("click", function(){
-    write({done: true});
-    show(false);
-  });
-  if (reopenBtn) reopenBtn.addEventListener("click", function(){ show(true); });
-})();
-</script>
-</body>
-</html>
-addEventListener("click", function(){ show(true); });
-})();
-</script>
-</body>
-</html>
-);
-})();
-</script>
-</body>
-</html>
+
