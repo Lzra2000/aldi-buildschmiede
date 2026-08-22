@@ -283,19 +283,11 @@ def write_empty(reason):
 
 
 def build_entry(icon, cls, sub, inv, url=None):
-    """Kompakter Eintrag: Name allein oder Objekt mit Meta (+ optionale url)."""
-    if cls or sub or inv or url:
-        o = {"i": icon}
-        if cls:
-            o["cls"] = cls
-        if sub:
-            o["sub"] = sub
-        if inv:
-            o["inv"] = inv
-        if url:
-            o["url"] = url
-        return o
-    return icon
+    """Objekt mit Icon + Item.dbc-Meta; optionale data:-WebP-url behalten."""
+    o = {"i": icon, "cls": int(cls), "sub": int(sub), "inv": int(inv)}
+    if url:
+        o["url"] = url
+    return o
 
 
 def main(argv=None):
