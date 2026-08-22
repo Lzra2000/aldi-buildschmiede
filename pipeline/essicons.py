@@ -24,6 +24,7 @@ DATA = os.path.join(ROOT, "data")
 EXTRACT = r"C:\Users\x\Documents\AscensionInterfaceExtract\by-archive"
 
 # Gemessen — keine erfundenen Dateinamen.
+# CP: kein gemessenes Client-Icon (Constants/UI: nur MARKUP_AE/TE, kein classicon-CP).
 EXTRA_ICONS = (
     "inv_custom_abilityessence",
     "inv_custom_talentessence",

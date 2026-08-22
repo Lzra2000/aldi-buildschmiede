@@ -2001,7 +2001,11 @@
   function wcIdGridHtml(ids, label, kind) {
     if (!ids || !ids.length) return "";
     var o = [];
-    o.push('<div class="wepline"><b>' + esc(label) + "</b> " + ids.length + "</div>");
+    var hdIco = label === "Sperren"
+      ? lockIconHtml(14, "Gesperrte Einträge") + " "
+      : "";
+    o.push('<div class="wepline">' + hdIco + "<b>" + esc(label) +
+      "</b> " + ids.length + "</div>");
     function cell(id) {
       var idx = kind === "sid" ? BYSID[id] : BYEID[id];
       return '<div class="scard" role="listitem">' + scardIco(idx, 28) +
@@ -3737,6 +3741,10 @@
     }
     if (DES && !isDesireEligIdx(i)) {
       show.push('<span class="bdg r" title="Nicht auf dem Wildcard-Desire-Board / Rapid Roll">kein Desire</span>');
+    }
+    if (isLockedIdx(i)) {
+      show.push('<span class="bdg lockbdg" title="Im Build gesperrt — bleibt beim Umskillen liegen.">' +
+        lockIconHtml(12, "Gesperrt") + " gesperrt</span>");
     }
     if (o.w) {
       show.push('<span class="bdg w">' + fmt(o.w) + " % " +
@@ -7256,11 +7264,12 @@
     }
     if ((CHAR && CHAR.locked && CHAR.locked.length) ||
         (RIVAL.locked && RIVAL.locked.length)) {
-      metaBits.push("Locks du " + ((CHAR && CHAR.locked) || []).length +
+      metaBits.push(lockIconHtml(12, "Gesperrte Einträge") +
+        " Sperren du " + ((CHAR && CHAR.locked) || []).length +
         " · er " + (RIVAL.locked || []).length);
     }
     if (metaBits.length) {
-      o.push('<div class="qhint">' + metaBits.map(esc).join(" · ") + "</div>");
+      o.push('<div class="qhint">' + metaBits.join(" · ") + "</div>");
     }
 
     o.push('<div class="cmpsplit"><span class="c-mine">' + onlyMine.length +
