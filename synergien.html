@@ -13,16 +13,16 @@
   BUILDSCHMIEDE TOKEN BLOCK — share with builder-head.html
   Own forge-slate chrome (CSS only). No Ascension/WoW BLP frame kits.
   Dark = default. Light = parchment reading mode.
-  Calm palette: one guild-brass accent, muted quality, soft good/ember.
+  Semantic (same hex as Builder):
+  --accent --accent-ink --accent-soft  guild gold (#C9A227 family) — CTA / Highlight
+  --danger --danger-soft  kritisch (muted red, not neon)
+  --caution --caution-soft  verbesserbar / Achtung (amber, not ember)
+  --good --good-soft  live / ok (muted green)
+  --warn aliases --danger (wie Builder); .note.warn nutzt --caution
   --ground --raised --sunken  stone panel stack
   --ink --ink-soft --ink-faint --ink-dim  text
   --muted  secondary copy (= --ink-dim)
   --rule --rule-soft --edge  metal lines
-  --accent --accent-ink --accent-soft  guild brass (#B8963A family)
-  --ember --ember-soft  Wildcard heat (= --warn)
-  --danger --danger-soft  kritisch / über Budget
-  --caution --caution-soft  Hinweis / verbesserbar (= --ember)
-  --good --good-soft  live / ok
   --q0…--q4  WoW quality (Normal→Legendary) — data colors, muted, not neon
   --atm-a --atm-b  forge washes
   --quiet --quiet-focus  secondary blocks until hover/focus
@@ -33,15 +33,16 @@
   --ink:#1A1510; --ink-soft:#3F362C; --ink-faint:#5C5244; --ink-dim:#756C5E;
   --rule:#8A7E68; --rule-soft:#B0A48E;
   --accent:#8B6914; --accent-ink:#FFF8E0; --accent-soft:#E4DCC4;
-  --ember:#8A4A28; --ember-soft:#E6DED4;
-  --warn:var(--ember); --warn-soft:var(--ember-soft);
-  --danger:#7A3532; --danger-soft:#E2D4D0;
-  --caution:var(--ember); --caution-soft:var(--ember-soft);
-  --good:#2F5340; --good-soft:#D6DED6;
-  --info:#5A564C; --info-soft:#E2DCD4;
+  --gold:var(--accent); --gold-hi:var(--accent);
+  --danger:#8B3530; --danger-soft:#E8D6D2;
+  --warn:var(--danger); --warn-soft:var(--danger-soft);
+  --caution:#8A5018; --caution-soft:#E8D8C4;
+  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --good:#2F5340; --good-soft:#D4DED6; --success:var(--good);
+  --info:#3A5268; --info-soft:#D6DCE2;
   --q0:#7A7468; --q1:#3D6A32; --q2:#2E5278; --q3:#5A3D72; --q4:#8A5418;
-  --fire:#8A4A28; --frost:#2E5278; --shadow:#5A3D72;
-  --nature:#2F5340; --holy:#8B6914; --arcane:#5A3D72; --physical:#6A6258;
+  --fire:#6E4E42; --frost:#3E5264; --shadow:#52485A;
+  --nature:#3E5244; --holy:#6A5A30; --arcane:#52485A; --physical:#5C564E;
   --atm-a:rgba(139,105,20,.05); --atm-b:rgba(138,74,40,.02);
   --edge:rgba(26,21,16,.10);
   --panel-glow:rgba(139,105,20,.03);
@@ -49,44 +50,52 @@
   --dur-view:.22s; --dur-chip:.15s; --ease-out:cubic-bezier(.2,.7,.2,1);
   --quiet:.78; --quiet-focus:1;
   --muted:var(--ink-dim);
+  --page-max:1860px;
+  --page-pad:clamp(10px,1.4vw,20px);
+  --gap:10px;
+  --sticky-top:60px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
   --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
   --rule:#3A3428; --rule-soft:#2A241C;
   --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
-  --ember:#C48A58; --ember-soft:#1C140E;
-  --caution:var(--ember); --caution-soft:var(--ember-soft);
-  --warn:var(--caution); --warn-soft:var(--caution-soft);
-  --danger:#C4786C; --danger-soft:#1A100E;
-  --good:#7A9A78; --good-soft:#101610;
-  --info:#A39886; --info-soft:#141210;
+  --gold:var(--accent); --gold-hi:var(--accent);
+  --danger:#C47872; --danger-soft:#1C1010;
+  --warn:var(--danger); --warn-soft:var(--danger-soft);
+  --caution:#C4A05A; --caution-soft:#1C160C;
+  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --good:#7A9A78; --good-soft:#101610; --success:var(--good);
+  --info:#7A8FA0; --info-soft:#101418;
   --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
-  --fire:#C48A58; --frost:#6A8AA8; --shadow:#8A7A98;
-  --nature:#7A9A78; --holy:#C9A227; --arcane:#8A7A98; --physical:#8A8070;
+  --fire:#A87868; --frost:#6A7A8A; --shadow:#7A7088;
+  --nature:#6A8A72; --holy:#B8A060; --arcane:#7A7088; --physical:#7A7468;
   --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
   --edge:rgba(0,0,0,.40);
   --panel-glow:rgba(201,162,39,.03);
-  --stone:#1A1612; --gold:#C9A227; --gold-hi:#C9A227;
+  --stone:#1A1612;
+  --muted:var(--ink-dim);
 }}
 :root[data-theme="dark"]{
   --ground:#0A0908; --raised:#1A1612; --sunken:#0D0B09;
   --ink:#E8E0D0; --ink-soft:#C4BAA6; --ink-faint:#A39886; --ink-dim:#7A7164;
   --rule:#3A3428; --rule-soft:#2A241C;
   --accent:#C9A227; --accent-ink:#1A1408; --accent-soft:#241E10;
-  --ember:#C48A58; --ember-soft:#1C140E;
-  --caution:var(--ember); --caution-soft:var(--ember-soft);
-  --warn:var(--caution); --warn-soft:var(--caution-soft);
-  --danger:#C4786C; --danger-soft:#1A100E;
-  --good:#7A9A78; --good-soft:#101610;
-  --info:#A39886; --info-soft:#141210;
+  --gold:var(--accent); --gold-hi:var(--accent);
+  --danger:#C47872; --danger-soft:#1C1010;
+  --warn:var(--danger); --warn-soft:var(--danger-soft);
+  --caution:#C4A05A; --caution-soft:#1C160C;
+  --ember:var(--caution); --ember-soft:var(--caution-soft);
+  --good:#7A9A78; --good-soft:#101610; --success:var(--good);
+  --info:#7A8FA0; --info-soft:#101418;
   --q0:#9A9288; --q1:#7A9A6A; --q2:#6A8AA8; --q3:#9688A8; --q4:#C49A62;
-  --fire:#C48A58; --frost:#6A8AA8; --shadow:#8A7A98;
-  --nature:#7A9A78; --holy:#C9A227; --arcane:#8A7A98; --physical:#8A8070;
+  --fire:#A87868; --frost:#6A7A8A; --shadow:#7A7088;
+  --nature:#6A8A72; --holy:#B8A060; --arcane:#7A7088; --physical:#7A7468;
   --atm-a:rgba(201,162,39,.05); --atm-b:rgba(196,138,88,.02);
   --edge:rgba(0,0,0,.40);
   --panel-glow:rgba(201,162,39,.03);
-  --stone:#1A1612; --gold:#C9A227; --gold-hi:#C9A227;
+  --stone:#1A1612;
+  --muted:var(--ink-dim);
 }
 
 *{box-sizing:border-box}
@@ -117,16 +126,17 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
 .wrap{max-width:min(1860px,100%);margin:0 auto;padding:12px clamp(10px,1.6vw,20px) 0}
 .cols-syn{display:grid;gap:12px;grid-template-columns:1fr;align-items:start}
 .col-side{display:flex}
+.col-main{min-width:0}
 @media(min-width:1100px){
-  .cols-syn{grid-template-columns:minmax(180px,220px) minmax(0,1fr);gap:18px}
-  .col-side{position:sticky;top:78px;align-self:start}
+  .cols-syn{grid-template-columns:minmax(180px,220px) minmax(0,1fr);gap:var(--gap)}
+  .col-side{position:sticky;top:var(--sticky-top);align-self:start}
 }
 
 .topbar{position:sticky;top:0;z-index:50;background:var(--raised);
   border-bottom:1px solid var(--rule)}
 .topbar::after{content:"";display:block;height:2px;
   background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 28%,transparent 62%)}
-.tbin{max-width:min(1860px,100%);margin:0 auto;padding:0 clamp(10px,1.6vw,20px);
+.tbin{max-width:min(100%,var(--page-max));margin:0 auto;padding:0 var(--page-pad);
   display:flex;align-items:center;gap:clamp(12px,2vw,28px);flex-wrap:wrap;
   min-height:68px;position:relative}
 .brand{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;
@@ -153,8 +163,9 @@ code{font-size:.92em;background:var(--sunken);border:1px solid var(--rule);paddi
 .prodnav a.on{color:var(--accent);border-bottom-color:var(--accent)}
 .prodnav a:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
 
-.startrow{border-bottom:1px solid var(--rule-soft);background:var(--accent-soft)}
-.startin{max-width:min(1860px,100%);margin:0 auto;padding:6px clamp(10px,1.6vw,20px);
+.startrow{border-bottom:1px solid var(--rule-soft);
+  background:color-mix(in srgb,var(--sunken) 72%,var(--ground))}
+.startin{max-width:min(100%,var(--page-max));margin:0 auto;padding:6px var(--page-pad);
   display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px}
 .startin .shd{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
   letter-spacing:.04em;color:var(--accent);margin:0;flex:0 0 auto}
@@ -304,26 +315,34 @@ tr:last-child td{border-bottom:none}
 .note{position:relative;background:var(--accent-soft);border:1px solid var(--accent);
   padding:16px 20px 16px 22px;margin:24px 0;
   box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--accent)}
-.note.warn{background:var(--warn-soft);border-color:var(--ember);
-  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--ember)}
+.note.warn{background:var(--caution-soft);border-color:var(--caution);
+  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--caution)}
+.note.danger{background:var(--danger-soft);border-color:var(--danger);
+  box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--danger)}
 .note.good{background:var(--good-soft);border-color:var(--good);
   box-shadow:0 1px 0 var(--edge),inset 3px 0 0 var(--good)}
 .note p{margin:0;max-width:none}
 .note p+p{margin-top:10px}
 .note .hd{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
   margin:0 0 7px;font-weight:700;color:var(--accent)}
-.note.warn .hd{color:var(--ember)}
+.note.warn .hd{color:var(--caution)}
+.note.danger .hd{color:var(--danger)}
 .note.good .hd{color:var(--good)}
 a.cta{
-  display:inline-block;color:var(--accent-ink);text-decoration:none;margin-top:14px;
+  display:inline-block;color:var(--accent);text-decoration:none;margin-top:14px;
   font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
-  padding:10px 16px;border:1px solid var(--accent);background:var(--accent);
-  transition:filter var(--dur-chip)}
-a.cta:hover{filter:brightness(1.06);color:var(--accent-ink)}
-a.cta:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:3px}
+  padding:0 0 2px;border:0;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  background:transparent}
+a.cta:hover{color:var(--ink);border-bottom-color:var(--accent)}
+a.cta:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+.footnav{margin-top:12px}
+.footnav a{color:var(--accent);font-weight:700;text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.footnav a:hover{border-bottom-color:var(--accent)}
 
-.cols{display:grid;grid-template-columns:1fr;gap:26px;margin-top:24px}
+.cols{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-top:20px}
 @media(min-width:760px){.cols{grid-template-columns:1fr 1fr}}
+@media(min-width:1400px){.cols{grid-template-columns:1fr 1fr 1fr}}
 .col{background:var(--raised);border:1px solid var(--rule);
   box-shadow:0 1px 0 var(--edge),0 0 0 1px var(--panel-glow);
   padding:14px 16px;position:relative}
@@ -331,8 +350,8 @@ a.cta:focus-visible{outline:2px solid var(--gold,var(--accent));outline-offset:3
   background:var(--accent);opacity:.45}
 .col h3{margin-top:0;color:var(--ink)}
 .col ul{list-style:none;margin:0;padding:0}
-.col li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;
-  border-bottom:1px solid var(--rule-soft);font-size:14px}
+.col li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;
+  border-bottom:1px solid var(--rule-soft);font-size:13px}
 .col li .nm{font-family:"JetBrains Mono",monospace}
 .col li .meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-faint);white-space:nowrap}
 .grp{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;
@@ -390,8 +409,10 @@ a{color:var(--accent)}
 .lookstat{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);
   margin:10px 0 0}
 .look,.hits{scroll-margin-top:86px}
-.hits{display:grid;gap:12px;margin-top:16px}
-.hit{background:var(--sunken);border:1px solid var(--rule);padding:12px 14px}
+.hits{display:grid;gap:8px;margin-top:10px}
+@media(min-width:900px){.hits{grid-template-columns:1fr 1fr}}
+@media(min-width:1400px){.hits{grid-template-columns:1fr 1fr 1fr}}
+.hit{background:var(--sunken);border:1px solid var(--rule);padding:8px 10px}
 .hit h3{margin:0 0 6px;font-size:17px;color:var(--ink)}
 .hit .meta{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint)}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
@@ -481,35 +502,75 @@ footer details.more .more-body{padding:8px 0 0;color:var(--ink-faint);font-size:
   .chain,.col,.limit,.quiet,details.disclose{opacity:1}
 }
 
-/* Sister tip — mirrors Builder .tut* (compact, one accent) */
-.tut{border-bottom:1px solid var(--rule-soft);background:var(--sunken)}
-.tut-panel,.tut-dismissed{max-width:min(1860px,100%);margin:0 auto;
-  padding:10px clamp(10px,1.6vw,20px)}
+/* Tip strip — minimal .tut* mirror of Builder (forge-slate, one accent) */
+.muted{color:var(--muted,var(--ink-dim))}
+.tut,.tut-bar{
+  position:relative;
+  border-bottom:1px solid var(--rule-soft);
+  background:color-mix(in srgb,var(--sunken) 72%,var(--ground))}
+@supports not (background:color-mix(in srgb,white 50%,black)){
+  .tut,.tut-bar{background:var(--sunken)}}
+.tut::before,.tut-bar::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);opacity:.5;pointer-events:none}
+.tut-panel,.tut-dismissed{
+  max-width:min(100%,var(--page-max));margin:0 auto;
+  padding:10px var(--page-pad) 12px var(--page-pad);
+  position:relative}
 .tut-dismissed{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
 .tut-dismissed[hidden],.tut-panel[hidden]{display:none !important}
-.tut-reopen{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
-  color:var(--accent);background:var(--raised);border:1px solid var(--accent);
-  padding:6px 12px;cursor:pointer}
-.tut-reopen:hover,.tut-reopen:focus-visible{background:var(--accent);color:var(--accent-ink)}
-.tut-dismissed-hint{font-size:13px;color:var(--ink-faint);flex:1 1 180px}
-.tut-top{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
-.tut-kicker{margin:0;font-family:"JetBrains Mono",monospace;font-size:11px;
+.tut-reopen{
+  font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  color:var(--accent);background:transparent;border:1px solid var(--accent);
+  padding:7px 12px;cursor:pointer;min-height:36px}
+.tut-reopen:hover,.tut-reopen:focus-visible{
+  background:var(--accent);color:var(--accent-ink)}
+.tut-dismissed-hint{
+  margin:0;flex:1 1 160px;font-size:13px;color:var(--muted,var(--ink-dim));line-height:1.4}
+.tut-top{display:flex;align-items:center;gap:10px 14px;margin-bottom:8px;flex-wrap:wrap}
+.tut-kicker{
+  margin:0;font-family:"JetBrains Mono",monospace;font-size:11px;
   font-weight:700;letter-spacing:.04em;color:var(--accent)}
-.tut-x{margin-left:auto;background:transparent;border:0;color:var(--ink-faint);
-  font-size:20px;line-height:1;cursor:pointer;padding:0 4px}
-.tut-x:hover{color:var(--ink)}
+.tut-x{
+  margin-left:auto;background:transparent;border:1px solid transparent;
+  color:var(--ink-faint);font-size:22px;line-height:1;cursor:pointer;
+  min-width:44px;min-height:44px;padding:0;display:grid;place-items:center}
+.tut-x:hover{color:var(--ink);border-color:var(--rule-soft)}
 .tut-body{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink-soft);
   max-width:62ch}
+.tut-steps{
+  counter-reset:tutstep;list-style:none;margin:0 0 12px;padding:0;
+  display:grid;gap:7px;max-width:62ch}
+.tut-steps li{
+  counter-increment:tutstep;
+  display:grid;grid-template-columns:1.35em 1fr;gap:8px;align-items:start;
+  font-size:13.5px;line-height:1.45;color:var(--ink-soft)}
+.tut-steps li::before{
+  content:counter(tutstep);
+  font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  color:var(--accent);padding-top:2px}
+.tut-steps code{
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;
+  background:var(--raised);border:1px solid var(--rule);padding:1px 5px}
 .tut-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.tut-btn{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
-  padding:6px 11px;border:1px solid var(--rule);background:var(--raised);
-  color:var(--ink-soft);cursor:pointer;text-decoration:none;display:inline-block}
+.tut-btn{
+  font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+  padding:7px 12px;border:1px solid var(--rule);background:transparent;
+  color:var(--ink-soft);cursor:pointer;text-decoration:none;display:inline-block;
+  min-height:36px}
 .tut-btn:hover{border-color:var(--accent);color:var(--ink)}
 a.tut-btn.primary,button.tut-btn.primary{border-color:var(--accent);color:var(--accent)}
 a.tut-btn.primary:hover,button.tut-btn.primary:hover{
   background:var(--accent);color:var(--accent-ink)}
 .tut-btn:focus-visible,.tut-reopen:focus-visible,.tut-x:focus-visible{
   outline:2px solid var(--gold,var(--accent));outline-offset:2px}
+@media(max-width:640px){
+  .tut-panel,.tut-dismissed{padding:10px 12px 12px 16px}
+  .tut-actions{width:100%}
+  .tut-btn,.tut-reopen{flex:1 1 calc(50% - 8px);text-align:center}
+  .tut-steps li{font-size:13px}
+}
+@media(prefers-contrast:more){.tut::before,.tut-bar::before{opacity:1}}
 </style>
 </head>
 <body>
@@ -546,7 +607,11 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       <p class="tut-kicker">Hinweis</p>
       <button type="button" class="tut-x" id="synTipClose" title="Hinweis schließen" aria-label="Hinweis schließen">×</button>
     </div>
-    <p class="tut-body">Vererbung und gleicher GCD stehen hier. Das Tutorial in der Buildschmiede erklärt Addon, Import und Befund — für Levelrun und Endgame.</p>
+    <ol class="tut-steps">
+      <li>Hier Vererbung, geteilten GCD und Procs nachschlagen.</li>
+      <li>In der Buildschmiede das Addon laden, <code>/bs</code> kopieren und unter Werkzeuge einfügen.</li>
+      <li>Befund und Path gelten für Levelrun und Endgame.</li>
+    </ol>
     <div class="tut-actions">
       <a class="tut-btn primary" href="index.html#tut=1">Tutorial im Builder</a>
       <a class="tut-btn" href="index.html#t=vTools">Import</a>
@@ -606,7 +671,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
         <p>Der Katalog enthält 1.321 Spells und 1.750 Talente. Du nimmst 30 und 25 mit. Alles,
           was du an Redundanz mitschleppst — zwei Fähigkeiten, die dasselbe tun, ein Talent ohne
           seine Voraussetzung — kostet dich einen Platz, den ein wirksamer Effekt haben könnte.</p>
-        <div class="note">
+        <div class="note danger">
           <p class="hd">Die drei teuren Fehler</p>
           <p><strong>1. Dubletten.</strong> Dieselbe Attacke in sechs Schadensschulen belegt
             sechs Plätze für eine Rolle — nimm eine davon. <em>Welche</em>, ist allerdings
@@ -640,7 +705,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
           <a class="school" id="school-spellstrike" href="#look" data-jump="look" data-q="Aether Strike" data-f="alle" style="--c:var(--arcane)" title="Spellstrike nachschlagen — z. B. Aether Strike"><span class="name">Spellstrike</span>
             <span class="count">40</span><span class="eg">z. B. Aether Strike</span></a>
         </div>
-        <p style="margin-top:24px"><strong>316 Einträge</strong> tragen
+        <p style="margin-top:12px"><strong>316 Einträge</strong> tragen
           <code>This uses X modifiers</code>. Dazu kommen
           <strong>60 Dublettengruppen</strong> mit 234 Mitgliedern — Schulvarianten
           mit gemeinsamem GCD. <strong>Stormstrike ist mit 67 Erwähnungen die am
@@ -697,7 +762,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
           Sie sind aber nicht austauschbar: die Schule entscheidet, ob Armor
           den Schaden schluckt und welche Talente darauf einzahlen.</p>
 
-        <div class="note warn">
+        <div class="note danger">
           <p class="hd">Gleicher GCD — immer</p>
           <p>Schulvarianten derselben Fähigkeit teilen sich <strong>einen</strong> GCD.
             Burning Slam und Frozen Slam sind nicht zwei unabhängige Tasten in derselben
@@ -766,7 +831,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="modifier" data-keys="modifier vererbung uses modifiers swipe sinister revenge lava lash slam aimed steady kill mongoose rake mangle">
-        <summary><span class="num">05</span> Modifier-Vererbung <span class="hint"><a href="#look" data-jump="look" data-f="erb" title="Vererbung nachschlagen">316 Phrasen</a><a href="#look" data-jump="look" data-f="erb" title="Vererbung nachschlagen">110 Basen</a></span></summary>
+        <summary><span class="num">05</span> Modifier-Vererbung <span class="hint"><a href="#look" data-jump="look" data-q="" data-f="erb" title="Vererbung nachschlagen">316 Phrasen</a><a href="#look" data-jump="look" data-q="" data-f="erb" title="Vererbung nachschlagen">110 Basen</a></span></summary>
         <div class="topic-body">
         <h2>Modifier-Vererbung</h2>
         <p class="lede">Der Satz <code>This uses X modifiers</code> ist die wichtigste Zeile im
@@ -863,7 +928,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
             </tbody>
           </table>
         </div>
-        <div class="note warn">
+        <div class="note danger">
           <p class="hd">Der teuerste Griff daneben</p>
           <p>Acht Unterbrecher auf einem gemeinsamen Cooldown. Wer Kick <em>und</em> Counterspell
             mitnimmt, weil „einer ist magisch, einer physisch“, verschenkt einen Platz vollständig.
@@ -945,7 +1010,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
       </details>
 
       <details class="topic" id="procs" data-keys="proc chance windfury envenom scent of blood stormcloak tooltip dbc 1-99">
-        <summary><span class="num">08</span> Procs <span class="hint"><a href="#nachschlagen" data-jump="nachschlagen" data-f="proc" title="Procs nachschlagen">239 Tooltip</a><span>46 DBC</span></span></summary>
+        <summary><span class="num">08</span> Procs <span class="hint"><a href="#look" data-jump="look" data-q="" data-f="proc" title="Procs nachschlagen">239 Tooltip</a><a href="#look" data-jump="look" data-q="" data-f="proc" title="Procs nachschlagen">46 DBC</a></span></summary>
         <div class="topic-body">
         <h2>Procs — nur belegte Chancen</h2>
         <p class="lede">Eine Proc-Zahl erscheint hier nur, wenn der Tooltip sie nennt
@@ -1056,7 +1121,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
             </tbody>
           </table>
         </div>
-        <div class="note warn">
+        <div class="note danger">
           <p class="hd">Der teuerste Anfängerfehler</p>
           <p>Krit-Talente auf sechs verschiedene Fähigkeiten verteilen. Jedes einzelne wirkt dann
             nur auf ein Sechstel deines Schadens. <strong>Bündle Krit auf die Fähigkeit, die du
@@ -1098,7 +1163,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
           </table>
         </div>
 
-        <div class="note">
+        <div class="note good">
           <p class="hd">Blood Presence ist der beste Deal für Schadensbuilds</p>
           <p>Ein einziger Platz, permanent aktiv, gibt <strong>+2 % Schaden und Lebensraub
             gleichzeitig</strong>. Es gibt im Katalog kaum eine zweite Fähigkeit, die beide Achsen
@@ -1215,7 +1280,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
           </div>
         </div>
 
-        <div class="note warn" style="margin-top:30px">
+        <div class="note warn" style="margin-top:14px">
           <p class="hd">Zwei harte Abhängigkeiten</p>
           <p><strong>Critical Serration</strong> trägt im Tooltip <em>„Unlocked by Piercing Shots
             (Rank 1)“</em> — deshalb steht Piercing Shots im Build, obwohl kein einziger Schuss
@@ -1230,13 +1295,15 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
         <a class="cta" href="index.html">Zur Buildschmiede</a>
       </section>
   </div>
+  </div>
+  </div>
 
       <footer>
         <p>Datenbasis: Katalog (3.071), <code>relations</code>, <code>usesbase</code>,
           <code>basemods</code>, <code>cdgroups</code>, Tooltip-Skalierung und
           Spell.dbc-Mechanik. Synergien sind belegt; welcher Build stärker ist,
           entscheidet die Übungspuppe — keine erfundenen SP/AP-Koeffizienten.</p>
-        <p style="margin-top:12px"><a href="index.html">Zurück zur Buildschmiede</a>
+        <p class="footnav"><a href="index.html">Zurück zur Buildschmiede</a>
           · <a href="index.html#tut=1">Tutorial in der Buildschmiede</a>
           · <a href="index.html#t=vWissen">Wissen in der Buildschmiede</a></p>
       </footer>
@@ -1341,8 +1408,8 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
     e.stopPropagation();
     if (history.replaceState) history.replaceState(null, "", "#" + id);
     synGo(id, {
-      q: t.getAttribute("data-q") || "",
-      f: t.getAttribute("data-f") || ""
+      q: t.hasAttribute("data-q") ? (t.getAttribute("data-q") || "") : null,
+      f: t.hasAttribute("data-f") ? (t.getAttribute("data-f") || "") : null
     });
   }, true);
 
@@ -1484,7 +1551,7 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
   if (!qHit || !hitList) return;
 
   window.synSetHit = function(qVal, fVal){
-    if (qVal) qHit.value = qVal;
+    if (qVal != null) qHit.value = qVal;
     if (fVal){
       filt = fVal;
       document.querySelectorAll("#nachschlagen .filters:not(.school-filters) button[data-f]").forEach(function(b){
@@ -1493,7 +1560,8 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
     }
     var qNow = fold(qHit.value || "");
     document.querySelectorAll("#nachschlagen .school-filters button[data-q]").forEach(function(b){
-      b.setAttribute("aria-pressed", fold(b.getAttribute("data-q") || "") === qNow ? "true" : "false");
+      var qBtn = fold(b.getAttribute("data-q") || "");
+      b.setAttribute("aria-pressed", qNow && qBtn === qNow ? "true" : "false");
     });
     render();
   };
@@ -1579,6 +1647,25 @@ a.tut-btn.primary:hover,button.tut-btn.primary:hover{
     show(false);
   });
   if (reopenBtn) reopenBtn.addEventListener("click", function(){ show(true); });
+})();
+</script>
+</body>
+</html>
+Listener("click", function(){
+    write({done: true});
+    show(false);
+  });
+  if (reopenBtn) reopenBtn.addEventListener("click", function(){ show(true); });
+})();
+</script>
+</body>
+</html>
+addEventListener("click", function(){ show(true); });
+})();
+</script>
+</body>
+</html>
+);
 })();
 </script>
 </body>

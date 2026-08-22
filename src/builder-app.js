@@ -687,8 +687,10 @@
       isW = true;
       isM = true;
     }
-    // Explizit Physical + Waffen-% ist kein Hybrid, außer der Tag sagt Magie.
-    if (sc.w && school && !isMagicSchool(school) && !(t & T_MAGIC)) isM = false;
+    // Waffen-% ohne gemessene Magie-/*strike-Schule ist kein Hybrid.
+    // Tag-MAGIC durch Nebenklauseln (Shadow-Rider, Nature-Amp) zählt nicht —
+    // sonst wird Scourge Strike / Stormstrike fälschlich Duality.
+    if (sc.w && !isMagicSchool(school) && !isStrikeSchool(school)) isM = false;
     var isH = !!(t & T_HEAL) || !!sc.heal;
     // Heil-Hauptjob nur bei gemessener Tooltip-Heilung — nicht bei
     // „healing reduced“ / Bleed-Schnipseln, und nicht auf Waffen-Hybriden.
@@ -755,8 +757,9 @@
     // Hybridkern: wm ist die größte Schublade — nicht schon bei einem Token-Hybrid.
     if (p.wm >= 1 && p.wm >= p.pw && p.wm >= p.pm) duaV += 2;
 
+    // Physisch zählt für Strength und Agility gleich — ArPen vs. Waffen-Crit trennt.
     var strV = p.pw * 2 + p.arpen * 3 + p.phys;
-    var agiV = p.pw * 2 + p.critMelee * 2;
+    var agiV = p.pw * 2 + p.critMelee * 2 + p.phys;
     // Rein physisch ohne Hybrid: leichter Bonus vs. Duality-Nullscore.
     if (p.wm === 0 && p.pw >= 3 && p.pm === 0) {
       strV += 2;
@@ -825,8 +828,9 @@
     var hd = document.getElementById("cP");
     if (!ids.length) {
       hd.textContent = "—"; hd.className = "cnt";
-      box.innerHTML = '<div class="empty">Wähle Fähigkeiten — dann kommt hier die ' +
-        "Path-Empfehlung mit Begründung.</div>";
+      box.innerHTML = emptyState(
+        "Wähle Fähigkeiten.",
+        "<p>Dann kommt hier die Path-Empfehlung mit Begründung.</p>");
       return;
     }
     var p = profile(ids);
@@ -3600,9 +3604,9 @@
     hd.textContent = n ? String(n) : "—";
     hd.className = "cnt " + (n ? "ok" : "");
     if (!o.length) {
-      box.innerHTML = '<div class="empty">Aus den Tooltips deiner Auswahl lässt sich keine Zahl ' +
-        "herauslesen. Das heißt nicht, dass sie nicht skalieren — es steht nur " +
-        "nicht im Text.</div>";
+      box.innerHTML = emptyState(
+        "Keine Zahl in den Tooltips deiner Auswahl.",
+        "<p>Das heißt nicht, dass sie nicht skalieren — es steht nur nicht im Text.</p>");
       return;
     }
     var preview = [], rest = [], rowsSeen = 0;
@@ -4016,26 +4020,6 @@
     function pushMention(f) {
       formPushAllow(mention, f);
       info.strong = true;
-    }
-
-    var frmRaw = FRM[i];
-    if (frmRaw && typeof frmRaw === "string") {
-      var frmParts = frmRaw.split("+");
-      var ft, fcode;
-      for (ft = 0; ft < frmParts.length; ft++) {
-        fcode = frmParts[ft];
-        if (!fcode) continue;
-        if (fcode === "ushift") {
-          info.shapeshiftOk = true;
-          continue;
-        }
-        if (fcode === "humanoid") {
-          info.humanoidOnly = true;
-          continue;
-        }
-        rawAllow.push(formNormTag(fcode));
-        pushMention(fcode);
-      }
     }
 
     var paren = /\((cat|bear|feral)(?:\s+form)?\)/i.exec(name);
@@ -4502,10 +4486,12 @@
       var gi;
       for (gi = 0; gi < CAT.length && cnt.a < MAX_A; gi++) {
         var ginfo = formInfo(gi);
-        if (!ginfo.grants || ginfo.family !== primary || CAT[gi][1] !== 0) continue;
+        if (!ginfo.grants || formFamily(gi) !== primary || CAT[gi][1] !== 0) continue;
         if (isUndesiredIdx(gi)) continue;
         if (genLegal(gi, sel, use, cnt) && !formConflict(gi)) {
-          take(gi, "deine Kampf-Form");
+          take(gi, formIsCombat(primary) ? "deine Kampf-Form" :
+            (FORM_STANCE_GROUP[primary] === "presence" ? "deine Presence" :
+              "deine Haltung"));
         }
       }
     }
@@ -4690,21 +4676,22 @@
     if (!box) return;
     var o = [];
 
-    o.push('<div class="qhint">Wähle eine Ausrichtung — der Generator füllt ' +
-      "Fähigkeiten und passende Talente. " +
-      (isEndgameFrame() ? "Modus Endgame (bis 60)." : "Modus Levelrun (10–60).") +
-      (CHAR ? "" : " Ohne Import: Stufe und Budget unbekannt.") + "</div>");
-
-    o.push('<div class="archgrid">' + THEMES.map(function (t) {
-      return '<button class="archb" data-gen="' + t.k + '">' + esc(t.n) +
-        "</button>";
-    }).join("") + "</div>");
+    o.push(emptyHint(
+      "Wähle eine Ausrichtung — der Generator füllt Fähigkeiten und Talente.",
+      "<p>" + (isEndgameFrame() ? "Modus Endgame (bis 60)." : "Modus Levelrun (10–60).") +
+        (CHAR ? "" : " Ohne Import: Stufe und Budget unbekannt.") + "</p>"));
     o.push(wrapDetails(
-      THEMES.map(function (t) {
-        return '<div class="wepline"><b>' + esc(t.n) + "</b> " + esc(t.d) +
-          "</div>";
-      }).join(""),
-      "Was die Ausrichtungen bedeuten"));
+      "<p>Er geht den Katalog durch: erst Fähigkeiten der Ausrichtung, " +
+      "dann Talente dazu. Dubletten, zu hohe Stufen, gesperrte Paths und dein " +
+      "Seltenheits-Budget zählen mit. Eine Kampf-Form pro Build — Katze und " +
+      "Bär werden nicht gemischt.</p>",
+      "So arbeitet der Generator"));
+
+    o.push('<div class="genlist">' + THEMES.map(function (t) {
+      return '<button type="button" class="genb" data-gen="' + t.k + '"><b>' +
+        esc(t.n) + '</b><span class="genblurb">' + esc(t.d) +
+        "</span></button>";
+    }).join("") + "</div>");
 
     if (lastGen) {
       var g = lastGen;
@@ -4715,27 +4702,27 @@
       var pathN = bestP && PATHBY[bestP.k]
         ? PATHBY[bestP.k].n.replace("Path of ", "") : "";
 
-      o.push('<div class="scsum"><b>' + esc(g.theme.n) +
+      o.push('<div class="gensum"><b>' + esc(g.theme.n) +
         (pathN ? " · " + esc(pathN) : "") +
         (g.form && g.form !== "humanoid" ? " · " + esc(formDe(g.form)) : "") +
-        "</b>" +
+        "</b> " +
         abi.length + " Fähigkeiten, " + tal.length + " Talente. " +
         "Übernehmen ersetzt deine Auswahl.</div>");
       o.push('<div class="pastewrap pastebtns">' +
-        '<button class="primary" id="bGenApply">Build übernehmen</button>' +
-        '<button id="bGenDrop">Verwerfen</button></div>');
+        '<button type="button" class="primary" id="bGenApply">Build übernehmen</button>' +
+        '<button type="button" id="bGenDrop">Verwerfen</button></div>');
 
-      var preview = g.ids.slice().sort(function (a, b) {
+      var peek = [];
+      g.ids.slice().sort(function (a, b) {
         return CAT[a][1] - CAT[b][1] || CAT[b][3] - CAT[a][3];
-      }).slice(0, 6);
-      preview.forEach(function (i) {
-        o.push('<div class="cmprow"><span class="icon" style="width:20px;' +
+      }).slice(0, 6).forEach(function (i) {
+        peek.push('<div class="cmprow"><span class="icon" style="width:20px;' +
           'height:20px;flex:0 0 20px;' + iconStyle(i, 20) + '"></span>' +
           '<span class="nm q' + CAT[i][3] + '">' +
           esc(CAT[i][0]) + "</span></div>");
       });
       if (g.ids.length > 6) {
-        o.push('<div class="qhint">… und ' + (g.ids.length - 6) + " weitere</div>");
+        peek.push("<p>… und " + (g.ids.length - 6) + " weitere nach Übernehmen.</p>");
       }
 
       var groups = {};
@@ -4748,14 +4735,13 @@
         }
         groups[reason].push(i);
       });
-      o.push(wrapDetails(
-        order.map(function (reason) {
-          return '<div class="wepline"><b>' + esc(reason || "gewählt") +
-            "</b> " + groups[reason].map(function (i) {
-              return esc(CAT[i][0]);
-            }).join(" · ") + "</div>";
-        }).join(""),
-        "Warum diese Einträge (" + g.ids.length + ")"));
+      peek.push(order.map(function (reason) {
+        return '<div class="wepline"><b>' + esc(reason || "gewählt") +
+          "</b> " + groups[reason].map(function (i) {
+            return esc(CAT[i][0]);
+          }).join(" · ") + "</div>";
+      }).join(""));
+      o.push(wrapDetails(peek.join(""), "Auswahl (" + g.ids.length + ")"));
 
       if (g.skipped && g.skipped.length) {
         o.push(wrapDetails(
@@ -5327,21 +5313,29 @@
   // (kein #build / #chains — Listen sind #slotsA/#slotsT, Ketten #chainbox).
   var JUMP = {
     issues: { view: "vAnalyse", sel: "#issues", openTab: null },
+    "issues-krit": { view: "vAnalyse", sel: "#issues-krit", openTab: null },
+    "issues-fix": { view: "vAnalyse", sel: "#issues-fix", openTab: null },
     paths: { view: "vAnalyse", sel: "#paths", openTab: null },
     stats: { view: "vAnalyse", sel: "#statbox", openTab: null },
     gear: { view: "vAnalyse", sel: "#gearBox", openTab: null },
-    scards: { view: "vAnalyse", sel: "#gearBox", openTab: null },
+    scards: { view: "vAnalyse", sel: "#scardPanel", openTab: null },
+    scard: { view: "vAnalyse", sel: "#scardPanel", openTab: null },
     scale: { view: "vAnalyse", sel: "#aScale", openTab: "aScale" },
     struct: { view: "vAnalyse", sel: "#aStruct", openTab: "aStruct" },
     chain: { view: "vChain", sel: "#chainbox", openTab: null },
     chains: { view: "vChain", sel: "#chainbox", openTab: null },
     import: { view: "vTools", sel: "#pasteBox", openTab: null },
+    char: { view: "vTools", sel: "#charBox", openTab: null },
     gen: { view: "vTools", sel: "#genbox", openTab: "tGen" },
+    cmp: { view: "vTools", sel: "#cmpbox", openTab: "tCmp" },
     addon: { view: "vWissen", sel: "#rAddon", openTab: "rAddon" },
     frame: { view: "vAnalyse", sel: "#frameHint", openTab: null },
     build: { view: "vBuild", sel: "#slotsA", openTab: null },
+    slotsA: { view: "vBuild", sel: "#slotsA", openTab: null },
     talents: { view: "vBuild", sel: "#slotsT", openTab: null },
-    sug: { view: "vBuild", sel: "#sugbox", openTab: null }
+    slotsT: { view: "vBuild", sel: "#slotsT", openTab: null },
+    sug: { view: "vBuild", sel: "#sugbox", openTab: null },
+    meth: { view: "vAnalyse", sel: "#aMeth", openTab: "aMeth" }
   };
 
   function resolveJump(key) {
@@ -5383,7 +5377,19 @@
       node = node.parentElement;
     }
     requestAnimationFrame(function () {
-      focus.scrollIntoView({ behavior: "smooth", block: "start" });
+      var reduce = false;
+      try {
+        reduce = !!(window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      } catch (err) { /* */ }
+      if (!focus.hasAttribute("tabindex") &&
+          !/^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/i.test(focus.tagName)) {
+        focus.setAttribute("tabindex", "-1");
+      }
+      focus.scrollIntoView({
+        behavior: reduce ? "auto" : "smooth",
+        block: "start"
+      });
       focus.classList.remove("jumpflash");
       void focus.offsetWidth;
       focus.classList.add("jumpflash");
@@ -5404,7 +5410,13 @@
   });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
-    var j = e.target.closest("[data-jump]");
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest("input, select, textarea")) return;
+    var tag = (t.tagName || "").toLowerCase();
+    if (tag === "button" || tag === "summary") return;
+    if (tag === "a" && e.key === "Enter") return;
+    var j = t.closest("[data-jump]");
     if (!j) return;
     e.preventDefault();
     jumpTo(j.getAttribute("data-jump"), j.getAttribute("data-jump-filter") || "");
@@ -5625,6 +5637,7 @@
       });
     }
   }
+  initTutorial();
 
   document.addEventListener("click", function (e) {
     var b = e.target.closest(".vtab[data-view]");
@@ -5906,10 +5919,12 @@
             ? wrapDetails('<div class="chaingrid">' + cards.slice(6).join("") + "</div>",
               "Weitere Ketten (" + (cards.length - 6) + ")")
             : "")
-        : '<div class="empty">Keiner deiner Einträge hängt im Katalog an einem ' +
-          "anderen. Häkchen oben ausschalten, um trotzdem alle zu sehen.</div>")
-      : '<div class="empty">Wähle Fähigkeiten und Talente — dann steht hier, ' +
-        "was auf was einzahlt und was ins Leere läuft.</div>";
+        : emptyState(
+          "Keine Verknüpfung im Katalog.",
+          "<p>Häkchen oben ausschalten, um trotzdem alle Einträge zu sehen.</p>"))
+      : emptyState(
+        "Wähle Fähigkeiten und Talente.",
+        "<p>Dann steht hier, was auf was einzahlt und was ins Leere läuft.</p>");
   }
 
   document.addEventListener("change", function (e) {
@@ -5949,9 +5964,18 @@
       el.setAttribute("data-jump", key);
       if (title) el.title = title;
       el.classList.add("chip-jump");
-      if (el.tagName === "A" || el.tagName === "BUTTON") return;
+      var nested = el.querySelector("a, button");
+      var native = el.tagName === "A" || el.tagName === "BUTTON";
+      if (native || nested) {
+        el.removeAttribute("role");
+        if (!native) el.removeAttribute("tabindex");
+        if (nested) el.removeAttribute("aria-label");
+        else if (title) el.setAttribute("aria-label", title);
+        return;
+      }
       el.setAttribute("role", "button");
-      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
+      el.setAttribute("tabindex", "0");
+      if (title) el.setAttribute("aria-label", title);
     }
     var ci = document.getElementById("chipIssues");
     if (ci) {
@@ -6119,7 +6143,7 @@
   // Ein "+" in der Spalte heisst immer, dass er mehr davon hat.
   function cmpCell(a, b, label, unit) {
     var d = b - a;
-    var cls = d === 0 ? "" : (d > 0 ? "down" : "up");
+    var cls = d === 0 ? "" : (d > 0 ? "warn" : "good");
     return "<tr><td>" + esc(label) + '</td><td class="num">' + fmtN(a) + (unit || "") +
       '</td><td class="num">' + fmtN(b) + (unit || "") +
       '</td><td class="num ' + cls + '">' +
@@ -6625,10 +6649,11 @@
 
     if (!ids || !ids.length) {
       if (hd) { hd.textContent = "—"; hd.className = "cnt"; }
-      box.innerHTML = '<div class="qhint">Wähle einen Build — dann zeigt dieser Reiter '
-        + "die strukturelle Abdeckung aus Ascension <code>SpellTags.dbc</code> "
-        + "(Mobilität, Interrupt, CC, Schulen …). Tags kommen aus dem Client, "
-        + "nicht aus Heuristiken.</div>";
+      box.innerHTML = emptyHint(
+        "Wähle einen Build — dann siehst du die Tag-Abdeckung.",
+        "<p>Dieser Reiter zeigt die strukturelle Abdeckung aus Ascension " +
+          "<code>SpellTags.dbc</code> (Mobilität, Interrupt, CC, Schulen). " +
+          "Tags kommen aus dem Client, nicht aus Heuristiken.</p>");
       return;
     }
 
